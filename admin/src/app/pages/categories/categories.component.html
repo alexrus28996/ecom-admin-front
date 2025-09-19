@@ -1,0 +1,116 @@
+<div class="categories-shell">
+  <section class="categories-header">
+    <div>
+      <h1>{{ 'categories.title' | translate }}</h1>
+      <p class="muted">{{ 'categories.subtitle' | translate }}</p>
+    </div>
+    <form [formGroup]="filterForm" (ngSubmit)="onSubmit()" class="filters" novalidate>
+      <mat-form-field appearance="fill">
+        <mat-label>{{ 'categories.filters.search.label' | translate }}</mat-label>
+        <input matInput formControlName="q" [placeholder]="'categories.filters.search.placeholder' | translate" />
+        <button mat-icon-button matSuffix type="submit"><mat-icon>search</mat-icon></button>
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>{{ 'categories.filters.parent.label' | translate }}</mat-label>
+        <mat-select formControlName="parent">
+          <mat-option value="">{{ 'categories.filters.parent.root' | translate }}</mat-option>
+          <mat-option *ngFor="let p of parentsOptions" [value]="p._id">{{ p.name }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </form>
+  </section>
+
+  <section class="categories-grid">
+    <mat-card class="list-card">
+      <mat-card-title>{{ 'categories.list.title' | translate }}</mat-card-title>
+      <mat-card-content>
+        <div class="table-wrapper">
+          <div class="table-overlay" *ngIf="loading">
+            <mat-progress-spinner diameter="40" mode="indeterminate"></mat-progress-spinner>
+          </div>
+          <table mat-table [dataSource]="dataSource" *ngIf="dataSource.length; else emptyState">
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>{{ 'categories.table.name' | translate }}</th>
+              <td mat-cell *matCellDef="let c">{{ c.name }}</td>
+            </ng-container>
+            <ng-container matColumnDef="slug">
+              <th mat-header-cell *matHeaderCellDef>{{ 'categories.table.slug' | translate }}</th>
+              <td mat-cell *matCellDef="let c" class="muted">{{ c.slug }}</td>
+            </ng-container>
+            <ng-container matColumnDef="parent">
+              <th mat-header-cell *matHeaderCellDef>{{ 'categories.table.parent' | translate }}</th>
+              <td mat-cell *matCellDef="let c" class="muted">{{ c.parent || ('categories.parent.none' | translate) }}</td>
+            </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let c">
+                <button mat-button color="primary" (click)="startEdit(c)"><mat-icon>edit</mat-icon> {{ 'categories.actions.edit' | translate }}</button>
+                <button mat-button color="warn" (click)="confirmDelete(c)" [disabled]="loading"><mat-icon>delete</mat-icon> {{ 'categories.actions.delete' | translate }}</button>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+          <ng-template #emptyState>
+            <div class="empty-state">
+              <mat-icon>category</mat-icon>
+              <p>{{ 'categories.empty' | translate }}</p>
+            </div>
+          </ng-template>
+        </div>
+      </mat-card-content>
+      <mat-card-actions align="end">
+        <mat-paginator [length]="total" [pageIndex]="pageIndex" [pageSize]="pageSize" [pageSizeOptions]="pageSizeOptions" (page)="onPageChange($event)" showFirstLastButtons></mat-paginator>
+      </mat-card-actions>
+    </mat-card>
+
+    <mat-card class="edit-card">
+      <mat-card-title>{{ selectedId ? ('categories.edit.title' | translate) : ('categories.create.title' | translate) }}</mat-card-title>
+      <mat-card-content>
+        <form [formGroup]="form" (ngSubmit)="save()" class="form-grid" novalidate>
+          <mat-form-field appearance="fill">
+            <mat-label>{{ 'categories.form.name.label' | translate }}</mat-label>
+            <input matInput formControlName="name" [placeholder]="'categories.form.name.placeholder' | translate" />
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>{{ 'categories.form.slug.label' | translate }}</mat-label>
+            <input matInput formControlName="slug" />
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>{{ 'categories.form.description.label' | translate }}</mat-label>
+            <input matInput formControlName="description" />
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>{{ 'categories.form.parent.label' | translate }}</mat-label>
+            <mat-select formControlName="parent">
+              <mat-option value="">{{ 'categories.form.parent.root' | translate }}</mat-option>
+              <mat-option *ngFor="let p of parentsOptions" [value]="p._id">{{ p.name }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <div class="form-actions">
+            <button mat-stroked-button type="button" color="warn" (click)="startNew()">{{ 'categories.actions.clear' | translate }}</button>
+            <button mat-raised-button color="primary" type="submit">{{ 'categories.actions.save' | translate }}</button>
+          </div>
+        </form>
+
+        <section *ngIf="selectedId" class="children-section">
+          <h3>{{ 'categories.children.title' | translate }}</h3>
+          <p class="muted">{{ 'categories.children.hint' | translate }}</p>
+          <div cdkDropList (cdkDropListDropped)="dropChild($event)" class="children-list">
+            <div class="child-row" *ngFor="let c of children; let i = index" cdkDrag>
+              <mat-icon class="drag-handle" cdkDragHandle>drag_indicator</mat-icon>
+              <span class="child-name">{{ c.name }}</span>
+              <span class="index">#{{ i + 1 }}</span>
+            </div>
+          </div>
+          <div class="children-actions">
+            <button mat-raised-button color="primary" (click)="saveOrder()">{{ 'categories.children.save' | translate }}</button>
+          </div>
+        </section>
+      </mat-card-content>
+    </mat-card>
+  </section>
+
+  <app-error-banner [key]="errorKey" [error]="lastError"></app-error-banner>
+</div>
+

@@ -1,0 +1,35 @@
+<div class="panel">
+  <h2>My Orders</h2>
+  <div class="row" style="align-items:flex-end;">
+    <div><label class="muted">Page</label><input [(ngModel)]="page" type="number" min="1"></div>
+    <div><label class="muted">Limit</label><input [(ngModel)]="limit" type="number" min="1"></div>
+    <div><button (click)="load()">Apply</button></div>
+    <div class="spacer"></div>
+    <div>
+      <label class="muted">Shipping</label>
+      <input [(ngModel)]="shipping" type="number" min="0" step="0.01">
+    </div>
+    <div>
+      <label class="muted">Tax rate</label>
+      <input [(ngModel)]="taxRate" type="number" min="0" max="1" step="0.01">
+    </div>
+    <div>
+      <button (click)="createOrder()">Create Order from Cart</button>
+    </div>
+  </div>
+  <p *ngIf="loading" class="muted">Loading…</p>
+  <p *ngIf="error" class="muted">{{ error }}</p>
+  <table *ngIf="data">
+    <thead><tr><th>ID</th><th>Total</th><th>Status</th><th>Placed</th><th></th></tr></thead>
+    <tbody>
+      <tr *ngFor="let o of data.items">
+        <td>{{ o._id }}</td>
+        <td>{{ o.total | number:'1.2-2' }} {{ o.currency }}</td>
+        <td>{{ o.status }} / {{ o.paymentStatus }}</td>
+        <td>{{ o['createdAt'] | date:'short' }}</td>
+        <td><a [routerLink]="['/orders', o._id]"><button>View</button></a></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+

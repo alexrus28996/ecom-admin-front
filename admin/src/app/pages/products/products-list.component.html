@@ -1,0 +1,114 @@
+<div class="products-shell">
+  <section class="products-header">
+    <div>
+      <h1>{{ 'products.list.title' | translate }}</h1>
+      <p class="muted">{{ 'products.list.subtitle' | translate }}</p>
+    </div>
+    <div class="products-header-actions">
+      <form [formGroup]="filterForm" (ngSubmit)="onSubmit()" novalidate>
+        <mat-form-field appearance="fill" floatLabel="always">
+          <mat-label>{{ 'products.list.filters.search.label' | translate }}</mat-label>
+          <input matInput formControlName="q" [placeholder]="'products.list.filters.search.placeholder' | translate" />
+          <button mat-icon-button matSuffix type="submit" [disabled]="loading">
+            <mat-icon>search</mat-icon>
+          </button>
+        </mat-form-field>
+        <mat-form-field appearance="fill">
+          <mat-label>{{ 'products.list.filters.category.label' | translate }}</mat-label>
+          <mat-select formControlName="category">
+            <mat-option value="">{{ 'products.list.filters.category.any' | translate }}</mat-option>
+            <mat-option *ngFor="let category of categories" [value]="category.id">{{ category.name }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </form>
+      <button mat-raised-button color="primary" routerLink="/products/new" *ngIf="auth.isAdmin" [disabled]="loading">
+        <mat-icon>add</mat-icon>
+        {{ 'products.list.actions.create' | translate }}
+      </button>
+    </div>
+  </section>
+
+  <section class="table-wrapper">
+    <app-loading [show]="loading" labelKey="common.loading"></app-loading>
+
+    <table mat-table [dataSource]="dataSource" *ngIf="dataSource.length; else emptyState">
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>{{ 'products.list.table.name' | translate }}</th>
+        <td mat-cell *matCellDef="let product">
+          <div class="name-cell" *ngIf="variantSummary(product) as summary">
+            <span>{{ product.name }}</span>
+            <span class="muted" *ngIf="product.description">{{ product.description }}</span>
+            <span class="muted" *ngIf="categoryName(product.category)">{{ categoryName(product.category) }}</span>
+            <span class="muted">{{ 'products.list.table.variantsSummary' | translate:{ total: summary.totalVariants, active: summary.activeVariants } }}</span>
+            <span class="muted">{{ 'products.list.table.stockTotal' | translate:{ stock: summary.totalStock } }}</span>
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="price">
+        <th mat-header-cell *matHeaderCellDef>{{ 'products.list.table.price' | translate }}</th>
+        <td mat-cell *matCellDef="let product">
+          {{ product.price | currency:(product.currency || 'USD'):'symbol':'1.2-2' }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="stock">
+        <th mat-header-cell *matHeaderCellDef>{{ 'products.list.table.stock' | translate }}</th>
+        <td mat-cell *matCellDef="let product">{{ product.stock ?? 0 }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>{{ 'products.list.table.status' | translate }}</th>
+        <td mat-cell *matCellDef="let product">
+          <span class="status-chip" [ngClass]="{ inactive: !product.isActive }">
+            <mat-icon>{{ product.isActive ? 'check_circle' : 'pause_circle' }}</mat-icon>
+            {{ product.isActive ? ('products.list.status.active' | translate) : ('products.list.status.inactive' | translate) }}
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>{{ 'products.list.table.actions' | translate }}</th>
+        <td mat-cell *matCellDef="let product">
+          <div class="products-row-actions">
+            <button mat-icon-button color="primary" [routerLink]="['/products', product._id]" *ngIf="auth.isAdmin" [disabled]="loading" matTooltip="{{ 'products.list.actions.edit' | translate }}">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="accent" (click)="addToCart(product)" matTooltip="{{ 'products.list.actions.addToCart' | translate }}">
+              <mat-icon>shopping_cart</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="confirmDelete(product)" *ngIf="auth.isAdmin" [disabled]="loading" matTooltip="{{ 'products.list.actions.delete' | translate }}">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns; trackBy: trackById"></tr>
+    </table>
+
+    <ng-template #emptyState>
+      <div class="empty-state">
+        <mat-icon>inventory_2</mat-icon>
+        <p>{{ 'products.list.empty' | translate }}</p>
+      </div>
+    </ng-template>
+  </section>
+
+  <section *ngIf="total > 0">
+    <mat-paginator
+      [length]="total"
+      [pageIndex]="pageIndex"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="pageSizeOptions"
+      (page)="onPageChange($event)"
+      showFirstLastButtons
+    ></mat-paginator>
+  </section>
+
+  <app-error-banner [key]="errorKey" [error]="lastError"></app-error-banner>
+</div>
+
+
+

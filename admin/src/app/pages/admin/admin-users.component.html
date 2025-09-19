@@ -1,0 +1,26 @@
+<div class="panel" style="position:relative;">
+  <h2>{{ 'adminUsersRoles.title' | translate }}</h2>
+  <p class="muted">{{ 'adminUsersRoles.subtitle' | translate }}</p>
+
+  <app-loading [show]="loading" labelKey="common.loading"></app-loading>
+  <app-error-banner [key]="errorKey" [error]="lastError"></app-error-banner>
+
+  <div class="row" style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
+    <mat-form-field appearance="fill">
+      <mat-label>{{ 'adminUsersRoles.userId' | translate }}</mat-label>
+      <input matInput [formControl]="userId" />
+    </mat-form-field>
+    <button mat-raised-button color="primary" (click)="promote()" [disabled]="userId.invalid || loading">
+      <mat-icon>arrow_circle_up</mat-icon>
+      {{ 'adminUsersRoles.actions.promote' | translate }}
+    </button>
+    <button mat-raised-button color="warn" (click)="demote()" [disabled]="userId.invalid || loading">
+      <mat-icon>arrow_circle_down</mat-icon>
+      {{ 'adminUsersRoles.actions.demote' | translate }}
+    </button>
+  </div>
+
+  <p class="muted" style="margin-top:12px;">{{ 'adminUsersRoles.note' | translate }}</p>
+</div>
+
+

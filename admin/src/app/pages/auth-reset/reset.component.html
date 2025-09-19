@@ -1,0 +1,11 @@
+<div class="panel" style="max-width:520px; margin:48px auto;">
+  <h2>Reset Password</h2>
+  <p class="muted">Enter new password for your account.</p>
+  <div class="row"><input [(ngModel)]="password" type="password" placeholder="New password" /></div>
+  <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
+    <button (click)="submit()" [disabled]="loading">{{ loading ? 'Resetting…' : 'Reset Password' }}</button>
+    <span class="muted" *ngIf="msg">{{ msg }}</span>
+    <span class="muted" *ngIf="err">{{ err }}</span>
+  </div>
+</div>
+

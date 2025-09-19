@@ -1,0 +1,31 @@
+<div class="panel">
+  <h2>My Cart</h2>
+  <p *ngIf="loading" class="muted">Loading…</p>
+  <p *ngIf="error" class="muted">{{ error }}</p>
+  <div *ngIf="cart">
+    <table>
+      <thead>
+        <tr><th>Product</th><th>Price</th><th>Qty</th><th>Line</th><th></th></tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let it of cart.items">
+          <td>{{ it.name }}</td>
+          <td>{{ it.price | number:'1.2-2' }} {{ it.currency }}</td>
+          <td>
+            <button (click)="dec(it.product, it.quantity)">-</button>
+            <span style="margin:0 8px">{{ it.quantity }}</span>
+            <button (click)="inc(it.product, it.quantity)">+</button>
+          </td>
+          <td>{{ (it.price * it.quantity) | number:'1.2-2' }} {{ it.currency }}</td>
+          <td><button class="danger" (click)="remove(it.product)">Remove</button></td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="display:flex; gap:8px; align-items:center; margin-top:12px;">
+      <strong>Subtotal:</strong> {{ cart.subtotal | number:'1.2-2' }} {{ cart.currency }}
+      <span class="spacer"></span>
+      <button class="danger" (click)="clear()">Clear Cart</button>
+    </div>
+  </div>
+</div>
+

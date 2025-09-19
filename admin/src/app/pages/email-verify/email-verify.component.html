@@ -1,0 +1,7 @@
+<div class="panel" style="max-width:520px; margin:48px auto;">
+  <h2>Email Verification</h2>
+  <p *ngIf="loading" class="muted">Verifying…</p>
+  <p *ngIf="msg" class="muted">{{ msg }}</p>
+  <p *ngIf="err" class="muted">{{ err }}</p>
+</div>
+

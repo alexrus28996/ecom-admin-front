@@ -1,0 +1,84 @@
+<ng-container *ngIf="!loading; else dashboardLoading">
+  <div class="dashboard-grid">
+    <section class="dashboard-header">
+      <div class="header-text">
+        <h1>{{ 'dashboard.title' | translate }}</h1>
+        <p>{{ 'dashboard.subtitle' | translate }}</p>
+      </div>
+      <button mat-stroked-button color="accent" (click)="refresh()">
+        <mat-icon>refresh</mat-icon>
+        {{ 'dashboard.actions.refresh' | translate }}
+      </button>
+    </section>
+
+    <section class="metric-cards">
+      <mat-card *ngFor="let card of buildCards()" class="metric-card" [ngClass]="card.color">
+        <mat-card-header>
+          <div mat-card-avatar class="metric-icon">
+            <mat-icon>{{ card.icon }}</mat-icon>
+          </div>
+          <mat-card-title>{{ card.value }}</mat-card-title>
+          <mat-card-subtitle>{{ card.titleKey | translate }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content *ngIf="card.hintKey">
+          <p>{{ card.hintKey | translate }}</p>
+        </mat-card-content>
+      </mat-card>
+    </section>
+
+    <section class="health-section" *ngIf="health">
+      <mat-card class="panel">
+        <mat-card-title>{{ 'dashboard.health.title' | translate }}</mat-card-title>
+        <mat-card-content>
+          <div class="health-status" [ngClass]="healthStatusClass()">
+            <mat-icon>{{ healthStatusClass() === 'healthy' ? 'check_circle' : (healthStatusClass() === 'degraded' ? 'warning' : 'error') }}</mat-icon>
+            <div>
+              <h3>{{ ('dashboard.health.status.' + healthStatusClass()) | translate }}</h3>
+              <p *ngIf="health?.name">{{ 'dashboard.health.service' | translate:{ name: health.name } }}</p>
+              <p *ngIf="health?.version">{{ 'dashboard.health.version' | translate:{ version: health.version } }}</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </section>
+
+    <section class="revenue-section" *ngIf="metrics?.revenueLast7Days?.length">
+      <mat-card class="panel">
+        <mat-card-title>{{ 'dashboard.revenue.title' | translate }}</mat-card-title>
+        <mat-card-content>
+          <div class="revenue-list">
+            <div class="revenue-row" *ngFor="let day of metrics?.revenueLast7Days">
+              <span class="muted">{{ day.date | date:'EEE, MMM d' }}</span>
+              <span>
+                {{ day.total | currency:'USD':'symbol':'1.2-2' }}
+              </span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </section>
+
+    <section class="orders-breakdown" *ngIf="metrics?.orders?.byStatus | keyvalue as entries">
+      <mat-card class="panel">
+        <mat-card-title>{{ 'dashboard.orders.title' | translate }}</mat-card-title>
+        <mat-card-content>
+          <div class="status-grid">
+            <div class="status-cell" *ngFor="let status of entries">
+              <span class="status-label">{{ ('dashboard.orders.status.' + status.key) | translate }}</span>
+              <span class="status-value">{{ status.value }}</span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </section>
+  </div>
+
+  <app-error-banner [key]="errorKey"></app-error-banner>
+</ng-container>
+
+<ng-template #dashboardLoading>
+  <div class="dashboard-loading">
+    <mat-progress-spinner diameter="48" mode="indeterminate" color="primary"></mat-progress-spinner>
+    <p>{{ 'dashboard.loading' | translate }}</p>
+  </div>
+</ng-template>

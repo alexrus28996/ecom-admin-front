@@ -1,0 +1,81 @@
+<div class="panel">
+  <section class="header">
+    <div>
+      <h2>{{ 'inventory.title' | translate }}</h2>
+      <p class="muted">{{ 'inventory.subtitle' | translate }}</p>
+    </div>
+  </section>
+
+  <h3>{{ 'inventory.overview.title' | translate }}</h3>
+  <form [formGroup]="invFilters" class="filters" (ngSubmit)="loadInv()">
+    <mat-form-field appearance="fill"><mat-label>{{ 'inventory.filters.product' | translate }}</mat-label><input matInput formControlName="product" /></mat-form-field>
+    <mat-form-field appearance="fill"><mat-label>{{ 'inventory.filters.variant' | translate }}</mat-label><input matInput formControlName="variant" /></mat-form-field>
+    <mat-form-field appearance="fill"><mat-label>{{ 'inventory.filters.location' | translate }}</mat-label><input matInput formControlName="location" /></mat-form-field>
+    <button mat-stroked-button color="primary" type="submit">{{ 'inventory.actions.apply' | translate }}</button>
+  </form>
+  <section class="table-wrapper" style="position:relative;">
+    <app-loading [show]="invLoading" labelKey="common.loading"></app-loading>
+    <table mat-table [dataSource]="inv.items" *ngIf="inv.items?.length; else invEmpty">
+      <ng-container matColumnDef="product"><th mat-header-cell *matHeaderCellDef>{{ 'inventory.table.product' | translate }}</th><td mat-cell *matCellDef="let r">{{ r.product || r.productId }}</td></ng-container>
+      <ng-container matColumnDef="variant"><th mat-header-cell *matHeaderCellDef>{{ 'inventory.table.variant' | translate }}</th><td mat-cell *matCellDef="let r">{{ r.variant || r.variantId || '-' }}</td></ng-container>
+      <ng-container matColumnDef="stock"><th mat-header-cell *matHeaderCellDef>{{ 'inventory.table.stock' | translate }}</th><td mat-cell *matCellDef="let r">{{ r.stock ?? r.quantity ?? 0 }}</td></ng-container>
+      <tr mat-header-row *matHeaderRowDef="['product','variant','stock']"></tr>
+      <tr mat-row *matRowDef="let row; columns: ['product','variant','stock']"></tr>
+    </table>
+    <ng-template #invEmpty><div class="empty-state"><mat-icon>inventory_2</mat-icon><p>{{ 'inventory.overview.empty' | translate }}</p></div></ng-template>
+    <app-error-banner [key]="invErrorKey"></app-error-banner>
+  </section>
+  <mat-paginator [length]="inv.total" [pageIndex]="inv.page" [pageSize]="inv.pageSize" [pageSizeOptions]="[10,25,50,100]" (page)="pageInv($event)" showFirstLastButtons></mat-paginator>
+
+  <h3 style="margin-top:24px;">{{ 'inventory.adjustments.title' | translate }}</h3>
+  <form [formGroup]="adjForm" class="filters" (ngSubmit)="saveAdjustment()">
+    <mat-form-field appearance="fill"><mat-label>{{ 'inventory.adjust.productId' | translate }}</mat-label><input matInput formControlName="productId" /></mat-form-field>
+    <mat-form-field appearance="fill"><mat-label>{{ 'inventory.adjust.variantId' | translate }}</mat-label><input matInput formControlName="variantId" /></mat-form-field>
+    <mat-form-field appearance="fill"><mat-label>{{ 'inventory.adjust.qtyChange' | translate }}</mat-label><input matInput type="number" formControlName="qtyChange" /></mat-form-field>
+    <mat-form-field appearance="fill"><mat-label>{{ 'inventory.adjust.reason' | translate }}</mat-label><input matInput formControlName="reason" /></mat-form-field>
+    <mat-form-field appearance="fill"><mat-label>{{ 'inventory.adjust.note' | translate }}</mat-label><input matInput formControlName="note" /></mat-form-field>
+    <button mat-raised-button color="primary" type="submit" [disabled]="adjSaving">{{ 'inventory.actions.createAdjustment' | translate }}</button>
+  </form>
+
+  <form [formGroup]="adjFilters" class="filters" (ngSubmit)="loadAdj()">
+    <mat-form-field appearance="fill"><mat-label>{{ 'inventory.filters.product' | translate }}</mat-label><input matInput formControlName="product" /></mat-form-field>
+    <mat-form-field appearance="fill"><mat-label>{{ 'inventory.filters.variant' | translate }}</mat-label><input matInput formControlName="variant" /></mat-form-field>
+    <mat-form-field appearance="fill"><mat-label>{{ 'inventory.filters.reason' | translate }}</mat-label><input matInput formControlName="reason" /></mat-form-field>
+    <button mat-stroked-button color="primary" type="submit">{{ 'inventory.actions.apply' | translate }}</button>
+  </form>
+  <section class="table-wrapper" style="position:relative;">
+    <app-loading [show]="adjLoading" labelKey="common.loading"></app-loading>
+    <table mat-table [dataSource]="adj.items" *ngIf="adj.items?.length; else adjEmpty">
+      <ng-container matColumnDef="time"><th mat-header-cell *matHeaderCellDef>{{ 'inventory.adjust.table.time' | translate }}</th><td mat-cell *matCellDef="let r">{{ r.time || r.createdAt | date:'short' }}</td></ng-container>
+      <ng-container matColumnDef="product"><th mat-header-cell *matHeaderCellDef>{{ 'inventory.table.product' | translate }}</th><td mat-cell *matCellDef="let r">{{ r.product || r.productId }}</td></ng-container>
+      <ng-container matColumnDef="variant"><th mat-header-cell *matHeaderCellDef>{{ 'inventory.table.variant' | translate }}</th><td mat-cell *matCellDef="let r">{{ r.variant || r.variantId || '-' }}</td></ng-container>
+      <ng-container matColumnDef="qty"><th mat-header-cell *matHeaderCellDef>{{ 'inventory.adjust.table.qtyChange' | translate }}</th><td mat-cell *matCellDef="let r">{{ r.qtyChange }}</td></ng-container>
+      <ng-container matColumnDef="reason"><th mat-header-cell *matHeaderCellDef>{{ 'inventory.adjust.table.reason' | translate }}</th><td mat-cell *matCellDef="let r">{{ r.reason || '-' }}</td></ng-container>
+      <ng-container matColumnDef="note"><th mat-header-cell *matHeaderCellDef>{{ 'inventory.adjust.table.note' | translate }}</th><td mat-cell *matCellDef="let r">{{ r.note || '-' }}</td></ng-container>
+      <tr mat-header-row *matHeaderRowDef="['time','product','variant','qty','reason','note']"></tr>
+      <tr mat-row *matRowDef="let row; columns: ['time','product','variant','qty','reason','note']"></tr>
+    </table>
+    <ng-template #adjEmpty><div class="empty-state"><mat-icon>list_alt</mat-icon><p>{{ 'inventory.adjustments.empty' | translate }}</p></div></ng-template>
+    <app-error-banner [key]="adjErrorKey"></app-error-banner>
+  </section>
+  <mat-paginator [length]="adj.total" [pageIndex]="adj.page" [pageSize]="adj.pageSize" [pageSizeOptions]="[10,25,50,100]" (page)="pageAdj($event)" showFirstLastButtons></mat-paginator>
+
+  <h3 style="margin-top:24px;">{{ 'inventory.low.title' | translate }}</h3>
+  <form [formGroup]="lowFilters" class="filters" (ngSubmit)="loadLow()">
+    <mat-form-field appearance="fill"><mat-label>{{ 'inventory.filters.threshold' | translate }}</mat-label><input matInput type="number" min="0" formControlName="threshold" /></mat-form-field>
+    <button mat-stroked-button color="primary" type="submit">{{ 'inventory.actions.apply' | translate }}</button>
+  </form>
+  <section class="table-wrapper" style="position:relative;">
+    <app-loading [show]="lowLoading" labelKey="common.loading"></app-loading>
+    <table mat-table [dataSource]="low.items" *ngIf="low.items?.length; else lowEmpty">
+      <ng-container matColumnDef="product"><th mat-header-cell *matHeaderCellDef>{{ 'inventory.table.product' | translate }}</th><td mat-cell *matCellDef="let r">{{ r.product || r.productId }}</td></ng-container>
+      <ng-container matColumnDef="variant"><th mat-header-cell *matHeaderCellDef>{{ 'inventory.table.variant' | translate }}</th><td mat-cell *matCellDef="let r">{{ r.variant || r.variantId || '-' }}</td></ng-container>
+      <ng-container matColumnDef="stock"><th mat-header-cell *matHeaderCellDef>{{ 'inventory.table.stock' | translate }}</th><td mat-cell *matCellDef="let r">{{ r.stock ?? r.quantity ?? 0 }}</td></ng-container>
+      <tr mat-header-row *matHeaderRowDef="['product','variant','stock']"></tr>
+      <tr mat-row *matRowDef="let row; columns: ['product','variant','stock']"></tr>
+    </table>
+    <ng-template #lowEmpty><div class="empty-state"><mat-icon>report</mat-icon><p>{{ 'inventory.low.empty' | translate }}</p></div></ng-template>
+    <app-error-banner [key]="lowErrorKey"></app-error-banner>
+  </section>
+  <mat-paginator [length]="low.total" [pageIndex]="low.page" [pageSize]="low.pageSize" [pageSizeOptions]="[10,25,50,100]" (page)="pageLow($event)" showFirstLastButtons></mat-paginator>
+</div>

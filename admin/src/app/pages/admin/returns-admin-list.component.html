@@ -1,0 +1,111 @@
+<div class="panel returns-panel">
+  <section class="header">
+    <div>
+      <h2>{{ 'returns.list.title' | translate }}</h2>
+      <p class="muted">{{ 'returns.list.subtitle' | translate }}</p>
+    </div>
+    <form [formGroup]="filterForm" (ngSubmit)="onStatusChange()" class="filters" novalidate>
+      <mat-form-field appearance="fill">
+        <mat-label>{{ 'returns.list.filters.status.label' | translate }}</mat-label>
+        <mat-select formControlName="status" (selectionChange)="onStatusChange()">
+          <mat-option value="">{{ 'returns.list.filters.status.any' | translate }}</mat-option>
+          <mat-option value="requested">{{ 'returns.status.requested' | translate }}</mat-option>
+          <mat-option value="approved">{{ 'returns.status.approved' | translate }}</mat-option>
+          <mat-option value="rejected">{{ 'returns.status.rejected' | translate }}</mat-option>
+          <mat-option value="refunded">{{ 'returns.status.refunded' | translate }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </form>
+  </section>
+
+  <section class="table-wrapper" style="position:relative;">
+    <app-loading [show]="loading" labelKey="common.loading"></app-loading>
+
+    <table mat-table [dataSource]="data" *ngIf="data?.length; else empty" (matRowClick)="open($event)">
+      <ng-container matColumnDef="order">
+        <th mat-header-cell *matHeaderCellDef>{{ 'returns.list.table.order' | translate }}</th>
+        <td mat-cell *matCellDef="let r">{{ r.order || r.orderId }}</td>
+      </ng-container>
+      <ng-container matColumnDef="amount">
+        <th mat-header-cell *matHeaderCellDef>{{ 'returns.list.table.amount' | translate }}</th>
+        <td mat-cell *matCellDef="let r">{{ r.amount | currency:(r.currency || 'USD'):'symbol':'1.2-2' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>{{ 'returns.list.table.status' | translate }}</th>
+        <td mat-cell *matCellDef="let r">
+          <span class="tag" [ngClass]="r.status">
+            {{ ('returns.status.' + (r.status || 'requested')) | translate }}
+          </span>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="requestedAt">
+        <th mat-header-cell *matHeaderCellDef>{{ 'returns.list.table.requestedAt' | translate }}</th>
+        <td mat-cell *matCellDef="let r">{{ r.createdAt | date:'short' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>{{ 'returns.list.table.actions' | translate }}</th>
+        <td mat-cell *matCellDef="let r">
+          <button mat-button color="primary" (click)="approve(r)" *ngIf="r.status==='requested'" [disabled]="loading">
+            <mat-icon>check</mat-icon>
+            {{ 'returns.list.actions.approve' | translate }}
+          </button>
+          <button mat-button color="warn" (click)="reject(r)" *ngIf="r.status==='requested'" [disabled]="loading">
+            <mat-icon>close</mat-icon>
+            {{ 'returns.list.actions.reject' | translate }}
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayed"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayed" (click)="open(row)"></tr>
+    </table>
+
+    <ng-template #empty>
+      <div class="empty-state">
+        <mat-icon>assignment_return</mat-icon>
+        <p>{{ 'returns.list.empty' | translate }}</p>
+      </div>
+    </ng-template>
+  </section>
+
+  <mat-drawer-container autosize hasBackdrop *ngIf="selected">
+    <mat-drawer mode="over" position="end" opened>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <h3 style="margin:0;">{{ 'returns.list.title' | translate }}</h3>
+        <button mat-icon-button (click)="close()"><mat-icon>close</mat-icon></button>
+      </div>
+      <div class="muted" style="margin-top:4px;">ID: {{ selected._id || selected.id }}</div>
+      <div style="margin-top:12px; display:grid; gap:8px;">
+        <div><strong>{{ 'returns.list.table.order' | translate }}:</strong> {{ selected.order || selected.orderId }}</div>
+        <div><strong>{{ 'returns.list.table.amount' | translate }}:</strong> {{ selected.amount | currency:(selected.currency || 'USD'):'symbol':'1.2-2' }}</div>
+        <div><strong>{{ 'returns.list.table.status' | translate }}:</strong> {{ ('returns.status.' + (selected.status || 'requested')) | translate }}</div>
+        <div *ngIf="selected.reason"><strong>Reason:</strong> {{ selected.reason }}</div>
+        <div *ngIf="selected.note"><strong>Note:</strong> {{ selected.note }}</div>
+        <div *ngIf="selected.createdAt"><strong>{{ 'returns.list.table.requestedAt' | translate }}:</strong> {{ selected.createdAt | date:'short' }}</div>
+      </div>
+      <div style="margin-top:16px; display:flex; gap:8px;">
+        <button mat-raised-button color="primary" (click)="approve(selected)" *ngIf="selected.status==='requested'" [disabled]="loading">
+          <mat-icon>check</mat-icon>
+          {{ 'returns.list.actions.approve' | translate }}
+        </button>
+        <button mat-raised-button color="warn" (click)="reject(selected)" *ngIf="selected.status==='requested'" [disabled]="loading">
+          <mat-icon>close</mat-icon>
+          {{ 'returns.list.actions.reject' | translate }}
+        </button>
+      </div>
+    </mat-drawer>
+  </mat-drawer-container>
+
+  <section *ngIf="total > 0">
+    <mat-paginator
+      [length]="total"
+      [pageIndex]="page"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="pageSizes"
+      (page)="onPage($event)"
+      showFirstLastButtons
+    ></mat-paginator>
+  </section>
+
+  <app-error-banner [key]="errorKey" [error]="lastError"></app-error-banner>
+</div>

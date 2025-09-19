@@ -1,0 +1,12 @@
+<div class="panel" style="text-align:center; padding:32px;">
+  <mat-icon color="warn" style="font-size:48px; width:48px; height:48px;">block</mat-icon>
+  <h2>{{ 'denied.title' | translate }}</h2>
+  <p class="muted">{{ 'denied.message' | translate }}</p>
+  <div style="margin-top:16px;">
+    <button mat-raised-button color="primary" (click)="goHome()">
+      <mat-icon>home</mat-icon>
+      {{ 'denied.actions.home' | translate }}
+    </button>
+  </div>
+</div>
+

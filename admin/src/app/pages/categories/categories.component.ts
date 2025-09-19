@@ -1,0 +1,236 @@
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { UntypedFormArray, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
+import { PageEvent } from '@angular/material/paginator';
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+import { TranslateService } from '@ngx-translate/core';
+import { AdminService } from '../../services/admin.service';
+import { ToastService } from '../../core/toast.service';
+import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
+
+interface Category { _id: string; name: string; slug?: string; description?: string; parent?: string | null; }
+interface Paginated<T> { items: T[]; total: number; page: number; pages: number; }
+
+@Component({ selector: 'app-categories', templateUrl: './categories.component.html', styleUrls: ['./categories.component.scss'], changeDetection: ChangeDetectionStrategy.OnPush })
+export class CategoriesComponent implements OnInit {
+  readonly filterForm: UntypedFormGroup = this.fb.group({ q: [''], parent: [''] });
+
+  displayedColumns: string[] = ['name', 'slug', 'parent', 'actions'];
+  dataSource: Category[] = [];
+  total = 0;
+  pageIndex = 0;
+  pageSize = 20;
+  readonly pageSizeOptions = [10, 20, 50];
+
+  loading = false;
+  errorKey: string | null = null;
+  lastError: any = null;
+
+  readonly form: UntypedFormGroup = this.fb.group({
+    id: [''],
+    name: ['', [Validators.required, Validators.minLength(2)]],
+    slug: [''],
+    description: [''],
+    parent: ['']
+  });
+  selectedId: string | null = null;
+  children: Category[] = [];
+
+  parentsOptions: Category[] = [];
+
+  constructor(
+    private readonly fb: UntypedFormBuilder,
+    private readonly admin: AdminService,
+    private readonly dialog: MatDialog,
+    private readonly toast: ToastService,
+    private readonly t: TranslateService,
+    private readonly cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit(): void {
+    this.loadParents();
+    this.loadList();
+  }
+
+  loadParents(): void {
+    this.admin.listCategories({ page: 1, limit: 1000 }).subscribe({
+      next: (res: Paginated<Category>) => {
+        this.parentsOptions = res.items;
+        this.cdr.markForCheck();
+      },
+      error: () => {}
+    });
+  }
+
+  loadList(): void {
+    this.loading = true;
+    this.errorKey = null;
+    this.lastError = null;
+    this.cdr.markForCheck();
+
+    const q = this.filterForm.value.q?.trim();
+    const parent = this.filterForm.value.parent;
+    const parentParam = parent === '' ? '' : parent;
+
+    this.admin
+      .listCategories({ q: q || undefined, page: this.pageIndex + 1, limit: this.pageSize, parent: parentParam as any })
+      .subscribe({
+        next: (res: Paginated<Category>) => {
+          this.dataSource = res.items;
+          this.total = res.total;
+          this.pageIndex = res.page - 1;
+          this.loading = false;
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          this.lastError = err;
+          const code = err?.error?.error?.code;
+          this.errorKey = code ? `errors.backend.${code}` : 'categories.errors.loadFailed';
+          this.loading = false;
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  onSubmit(): void {
+    this.pageIndex = 0;
+    this.loadList();
+  }
+
+  onPageChange(event: PageEvent): void {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
+    this.loadList();
+  }
+
+  startNew(): void {
+    this.form.reset({ id: '', name: '', slug: '', description: '', parent: '' });
+    this.selectedId = null;
+    this.children = [];
+    this.cdr.markForCheck();
+  }
+
+  startEdit(cat: Category): void {
+    this.form.patchValue({ id: cat._id, name: cat.name, slug: cat.slug || '', description: cat.description || '', parent: cat.parent || '' });
+    this.selectedId = cat._id;
+    this.cdr.markForCheck();
+    this.loadChildren();
+  }
+
+  save(): void {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    const v = this.form.getRawValue();
+    const payload = {
+      name: (v.name || '').trim(),
+      slug: v.slug || undefined,
+      description: v.description || undefined,
+      parent: v.parent === '' ? null : v.parent
+    };
+
+    if (v.id) {
+      this.admin.updateCategory(v.id, payload).subscribe({
+        next: () => {
+          this.toast.success(this.t.instant('categories.toasts.saved'));
+          this.loadList();
+          this.loadChildren();
+        },
+        error: () => this.toast.error(this.t.instant('categories.errors.saveFailed'))
+      });
+    } else {
+      this.admin.createCategory(payload).subscribe({
+        next: () => {
+          this.toast.success(this.t.instant('categories.toasts.created'));
+          this.startNew();
+          this.loadList();
+        },
+        error: () => this.toast.error(this.t.instant('categories.errors.createFailed'))
+      });
+    }
+  }
+
+  confirmDelete(cat: Category): void {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '380px',
+      data: {
+        titleKey: 'categories.delete.title',
+        messageKey: 'categories.delete.message',
+        messageParams: { name: cat.name },
+        confirmKey: 'categories.delete.confirm'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((ok) => {
+      if (ok) {
+        this.remove(cat);
+      }
+    });
+  }
+
+  private remove(cat: Category): void {
+    this.loading = true;
+    this.errorKey = null;
+    this.lastError = null;
+    this.cdr.markForCheck();
+
+    this.admin.deleteCategory(cat._id).subscribe({
+      next: () => {
+        this.toast.success(this.t.instant('categories.toasts.deleted'));
+        this.loadList();
+        if (this.selectedId === cat._id) {
+          this.startNew();
+        }
+      },
+      error: (err) => {
+        const code = err?.error?.error?.code;
+        this.errorKey = code ? `errors.backend.${code}` : 'categories.errors.deleteFailed';
+        this.lastError = err;
+        this.loading = false;
+        this.toast.error(this.t.instant('categories.errors.deleteFailed'));
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  loadChildren(): void {
+    if (!this.selectedId) {
+      this.children = [];
+      return;
+    }
+
+    this.admin.listChildren(this.selectedId, { page: 1, limit: 1000 }).subscribe({
+      next: (res: Paginated<Category>) => {
+        this.children = res.items || [];
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.children = [];
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  dropChild(event: CdkDragDrop<Category[]>): void {
+    moveItemInArray(this.children, event.previousIndex, event.currentIndex);
+    this.cdr.markForCheck();
+  }
+
+  saveOrder(): void {
+    if (!this.selectedId) {
+      return;
+    }
+
+    const ids = this.children.map((c) => c._id);
+    this.admin.reorderChildren(this.selectedId, ids).subscribe({
+      next: (res: any) => {
+        this.toast.success(this.t.instant('categories.toasts.orderSaved'));
+        this.children = res.items;
+        this.cdr.markForCheck();
+      },
+      error: () => this.toast.error(this.t.instant('categories.errors.reorderFailed'))
+    });
+  }
+}

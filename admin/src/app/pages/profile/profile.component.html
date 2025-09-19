@@ -1,0 +1,45 @@
+﻿<div class="panel">
+  <h2>{{ 'profile.title' | translate }}</h2>
+  <div *ngIf="auth.user as u" class="muted">{{ u.email }} — {{ 'profile.roles' | translate }}: {{ u.roles.join(', ') }}</div>
+
+  <h3 style="margin-top:16px;">{{ 'profile.sections.name' | translate }}</h3>
+  <div class="row">
+    <mat-form-field appearance="fill"><mat-label>{{ 'profile.name.label' | translate }}</mat-label><input matInput [formControl]="nameForm.controls.name" [placeholder]="'profile.name.placeholder' | translate" /></mat-form-field>
+    <button mat-raised-button color="primary" (click)="saveName()" [disabled]="loading">{{ 'profile.actions.save' | translate }}</button>
+  </div>
+
+  <h3 style="margin-top:16px;">{{ 'profile.sections.password' | translate }}</h3>
+  <div class="row">
+    <mat-form-field appearance="fill"><mat-label>{{ 'profile.password.current' | translate }}</mat-label><input matInput type="password" [formControl]="passForm.controls.currentPassword" /></mat-form-field>
+    <mat-form-field appearance="fill"><mat-label>{{ 'profile.password.new' | translate }}</mat-label><input matInput type="password" [formControl]="passForm.controls.newPassword" /></mat-form-field>
+    <button mat-raised-button color="primary" (click)="changePassword()" [disabled]="loading">{{ 'profile.actions.change' | translate }}</button>
+  </div>
+
+  <h3 style="margin-top:16px;">{{ 'profile.sections.email' | translate }}</h3>
+  <div class="row">
+    <button mat-stroked-button color="primary" (click)="requestVerify()" [disabled]="loading">{{ 'profile.email.verify' | translate }}</button>
+  </div>
+  <div class="row" style="margin-top:8px;">
+    <mat-form-field appearance="fill"><mat-label>{{ 'profile.email.new' | translate }}</mat-label><input matInput type="email" [formControl]="emailForm.controls.newEmail" /></mat-form-field>
+    <button mat-raised-button color="primary" (click)="requestEmailChange()" [disabled]="loading">{{ 'profile.email.requestChange' | translate }}</button>
+  </div>
+
+  <h3 style="margin-top:16px;">{{ 'profile.sections.preferences' | translate }}</h3>
+  <div class="row" style="display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
+    <mat-form-field appearance="fill">
+      <mat-label>{{ 'profile.prefs.locale' | translate }}</mat-label>
+      <mat-select [formControl]="prefsForm.controls.locale">
+        <mat-option value="en">English</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-slide-toggle [formControl]="(prefsForm.get('notifications.email'))">{{ 'profile.prefs.notifications.email' | translate }}</mat-slide-toggle>
+    <mat-slide-toggle [formControl]="(prefsForm.get('notifications.sms'))">{{ 'profile.prefs.notifications.sms' | translate }}</mat-slide-toggle>
+    <mat-slide-toggle [formControl]="(prefsForm.get('notifications.push'))">{{ 'profile.prefs.notifications.push' | translate }}</mat-slide-toggle>
+    <button mat-raised-button color="primary" (click)="savePrefs()" [disabled]="prefsLoading">{{ 'profile.actions.save' | translate }}</button>
+  </div>
+
+  <div style="margin-top:12px;">
+    <span class="muted" *ngIf="msg">{{ msg }}</span>
+    <span class="muted" *ngIf="err">{{ err }}</span>
+  </div>
+</div>

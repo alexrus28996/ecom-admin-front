@@ -1,0 +1,6 @@
+:host { display: block; }
+
+.filters { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin: 8px 0; }
+.table-wrapper { position: relative; }
+.empty-state { text-align: center; padding: 24px 0; color: var(--app-text-muted); }
+
