@@ -11,22 +11,8 @@ Legend
 
 ## Execution Plan (Next Up)
 1. Establish Angular Material baseline: configure theme palette, typography, and responsive layout shell (app toolbar + sidenav) to support Material-first UI. [done]
-<<<<<<< ours
-<<<<<<< ours
-2. Wire localization scaffolding: ensure i18n module loads, seed translation files, and replace static strings in shell/auth views. [done]
-<<<<<<< ours
-3. Implement RBAC-aware navigation: use `/api/auth/me` roles to drive menu visibility, protect routes, and surface 403 redirect messaging. [started: 403 handling in interceptor + toasts]
-=======
-3. Implement RBAC-aware navigation: use `/api/auth/me` roles to drive menu visibility, protect routes, and surface 403 redirect messaging. [done]
->>>>>>> theirs
-=======
-2. Wire localization scaffolding: ensure i18n module loads, seed translation files, and replace static strings in shell/auth views.
-3. Implement RBAC-aware navigation: use `/api/auth/me` roles to drive menu visibility, protect routes, and surface 403 redirect messaging. [started: 403 handling in interceptor + toasts]
->>>>>>> theirs
-=======
 2. Wire localization scaffolding: ensure i18n module loads, seed translation files, and replace static strings in shell/auth views. [done]
 3. Implement RBAC-aware navigation: use `/api/auth/me` roles to drive menu visibility, protect routes, and surface 403 redirect messaging. [done]
->>>>>>> theirs
 4. Build dashboard metrics screen: material cards + charts backed by `GET /api/admin/metrics` and `GET /health`, including loading and empty states.
 5. Ship shared UI primitives: confirmation dialog, error banner, loading indicators packaged for reuse across product/order/returns flows. [confirm + error banner shipped]
 6. Begin admin returns console: table + detail drawer powered by `/api/admin/returns` and approve/reject endpoints. [list + approve/reject shipped]
