@@ -74,13 +74,13 @@
         <h3 style="margin:0;">{{ 'returns.list.title' | translate }}</h3>
         <button mat-icon-button (click)="close()"><mat-icon>close</mat-icon></button>
       </div>
-      <div class="muted" style="margin-top:4px;">ID: {{ selected._id || selected.id }}</div>
+      <div class="muted" style="margin-top:4px;">{{ 'returns.list.detail.id' | translate }}: {{ selected._id || selected.id }}</div>
       <div style="margin-top:12px; display:grid; gap:8px;">
         <div><strong>{{ 'returns.list.table.order' | translate }}:</strong> {{ selected.order || selected.orderId }}</div>
         <div><strong>{{ 'returns.list.table.amount' | translate }}:</strong> {{ selected.amount | currency:(selected.currency || 'USD'):'symbol':'1.2-2' }}</div>
         <div><strong>{{ 'returns.list.table.status' | translate }}:</strong> {{ ('returns.status.' + (selected.status || 'requested')) | translate }}</div>
-        <div *ngIf="selected.reason"><strong>Reason:</strong> {{ selected.reason }}</div>
-        <div *ngIf="selected.note"><strong>Note:</strong> {{ selected.note }}</div>
+        <div *ngIf="selected.reason"><strong>{{ 'returns.list.detail.reason' | translate }}:</strong> {{ selected.reason }}</div>
+        <div *ngIf="selected.note"><strong>{{ 'returns.list.detail.note' | translate }}:</strong> {{ selected.note }}</div>
         <div *ngIf="selected.createdAt"><strong>{{ 'returns.list.table.requestedAt' | translate }}:</strong> {{ selected.createdAt | date:'short' }}</div>
       </div>
       <div style="margin-top:16px; display:flex; gap:8px;">

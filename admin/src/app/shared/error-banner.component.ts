@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-error-banner',
   template: `
-    <div class="app-error-banner" *ngIf="resolvedKey() as k">
+    <div class="app-error-banner" *ngIf="resolved() as ctx">
       <mat-icon [color]="color">{{ icon }}</mat-icon>
-      <span>{{ k | translate }}</span>
+      <span>{{ ctx.key | translate: ctx.params }}</span>
     </div>
   `,
   styles: [
@@ -29,11 +30,26 @@ export class ErrorBannerComponent {
   @Input() icon: string = 'error';
   @Input() color: 'primary' | 'accent' | 'warn' = 'warn';
 
-  resolvedKey(): string | null {
-    if (this.key) return this.key;
+  constructor(private readonly translate: TranslateService) {}
+
+  resolved(): { key: string; params?: Record<string, unknown> } | null {
+    if (this.key) {
+      return { key: this.key };
+    }
+
     const code = this.error?.error?.error?.code;
-    if (code) return `errors.backend.${code}`;
-    return null;
+    if (!code) {
+      return null;
+    }
+
+    const backendKey = `errors.backend.${code}`;
+    const translated = this.translate.instant(backendKey);
+
+    if (translated && translated !== backendKey) {
+      return { key: backendKey };
+    }
+
+    return { key: 'errors.backend.default', params: { code } };
   }
 }
 
