@@ -1,0 +1,50 @@
+.variants-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+  font-weight: 500;
+}
+
+.variants-list {
+  display: grid;
+  gap: 16px;
+}
+
+.variant-card {
+  display: block;
+}
+
+.variant-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  align-items: center;
+}
+
+.variant-attributes {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.variant-attributes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.variant-attribute-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.variant-actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}

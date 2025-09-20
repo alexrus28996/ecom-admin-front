@@ -27,6 +27,7 @@ export class AppComponent implements OnInit {
   readonly primaryNav: ShellNavItem[] = [
     { labelKey: 'shell.nav.dashboard', icon: 'dashboard', route: '/dashboard' },
     { labelKey: 'shell.nav.products', icon: 'inventory_2', route: '/products' },
+    { labelKey: 'shell.nav.addresses', icon: 'location_on', route: '/addresses' },
     { labelKey: 'shell.nav.cart', icon: 'shopping_cart', route: '/cart' },
     { labelKey: 'shell.nav.orders', icon: 'assignment', route: '/orders' }
   ];

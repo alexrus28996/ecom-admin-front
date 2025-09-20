@@ -14,6 +14,7 @@ import { LoginComponent } from './pages/login/login.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { ProductsListComponent } from './pages/products/products-list.component';
 import { ProductFormComponent } from './pages/products/product-form.component';
+import { ProductVariantsDialogComponent } from './pages/products/product-variants-dialog.component';
 import { AdminUsersComponent } from './pages/admin/admin-users.component';
 import { AdminUsersListComponent } from './pages/admin/users-list.component';
 import { AdminOrdersListComponent } from './pages/admin/orders-admin-list.component';
@@ -21,6 +22,7 @@ import { AdminOrderDetailComponent } from './pages/admin/order-admin-detail.comp
 import { AdminReturnsListComponent } from './pages/admin/returns-admin-list.component';
 import { AdminInventoryComponent } from './pages/admin/inventory-admin.component';
 import { CategoriesComponent } from './pages/categories/categories.component';
+import { AddressManagementComponent, AddressFormDialogComponent } from './pages/addresses/address-management.component';
 import { RegisterComponent } from './pages/register/register.component';
 import { CartComponent } from './pages/cart/cart.component';
 import { OrdersListComponent } from './pages/orders/orders-list.component';
@@ -50,6 +52,7 @@ export function translateHttpLoaderFactory(http: HttpClient) {
     DashboardComponent,
     ProductsListComponent,
     ProductFormComponent,
+    ProductVariantsDialogComponent,
     CartComponent,
     OrdersListComponent,
     OrderDetailComponent,
@@ -68,7 +71,9 @@ export function translateHttpLoaderFactory(http: HttpClient) {
     AdminInventoryComponent,
     ErrorBannerComponent,
     LoadingComponent,
-    AccessDeniedComponent
+    AccessDeniedComponent,
+    AddressManagementComponent,
+    AddressFormDialogComponent
   ],
   imports: [
     BrowserModule,

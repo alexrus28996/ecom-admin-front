@@ -1,0 +1,82 @@
+<h2 mat-dialog-title>
+  {{ data?.address ? ('addresses.dialog.editTitle' | translate) : ('addresses.dialog.createTitle' | translate) }}
+</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form" class="address-form" novalidate>
+    <div class="form-grid">
+      <mat-form-field appearance="fill">
+        <mat-label>{{ 'addresses.form.type.label' | translate }}</mat-label>
+        <mat-select formControlName="type">
+          <mat-option *ngFor="let option of typeOptions" [value]="option.value">
+            {{ option.labelKey | translate }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>{{ 'addresses.form.name.label' | translate }}</mat-label>
+        <input matInput formControlName="name" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>{{ 'addresses.form.company.label' | translate }}</mat-label>
+        <input matInput formControlName="company" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>{{ 'addresses.form.line1.label' | translate }}</mat-label>
+        <input matInput formControlName="line1" />
+        <mat-error *ngIf="form.get('line1')?.hasError('required')">
+          {{ 'addresses.form.line1.required' | translate }}
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>{{ 'addresses.form.line2.label' | translate }}</mat-label>
+        <input matInput formControlName="line2" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>{{ 'addresses.form.city.label' | translate }}</mat-label>
+        <input matInput formControlName="city" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>{{ 'addresses.form.region.label' | translate }}</mat-label>
+        <input matInput formControlName="region" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>{{ 'addresses.form.postalCode.label' | translate }}</mat-label>
+        <input matInput formControlName="postalCode" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>{{ 'addresses.form.country.label' | translate }}</mat-label>
+        <input matInput formControlName="country" />
+        <mat-error *ngIf="form.get('country')?.hasError('required')">
+          {{ 'addresses.form.country.required' | translate }}
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>{{ 'addresses.form.phone.label' | translate }}</mat-label>
+        <input matInput formControlName="phone" />
+      </mat-form-field>
+    </div>
+
+    <mat-slide-toggle formControlName="isDefault">
+      {{ 'addresses.form.isDefault.label' | translate }}
+    </mat-slide-toggle>
+
+    <app-error-banner [key]="errorKey"></app-error-banner>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()">{{ 'common.actions.cancel' | translate }}</button>
+  <button mat-raised-button color="primary" type="button" (click)="save()" [disabled]="loading">
+    {{ 'addresses.dialog.save' | translate }}
+  </button>
+</mat-dialog-actions>

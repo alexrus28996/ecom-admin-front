@@ -4,7 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { TranslateService } from '@ngx-translate/core';
 
 import { ToastService } from '../../core/toast.service';
-import { CartService, Cart, CartItem, MoneyAmount } from '../../services/cart.service';
+import { CartService, Cart, CartItem, MoneyAmount, SavedCart } from '../../services/cart.service';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
 
 type BackendError = unknown;
@@ -64,6 +64,21 @@ export class CartComponent implements OnInit {
   private cartCurrency = 'USD';
   private readonly cartItemsById = new Map<string, CartItem>();
 
+  readonly saveForm = this.fb.group({
+    name: ['', [Validators.required, Validators.minLength(2)]],
+    description: ['']
+  });
+
+  savedCarts: SavedCart[] = [];
+  savedTotal = 0;
+  savedPageIndex = 0;
+  savedPageSize = 5;
+  readonly savedPageSizeOptions = [5, 10, 20];
+  savedLoading = false;
+  savedErrorKey: string | null = null;
+  savedLastError: BackendError = null;
+  savingCart = false;
+
   constructor(
     private readonly cartSvc: CartService,
     private readonly fb: FormBuilder,
@@ -75,6 +90,7 @@ export class CartComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
+    this.loadSaved();
   }
 
   load(): void {
@@ -236,8 +252,157 @@ export class CartComponent implements OnInit {
     });
   }
 
+  saveCart(): void {
+    if (this.saveForm.invalid || this.savingCart) {
+      this.saveForm.markAllAsTouched();
+      return;
+    }
+
+    const payload = this.saveForm.getRawValue();
+
+    this.savingCart = true;
+    this.savedErrorKey = null;
+    this.savedLastError = null;
+    this.cdr.markForCheck();
+
+    this.cartSvc.saveCurrent({
+      name: payload.name?.trim() || undefined,
+      description: payload.description?.trim() || undefined
+    }).subscribe({
+      next: ({ savedCart }) => {
+        this.savingCart = false;
+        this.toast.success(this.translate.instant('cart.saved.toasts.saved'));
+        this.saveForm.reset({ name: '', description: '' });
+        this.savedCarts = [savedCart, ...this.savedCarts];
+        this.loadSaved();
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.savingCart = false;
+        this.savedLastError = err;
+        const code = err?.error?.error?.code;
+        this.savedErrorKey = code ? `errors.backend.${code}` : 'cart.saved.errors.saveFailed';
+        this.toast.error(this.translate.instant('cart.saved.errors.saveFailed'));
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  onSavedPage(event: any): void {
+    this.savedPageSize = event.pageSize;
+    this.savedPageIndex = event.pageIndex;
+    this.loadSaved();
+  }
+
+  restoreCart(saved: SavedCart): void {
+    if (!saved?._id || this.savedLoading || this.loading) {
+      return;
+    }
+    this.savedLoading = true;
+    this.savedErrorKey = null;
+    this.savedLastError = null;
+    this.cdr.markForCheck();
+
+    this.cartSvc.restoreSaved(saved._id).subscribe({
+      next: ({ cart }) => {
+        this.savedLoading = false;
+        this.updateCart(cart);
+        this.toast.success(this.translate.instant('cart.saved.toasts.restored'));
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.savedLoading = false;
+        this.savedLastError = err;
+        const code = err?.error?.error?.code;
+        this.savedErrorKey = code ? `errors.backend.${code}` : 'cart.saved.errors.restoreFailed';
+        this.toast.error(this.translate.instant('cart.saved.errors.restoreFailed'));
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  confirmDeleteSaved(saved: SavedCart): void {
+    if (!saved?._id) {
+      return;
+    }
+
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      width: '360px',
+      data: {
+        titleKey: 'cart.saved.delete.title',
+        messageKey: 'cart.saved.delete.message',
+        messageParams: { name: saved.name || saved._id },
+        confirmKey: 'cart.saved.delete.confirm'
+      }
+    });
+
+    ref.afterClosed().subscribe((ok) => {
+      if (ok) {
+        this.deleteSaved(saved);
+      }
+    });
+  }
+
   trackById(_: number, item: DisplayCartItem): string {
     return item.id;
+  }
+
+  savedTotalDisplay(saved: SavedCart): DisplayMoney {
+    return this.normalizeMoney(saved.totals?.total, this.cartCurrency);
+  }
+
+  private loadSaved(): void {
+    this.savedLoading = true;
+    this.savedErrorKey = null;
+    this.savedLastError = null;
+    this.cdr.markForCheck();
+
+    this.cartSvc
+      .listSaved({ page: this.savedPageIndex + 1, limit: this.savedPageSize })
+      .subscribe({
+        next: (res) => {
+          this.savedCarts = res.items || [];
+          this.savedTotal = res.total || 0;
+          this.savedPageIndex = (res.page || 1) - 1;
+          this.savedLoading = false;
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          this.savedLastError = err;
+          const code = err?.error?.error?.code;
+          this.savedErrorKey = code ? `errors.backend.${code}` : 'cart.saved.errors.loadFailed';
+          this.savedLoading = false;
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  private deleteSaved(saved: SavedCart): void {
+    if (!saved?._id) {
+      return;
+    }
+
+    this.savedLoading = true;
+    this.savedErrorKey = null;
+    this.savedLastError = null;
+    this.cdr.markForCheck();
+
+    this.cartSvc.deleteSaved(saved._id).subscribe({
+      next: () => {
+        this.toast.success(this.translate.instant('cart.saved.toasts.deleted'));
+        this.savedLoading = false;
+        this.loadSaved();
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.savedLoading = false;
+        this.savedLastError = err;
+        const code = err?.error?.error?.code;
+        this.savedErrorKey = code ? `errors.backend.${code}` : 'cart.saved.errors.deleteFailed';
+        this.toast.error(this.translate.instant('cart.saved.errors.deleteFailed'));
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   private updateCart(cart: Cart): void {

@@ -5,6 +5,7 @@ import { PageEvent } from '@angular/material/paginator';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { TranslateService } from '@ngx-translate/core';
 import { AdminService } from '../../services/admin.service';
+import { CategoryService, Brand } from '../../services/category.service';
 import { ToastService } from '../../core/toast.service';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
 
@@ -38,9 +39,27 @@ export class CategoriesComponent implements OnInit {
 
   parentsOptions: Category[] = [];
 
+  readonly brandFilterForm: UntypedFormGroup = this.fb.group({ q: [''] });
+  readonly brandForm: UntypedFormGroup = this.fb.group({
+    id: [''],
+    name: ['', [Validators.required, Validators.minLength(2)]],
+    slug: ['']
+  });
+
+  brandColumns: string[] = ['name', 'slug', 'actions'];
+  brands: Brand[] = [];
+  brandTotal = 0;
+  brandPageIndex = 0;
+  brandPageSize = 20;
+  readonly brandPageSizeOptions = [10, 20, 50];
+  brandLoading = false;
+  brandErrorKey: string | null = null;
+  brandLastError: any = null;
+
   constructor(
     private readonly fb: UntypedFormBuilder,
     private readonly admin: AdminService,
+    private readonly categoryService: CategoryService,
     private readonly dialog: MatDialog,
     private readonly toast: ToastService,
     private readonly t: TranslateService,
@@ -50,6 +69,7 @@ export class CategoriesComponent implements OnInit {
   ngOnInit(): void {
     this.loadParents();
     this.loadList();
+    this.loadBrands();
   }
 
   loadParents(): void {
@@ -59,6 +79,130 @@ export class CategoriesComponent implements OnInit {
         this.cdr.markForCheck();
       },
       error: () => {}
+    });
+  }
+
+  loadBrands(): void {
+    this.brandLoading = true;
+    this.brandErrorKey = null;
+    this.brandLastError = null;
+    this.cdr.markForCheck();
+
+    const q = this.brandFilterForm.value.q?.trim();
+    this.categoryService
+      .listBrands({ q: q || undefined, page: this.brandPageIndex + 1, limit: this.brandPageSize })
+      .subscribe({
+        next: (res) => {
+          this.brands = res.items || [];
+          this.brandTotal = res.total || 0;
+          this.brandPageIndex = (res.page || 1) - 1;
+          this.brandLoading = false;
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          this.brandLastError = err;
+          const code = err?.error?.error?.code;
+          this.brandErrorKey = code ? `errors.backend.${code}` : 'categories.brands.errors.loadFailed';
+          this.brandLoading = false;
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  onBrandSearch(): void {
+    this.brandPageIndex = 0;
+    this.loadBrands();
+  }
+
+  onBrandPage(event: PageEvent): void {
+    this.brandPageIndex = event.pageIndex;
+    this.brandPageSize = event.pageSize;
+    this.loadBrands();
+  }
+
+  startNewBrand(): void {
+    this.brandForm.reset({ id: '', name: '', slug: '' });
+    this.cdr.markForCheck();
+  }
+
+  startBrandEdit(brand: Brand): void {
+    this.brandForm.patchValue({ id: brand._id, name: brand.name, slug: brand.slug || '' });
+    this.cdr.markForCheck();
+  }
+
+  saveBrand(): void {
+    if (this.brandForm.invalid) {
+      this.brandForm.markAllAsTouched();
+      return;
+    }
+
+    const raw = this.brandForm.getRawValue();
+    const payload = {
+      name: (raw.name || '').trim(),
+      slug: raw.slug?.trim() || undefined
+    };
+
+    if (raw.id) {
+      this.categoryService.updateBrand(raw.id, payload).subscribe({
+        next: () => {
+          this.toast.success(this.t.instant('categories.brands.toasts.updated'));
+          this.loadBrands();
+        },
+        error: () => this.toast.error(this.t.instant('categories.brands.errors.saveFailed'))
+      });
+    } else {
+      this.categoryService.createBrand(payload).subscribe({
+        next: () => {
+          this.toast.success(this.t.instant('categories.brands.toasts.created'));
+          this.startNewBrand();
+          this.loadBrands();
+        },
+        error: () => this.toast.error(this.t.instant('categories.brands.errors.createFailed'))
+      });
+    }
+  }
+
+  confirmDeleteBrand(brand: Brand): void {
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      width: '360px',
+      data: {
+        titleKey: 'categories.brands.delete.title',
+        messageKey: 'categories.brands.delete.message',
+        messageParams: { name: brand.name },
+        confirmKey: 'categories.brands.delete.confirm'
+      }
+    });
+
+    ref.afterClosed().subscribe((ok) => {
+      if (ok) {
+        this.deleteBrand(brand);
+      }
+    });
+  }
+
+  private deleteBrand(brand: Brand): void {
+    if (!brand?._id) {
+      return;
+    }
+
+    this.brandLoading = true;
+    this.brandErrorKey = null;
+    this.brandLastError = null;
+    this.cdr.markForCheck();
+
+    this.categoryService.deleteBrand(brand._id).subscribe({
+      next: () => {
+        this.toast.success(this.t.instant('categories.brands.toasts.deleted'));
+        this.loadBrands();
+      },
+      error: (err) => {
+        this.brandLastError = err;
+        const code = err?.error?.error?.code;
+        this.brandErrorKey = code ? `errors.backend.${code}` : 'categories.brands.errors.deleteFailed';
+        this.brandLoading = false;
+        this.toast.error(this.t.instant('categories.brands.errors.deleteFailed'));
+        this.cdr.markForCheck();
+      }
     });
   }
 

@@ -71,6 +71,17 @@
         <th mat-header-cell *matHeaderCellDef>{{ 'products.list.table.actions' | translate }}</th>
         <td mat-cell *matCellDef="let product">
           <div class="products-row-actions">
+            <button
+              mat-icon-button
+              color="primary"
+              type="button"
+              (click)="manageVariants(product)"
+              *ngIf="auth.isAdmin"
+              [disabled]="loading"
+              matTooltip="{{ 'products.list.actions.manageVariants' | translate }}"
+            >
+              <mat-icon>tune</mat-icon>
+            </button>
             <button mat-icon-button color="primary" [routerLink]="['/products', product._id]" *ngIf="auth.isAdmin" [disabled]="loading" matTooltip="{{ 'products.list.actions.edit' | translate }}">
               <mat-icon>edit</mat-icon>
             </button>

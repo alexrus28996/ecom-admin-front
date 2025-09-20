@@ -1,0 +1,85 @@
+<h2 mat-dialog-title>
+  {{ 'products.variants.title' | translate:{ name: productName } }}
+</h2>
+
+<mat-dialog-content>
+  <app-loading [show]="loading" labelKey="common.loading"></app-loading>
+  <app-error-banner [key]="errorKey" [error]="lastError"></app-error-banner>
+
+  <div class="variants-summary" *ngIf="!loading">
+    <span>{{ 'products.variants.summary.total' | translate:{ count: summary.total } }}</span>
+    <span>{{ 'products.variants.summary.active' | translate:{ count: summary.active } }}</span>
+    <span>{{ 'products.variants.summary.stock' | translate:{ count: summary.stock } }}</span>
+  </div>
+
+  <div class="variants-list" *ngIf="!loading">
+    <mat-card class="variant-card" *ngFor="let variant of variants.controls; let i = index; trackBy: trackByIndex" [formGroup]="variant">
+      <mat-card-header>
+        <mat-card-title>{{ 'products.variants.itemTitle' | translate:{ index: i + 1 } }}</mat-card-title>
+        <button mat-icon-button color="warn" type="button" (click)="removeVariant(i)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="variant-grid">
+          <mat-form-field appearance="fill">
+            <mat-label>{{ 'products.variants.fields.sku' | translate }}</mat-label>
+            <input matInput formControlName="sku" />
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>{{ 'products.variants.fields.stock' | translate }}</mat-label>
+            <input matInput type="number" min="0" formControlName="stock" />
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>{{ 'products.variants.fields.price' | translate }}</mat-label>
+            <input matInput type="number" min="0" step="0.01" formControlName="price" />
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>{{ 'products.variants.fields.priceDelta' | translate }}</mat-label>
+            <input matInput type="number" step="0.01" formControlName="priceDelta" />
+          </mat-form-field>
+          <mat-slide-toggle formControlName="isActive">
+            {{ 'products.variants.fields.isActive' | translate }}
+          </mat-slide-toggle>
+        </div>
+
+        <div class="variant-attributes">
+          <div class="variant-attributes-header">
+            <h4>{{ 'products.variants.fields.attributes' | translate }}</h4>
+            <button mat-stroked-button color="primary" type="button" (click)="addVariantAttribute(i)">
+              <mat-icon>add</mat-icon>
+              {{ 'products.variants.actions.addAttribute' | translate }}
+            </button>
+          </div>
+          <div class="variant-attribute-row" *ngFor="let attr of variantAttributes(i).controls; let j = index" [formGroup]="attr">
+            <mat-form-field appearance="fill">
+              <mat-label>{{ 'products.variants.fields.attributeKey' | translate }}</mat-label>
+              <input matInput formControlName="key" />
+            </mat-form-field>
+            <mat-form-field appearance="fill">
+              <mat-label>{{ 'products.variants.fields.attributeValue' | translate }}</mat-label>
+              <input matInput formControlName="value" />
+            </mat-form-field>
+            <button mat-icon-button color="warn" type="button" (click)="removeVariantAttribute(i, j)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <div class="variant-actions" *ngIf="!loading">
+    <button mat-stroked-button color="primary" type="button" (click)="addVariant()">
+      <mat-icon>add</mat-icon>
+      {{ 'products.variants.actions.addVariant' | translate }}
+    </button>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()">{{ 'common.actions.cancel' | translate }}</button>
+  <button mat-raised-button color="primary" type="button" (click)="save()" [disabled]="saving">
+    {{ 'products.variants.actions.save' | translate }}
+  </button>
+</mat-dialog-actions>

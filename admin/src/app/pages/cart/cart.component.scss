@@ -197,9 +197,35 @@
   font-size: 13px;
 }
 
+.saved-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.saved-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.saved-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.saved-table table {
+  width: 100%;
+}
+
+.saved-name {
+  font-weight: 500;
+}
+
 .cart-actions {
   display: flex;
   justify-content: flex-end;
+  gap: 12px;
 }
 
 .cart-actions button mat-progress-spinner {

@@ -10,14 +10,38 @@
       "confirm": "Confirm"
     }
   },
-  "denied": {
-    "title": "Access denied",
-    "message": "You do not have permission to view this page or perform this action.",
-    "actions": {
-      "home": "Go to dashboard"
-    }
-  },
   "products": {
+    "variants": {
+      "title": "Manage variants for {{ name }}",
+      "itemTitle": "Variant {{ index }}",
+      "summary": {
+        "total": "Variants: {{ count }}",
+        "active": "Active: {{ count }}",
+        "stock": "Variant stock: {{ count }}"
+      },
+      "fields": {
+        "sku": "SKU",
+        "stock": "Stock",
+        "price": "Price",
+        "priceDelta": "Price delta",
+        "isActive": "Active",
+        "attributes": "Attributes",
+        "attributeKey": "Attribute",
+        "attributeValue": "Value"
+      },
+      "actions": {
+        "addVariant": "Add variant",
+        "addAttribute": "Add attribute",
+        "save": "Save variants"
+      },
+      "toasts": {
+        "saved": "Variants updated."
+      },
+      "errors": {
+        "loadFailed": "Unable to load product variants.",
+        "saveFailed": "Unable to save variants."
+      }
+    },
     "list": {
       "title": "Product catalog",
       "subtitle": "Search, review, and manage every product in your store.",
@@ -35,7 +59,8 @@
         "create": "New product",
         "edit": "Edit product",
         "addToCart": "Add to cart",
-        "delete": "Delete product"
+        "delete": "Delete product",
+        "manageVariants": "Manage variants"
       },
       "table": {
         "name": "Product",
@@ -66,6 +91,13 @@
         "addToCart": "Could not add product to the cart.",
         "deleteFailed": "Could not delete the product."
       }
+    }
+  },
+  "denied": {
+    "title": "Access denied",
+    "message": "You do not have permission to view this page or perform this action.",
+    "actions": {
+      "home": "Go to dashboard"
     }
   },
   "adminOrders": {
@@ -171,6 +203,101 @@
       }
     }
   },
+  "addresses": {
+    "title": "Address book",
+    "subtitle": "Manage customer shipping and billing locations.",
+    "filters": {
+      "type": {
+        "label": "Type",
+        "any": "All types",
+        "shipping": "Shipping",
+        "billing": "Billing"
+      }
+    },
+    "actions": {
+      "create": "New address",
+      "edit": "Edit address",
+      "delete": "Delete address",
+      "setDefault": "Set as default"
+    },
+    "table": {
+      "name": "Name",
+      "type": "Type",
+      "location": "Location",
+      "phone": "Phone",
+      "default": "Default",
+      "actions": "Actions"
+    },
+    "types": {
+      "shipping": "Shipping",
+      "billing": "Billing"
+    },
+    "labels": {
+      "default": "Default"
+    },
+    "delete": {
+      "title": "Delete address",
+      "message": "Delete \"{{ name }}\"? This action cannot be undone.",
+      "confirm": "Delete"
+    },
+    "dialog": {
+      "createTitle": "Create address",
+      "editTitle": "Edit address",
+      "save": "Save address"
+    },
+    "form": {
+      "type": {
+        "label": "Address type",
+        "shipping": "Shipping",
+        "billing": "Billing"
+      },
+      "name": {
+        "label": "Recipient name"
+      },
+      "company": {
+        "label": "Company"
+      },
+      "line1": {
+        "label": "Address line 1",
+        "required": "Line 1 is required"
+      },
+      "line2": {
+        "label": "Address line 2"
+      },
+      "city": {
+        "label": "City"
+      },
+      "region": {
+        "label": "State / Region"
+      },
+      "postalCode": {
+        "label": "Postal code"
+      },
+      "country": {
+        "label": "Country",
+        "required": "Country is required"
+      },
+      "phone": {
+        "label": "Phone"
+      },
+      "isDefault": {
+        "label": "Mark as default"
+      }
+    },
+    "toasts": {
+      "created": "Address saved.",
+      "updated": "Address updated.",
+      "deleted": "Address deleted.",
+      "defaultSet": "Default address updated."
+    },
+    "errors": {
+      "loadFailed": "Unable to load addresses.",
+      "saveFailed": "Unable to save the address.",
+      "deleteFailed": "Unable to delete the address.",
+      "defaultFailed": "Unable to set the default address."
+    },
+    "empty": "No addresses yet."
+  },
   "profile": {
     "title": "My Profile",
     "roles": "Roles",
@@ -260,6 +387,52 @@
       },
       "applyFailed": "We couldn't apply that coupon.",
       "removeFailed": "We couldn't remove the coupon."
+    },
+    "saved": {
+      "title": "Saved carts",
+      "subtitle": "Store and reuse cart configurations for later.",
+      "form": {
+        "name": {
+          "label": "Cart name",
+          "placeholder": "Wholesale order",
+          "required": "Cart name is required.",
+          "minLength": "Cart name must be at least {{ min }} characters."
+        },
+        "description": {
+          "label": "Description"
+        },
+        "actions": {
+          "save": "Save cart"
+        }
+      },
+      "table": {
+        "name": "Name",
+        "items": "Items",
+        "total": "Total",
+        "actions": "Actions",
+        "unnamed": "Untitled cart"
+      },
+      "actions": {
+        "restore": "Load cart",
+        "delete": "Delete saved cart"
+      },
+      "delete": {
+        "title": "Delete saved cart",
+        "message": "Delete \"{{ name }}\"? This cannot be undone.",
+        "confirm": "Delete"
+      },
+      "empty": "No saved carts yet.",
+      "toasts": {
+        "saved": "Cart saved.",
+        "restored": "Cart restored.",
+        "deleted": "Saved cart deleted."
+      },
+      "errors": {
+        "loadFailed": "Unable to load saved carts.",
+        "saveFailed": "Unable to save the cart.",
+        "restoreFailed": "Unable to restore the saved cart.",
+        "deleteFailed": "Unable to delete the saved cart."
+      }
     },
     "clearConfirm": {
       "title": "Clear cart?",
@@ -680,6 +853,7 @@
     "nav": {
       "dashboard": "Dashboard",
       "products": "Products",
+      "addresses": "Addresses",
       "cart": "Cart",
       "orders": "Orders",
       "profile": "Profile",
@@ -865,6 +1039,67 @@
       "title": "Child categories",
       "hint": "Drag and drop to reorder child categories.",
       "save": "Save order"
+    },
+    "tabs": {
+      "categories": "Categories",
+      "brands": "Brands"
+    },
+    "brands": {
+      "title": "Brands",
+      "subtitle": "Manage brand catalog for quick tagging.",
+      "filters": {
+        "search": {
+          "label": "Search brands",
+          "placeholder": "Search brands"
+        }
+      },
+      "list": {
+        "title": "Brand list"
+      },
+      "table": {
+        "name": "Name",
+        "slug": "Slug",
+        "actions": "Actions"
+      },
+      "actions": {
+        "edit": "Edit",
+        "delete": "Delete",
+        "clear": "Clear",
+        "save": "Save brand"
+      },
+      "create": {
+        "title": "Create brand"
+      },
+      "edit": {
+        "title": "Edit brand"
+      },
+      "form": {
+        "name": {
+          "label": "Brand name",
+          "required": "Name is required.",
+          "minLength": "Name must be at least {{ min }} characters."
+        },
+        "slug": {
+          "label": "Slug"
+        }
+      },
+      "delete": {
+        "title": "Delete brand",
+        "message": "Delete \"{{ name }}\"? This action cannot be undone.",
+        "confirm": "Delete"
+      },
+      "toasts": {
+        "created": "Brand created.",
+        "updated": "Brand updated.",
+        "deleted": "Brand deleted."
+      },
+      "errors": {
+        "loadFailed": "Unable to load brands.",
+        "createFailed": "Unable to create brand.",
+        "saveFailed": "Unable to update brand.",
+        "deleteFailed": "Unable to delete brand."
+      },
+      "empty": "No brands found."
     },
     "empty": "No categories found."
   },

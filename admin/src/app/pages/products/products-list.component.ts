@@ -9,6 +9,7 @@ import { AuthService } from '../../core/auth.service';
 import { ToastService } from '../../core/toast.service';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
 import { AdminService } from '../../services/admin.service';
+import { ProductVariantsDialogComponent } from './product-variants-dialog.component';
 
 interface CategoryOption {
   id: string;
@@ -138,6 +139,25 @@ export class ProductsListComponent implements OnInit {
         this.delete(product);
       }
     });
+  }
+
+  manageVariants(product: ProductSummary): void {
+    if (!product?._id) {
+      return;
+    }
+
+    this.dialog
+      .open(ProductVariantsDialogComponent, {
+        width: '800px',
+        maxHeight: '90vh',
+        data: { id: product._id }
+      })
+      .afterClosed()
+      .subscribe((changed) => {
+        if (changed) {
+          this.load();
+        }
+      });
   }
 
   private delete(product: ProductSummary): void {

@@ -20,6 +20,7 @@ import { ResetComponent } from './pages/auth-reset/reset.component';
 import { AccessDeniedComponent } from './pages/denied/access-denied.component';
 import { AdminInventoryComponent } from './pages/admin/inventory-admin.component';
 import { EmailVerifyComponent } from './pages/email-verify/email-verify.component';
+import { AddressManagementComponent } from './pages/addresses/address-management.component';
 import { AuthGuard } from './core/auth.guard';
 import { AdminGuard } from './core/admin.guard';
 
@@ -37,6 +38,7 @@ const routes: Routes = [
   { path: 'products/new', component: ProductFormComponent, canActivate: [AuthGuard, AdminGuard] },
   { path: 'products/:id', component: ProductFormComponent, canActivate: [AuthGuard, AdminGuard] },
   { path: 'cart', component: CartComponent, canActivate: [AuthGuard] },
+  { path: 'addresses', component: AddressManagementComponent, canActivate: [AuthGuard] },
   { path: 'orders', component: OrdersListComponent, canActivate: [AuthGuard] },
   { path: 'orders/:id', component: OrderDetailComponent, canActivate: [AuthGuard] },
   { path: 'admin/users', component: AdminUsersListComponent, canActivate: [AuthGuard, AdminGuard] },
