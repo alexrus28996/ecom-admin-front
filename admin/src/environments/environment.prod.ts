@@ -1,5 +1,6 @@
 export const environment = {
   production: true,
-  apiBaseUrl: '/api'
+  // Replace with the production API base URL before deploying
+  apiBaseUrl: 'https://your-production-api.example.com/api'
 };
 
