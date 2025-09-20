@@ -1,0 +1,223 @@
+.cart-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.cart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.cart-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cart-header-text h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.muted {
+  margin: 0;
+  color: var(--app-text-muted);
+}
+
+.cart-body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.cart-grid {
+  display: grid;
+  gap: 24px;
+}
+
+@media (min-width: 960px) {
+  .cart-grid {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+}
+
+.cart-table-container {
+  overflow-x: auto;
+}
+
+.product-cell {
+  display: flex;
+  flex-direction: column;
+}
+
+.product-name {
+  font-weight: 500;
+}
+
+.product-sku {
+  font-size: 12px;
+}
+
+.qty-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qty-value {
+  min-width: 24px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 32px 0;
+  color: var(--app-text-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.empty-state mat-icon {
+  font-size: 42px;
+  width: 42px;
+  height: 42px;
+}
+
+.cart-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.cart-summary { 
+  background: var(--app-surface-elevated);
+  border: 1px solid var(--app-border);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cart-summary h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.cart-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 15px;
+}
+
+.cart-summary-row.total {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.cart-summary-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--app-text-muted);
+}
+
+.cart-summary-meta mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.discount {
+  color: var(--app-success);
+}
+
+.coupon-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.coupon-field {
+  width: 100%;
+}
+
+.coupon-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.coupon-actions button mat-progress-spinner {
+  margin-right: 8px;
+}
+
+.coupon-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.coupon-success {
+  margin: 0;
+  color: var(--app-success);
+}
+
+.coupon-error {
+  margin: 0;
+  color: var(--app-danger);
+}
+
+.coupon-applied {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.coupon-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.coupon-details .muted {
+  font-size: 13px;
+}
+
+.cart-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.cart-actions button mat-progress-spinner {
+  margin-right: 8px;
+}
+
+.cart-actions button mat-icon,
+.coupon-actions button mat-icon {
+  margin-right: 8px;
+}
+
+.cart-actions button mat-progress-spinner,
+.coupon-actions button mat-progress-spinner {
+  width: 18px;
+  height: 18px;
+}
+
+.cart-actions button mat-progress-spinner svg,
+.coupon-actions button mat-progress-spinner svg {
+  stroke: currentColor;
+}

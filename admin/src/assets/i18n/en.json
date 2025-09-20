@@ -246,6 +246,64 @@
                                    "preferencesSaveFailed":  "Unable to save preferences."
                                }
                 },
+    "cart":  {
+                 "title":  "My cart",
+                 "subtitle":  "Review items in your cart before creating an order.",
+                 "actions":  {
+                               "refresh":  "Refresh",
+                               "clear":  "Clear cart",
+                               "increase":  "Increase quantity",
+                               "decrease":  "Decrease quantity",
+                               "remove":  "Remove item"
+                             },
+                 "table":  {
+                              "product":  "Product",
+                              "price":  "Price",
+                              "qty":  "Qty",
+                              "line":  "Line",
+                              "actions":  "Actions",
+                              "unknownProduct":  "Unknown product"
+                            },
+                 "empty":  "Your cart is empty.",
+                 "summary":  {
+                                 "title":  "Cart summary",
+                                 "subtotal":  "Subtotal",
+                                 "discounts":  "Discounts",
+                                 "shipping":  "Shipping",
+                                 "tax":  "Tax",
+                                 "total":  "Total",
+                                 "updated":  "Updated {{ date }}"
+                               },
+                 "coupon":  {
+                                "label":  "Coupon code",
+                                "placeholder":  "Enter coupon",
+                                "apply":  "Apply coupon",
+                                "remove":  "Remove coupon",
+                                "savingsLabel":  "Savings",
+                                "errors":  {
+                                                "required":  "Coupon code is required.",
+                                                "minLength":  "Coupon code is too short."
+                                            },
+                                "applyFailed":  "We couldn't apply that coupon.",
+                                "removeFailed":  "We couldn't remove the coupon."
+                              },
+                 "clearConfirm":  {
+                                      "title":  "Clear cart?",
+                                      "message":  "This will remove every item from the cart."
+                                    },
+                 "toasts":  {
+                               "couponApplied":  "Coupon {{ code }} applied.",
+                               "couponRemoved":  "Coupon removed.",
+                               "itemRemoved":  "{{ name }} removed from the cart.",
+                               "cleared":  "Cart cleared."
+                             },
+                 "errors":  {
+                               "loadFailed":  "Unable to load cart.",
+                               "updateFailed":  "Unable to update the cart.",
+                               "removeFailed":  "Unable to remove the item.",
+                               "clearFailed":  "Unable to clear the cart."
+                             }
+             },
     "orders":  {
                    "list":  {
                                  "title":  "My orders",
