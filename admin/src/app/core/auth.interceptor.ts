@@ -1,7 +1,14 @@
 import { Injectable } from '@angular/core';
-import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError, of } from 'rxjs';
-import { catchError, switchMap } from 'rxjs/operators';
+import {
+  HttpEvent,
+  HttpHandler,
+  HttpInterceptor,
+  HttpRequest,
+  HttpErrorResponse,
+  HttpResponse
+} from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError, switchMap, tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { ToastService } from './toast.service';
 import { TranslateService } from '@ngx-translate/core';
@@ -10,6 +17,7 @@ import { AuthService } from './auth.service';
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
   private refreshing = false;
+  private consecutive401 = 0;
   constructor(
     private auth: AuthService,
     private router: Router,
@@ -21,15 +29,19 @@ export class AuthInterceptor implements HttpInterceptor {
     const authReq = token ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
 
     return next.handle(authReq).pipe(
+      tap((event) => {
+        if (event instanceof HttpResponse) {
+          this.consecutive401 = 0;
+        }
+      }),
       catchError((err: HttpErrorResponse) => {
         const url = req.url || '';
         const isAuthEndpoint = url.includes('/auth/login') || url.includes('/auth/refresh');
         if (err.status === 401 && !isAuthEndpoint) {
-          if (this.refreshing) {
-            // Another request already triggered refresh; just logout to avoid loops
-            this.auth.logout();
-            this.router.navigate(['/login']);
-            this.toast.error(this.i18n.instant('auth.errors.sessionExpired'));
+          this.consecutive401 += 1;
+          // If refresh already failed or we've seen repeated unauthorized responses, end the session.
+          if (this.consecutive401 >= 2 || this.refreshing) {
+            this.handleSessionExpired();
             return throwError(() => err);
           }
           this.refreshing = true;
@@ -37,9 +49,7 @@ export class AuthInterceptor implements HttpInterceptor {
             switchMap((res) => {
               this.refreshing = false;
               if (!res || !res.token) {
-                this.auth.logout();
-                this.router.navigate(['/login']);
-                this.toast.error(this.i18n.instant('auth.errors.sessionExpired'));
+                this.handleSessionExpired();
                 return throwError(() => err);
               }
               const retried = req.clone({ setHeaders: { Authorization: `Bearer ${res.token}` } });
@@ -47,9 +57,7 @@ export class AuthInterceptor implements HttpInterceptor {
             }),
             catchError((e) => {
               this.refreshing = false;
-              this.auth.logout();
-              this.router.navigate(['/login']);
-              this.toast.error(this.i18n.instant('auth.errors.sessionExpired'));
+              this.handleSessionExpired();
               return throwError(() => e);
             })
           );
@@ -63,5 +71,13 @@ export class AuthInterceptor implements HttpInterceptor {
         return throwError(() => err);
       })
     );
+  }
+
+  private handleSessionExpired(): void {
+    this.consecutive401 = 0;
+    this.refreshing = false;
+    this.auth.logout();
+    this.router.navigate(['/login']);
+    this.toast.error(this.i18n.instant('auth.errors.sessionExpired'));
   }
 }

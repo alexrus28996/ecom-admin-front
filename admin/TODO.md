@@ -63,7 +63,7 @@ Legend
 - [x] Profile + password workflows (`PATCH /api/auth/profile`, password change/forgot/reset endpoints).
 - [x] Email verify/change flows (`POST /api/auth/email/*`).
 - [ ] Preferences UX (`GET/PATCH /api/auth/preferences`).
-- [ ] Session expiry handling: detect repeated 401 after refresh, clear storage, and route to login with message.
+- [x] Session expiry handling: detect repeated 401 after refresh, clear storage, and route to login with message.
 
 ### Users & RBAC
 - [x] Admin user table (`GET /api/admin/users`) with search/pagination.
