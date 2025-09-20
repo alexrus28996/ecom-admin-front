@@ -1194,6 +1194,94 @@
       "generic": "Unable to sign in. Please check your details and try again."
     }
   },
+  "register": {
+    "title": "Create your account",
+    "subtitle": "Join the admin console to start managing your store.",
+    "name": {
+      "label": "Name",
+      "placeholder": "Your full name",
+      "errors": {
+        "required": "Name is required.",
+        "minLength": "Name must be at least {{ min }} characters."
+      }
+    },
+    "email": {
+      "label": "Email",
+      "placeholder": "you@example.com",
+      "errors": {
+        "required": "Email is required.",
+        "format": "Enter a valid email address."
+      }
+    },
+    "password": {
+      "label": "Password",
+      "placeholder": "Create a password",
+      "errors": {
+        "required": "Password is required.",
+        "minLength": "Password must be at least {{ min }} characters."
+      }
+    },
+    "actions": {
+      "submit": "Create account",
+      "submitting": "Submitting registration…",
+      "backToLogin": "Back to sign in"
+    },
+    "success": "Registration successful. You can now sign in.",
+    "errors": {
+      "generic": "Registration failed. Please try again."
+    }
+  },
+  "forgot": {
+    "title": "Forgot password",
+    "subtitle": "Enter your email and we'll send a reset link.",
+    "email": {
+      "label": "Email",
+      "placeholder": "you@example.com",
+      "errors": {
+        "required": "Email is required.",
+        "format": "Enter a valid email address."
+      }
+    },
+    "actions": {
+      "submit": "Send reset link",
+      "submitting": "Sending reset link…",
+      "backToLogin": "Back to sign in"
+    },
+    "success": "Reset instructions sent. Check your inbox.",
+    "errors": {
+      "generic": "We couldn't send the reset email. Please try again later."
+    }
+  },
+  "reset": {
+    "title": "Reset password",
+    "subtitle": "Choose a new password to finish resetting your account.",
+    "password": {
+      "label": "New password",
+      "placeholder": "Create a new password",
+      "errors": {
+        "required": "Password is required.",
+        "minLength": "Password must be at least {{ min }} characters."
+      }
+    },
+    "actions": {
+      "submit": "Update password",
+      "submitting": "Updating password…",
+      "backToLogin": "Back to sign in"
+    },
+    "success": "Password updated. You can now sign in.",
+    "errors": {
+      "generic": "We couldn't reset your password. Please try again.",
+      "invalidToken": "Reset link is invalid or has expired."
+    }
+  },
+  "emailVerify": {
+    "title": "Verify email",
+    "loading": "Verifying your email…",
+    "success": "Email verified successfully.",
+    "errors": {
+      "generic": "We couldn't verify your email. Please request a new link."
+    }
+  },
   "dashboard": {
     "title": "Dashboard",
     "subtitle": "Monitor store activity and performance at a glance.",
