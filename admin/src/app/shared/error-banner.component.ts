@@ -6,7 +6,12 @@ import { TranslateService } from '@ngx-translate/core';
   template: `
     <div class="app-error-banner" *ngIf="resolved() as ctx">
       <mat-icon [color]="color">{{ icon }}</mat-icon>
-      <span>{{ ctx.key | translate: ctx.params }}</span>
+      <ng-container *ngIf="ctx.message; else translated">
+        <span>{{ ctx.message }}</span>
+      </ng-container>
+      <ng-template #translated>
+        <span>{{ ctx.key | translate: ctx.params }}</span>
+      </ng-template>
     </div>
   `,
   styles: [
@@ -32,24 +37,34 @@ export class ErrorBannerComponent {
 
   constructor(private readonly translate: TranslateService) {}
 
-  resolved(): { key: string; params?: Record<string, unknown> } | null {
+  resolved(): { key?: string; params?: Record<string, unknown>; message?: string } | null {
     if (this.key) {
       return { key: this.key };
     }
 
-    const code = this.error?.error?.error?.code;
-    if (!code) {
-      return null;
+    const payload = this.error?.error?.error ?? {};
+    const codeRaw = (payload as Record<string, unknown>)['code'];
+    const code = typeof codeRaw === 'string' ? codeRaw : null;
+
+    if (code) {
+      const backendKey = `errors.backend.${code}`;
+      const translated = this.translate.instant(backendKey);
+
+      if (translated && translated !== backendKey) {
+        return { key: backendKey };
+      }
     }
 
-    const backendKey = `errors.backend.${code}`;
-    const translated = this.translate.instant(backendKey);
-
-    if (translated && translated !== backendKey) {
-      return { key: backendKey };
+    const messageRaw = (payload as Record<string, unknown>)['message'];
+    if (typeof messageRaw === 'string' && messageRaw.trim().length > 0) {
+      return { message: messageRaw.trim() };
     }
 
-    return { key: 'errors.backend.default', params: { code } };
+    if (code) {
+      return { key: 'errors.backend.default', params: { code } };
+    }
+
+    return null;
   }
 }
 
