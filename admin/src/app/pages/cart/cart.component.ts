@@ -430,13 +430,22 @@ export class CartComponent implements OnInit {
       return cart.updatedAt;
     }
 
-    const record = cart as Record<string, unknown>;
-    const updated = record?.['updated'];
-    if (typeof updated === 'string') {
-      return updated;
+    if (this.isRecord(cart)) {
+      const updated = cart['updated'];
+      if (typeof updated === 'string') {
+        return updated;
+      }
+
+      const updatedAt = cart['updated_at'];
+      if (typeof updatedAt === 'string') {
+        return updatedAt;
+      }
     }
 
-    const updatedAt = record?.['updated_at'];
-    return typeof updatedAt === 'string' ? updatedAt : null;
+    return null;
+  }
+
+  private isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null;
   }
 }
