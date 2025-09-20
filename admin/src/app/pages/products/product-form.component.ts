@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UntypedFormArray, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
-import { ProductsService, Product, ProductImage, ProductVariant } from '../../services/products.service';
+import { ProductsService, ProductDetail, ProductImage, ProductInput, ProductVariant } from '../../services/products.service';
 import { UploadService } from '../../services/upload.service';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ToastService } from '../../core/toast.service';
@@ -204,7 +204,7 @@ export class ProductFormComponent implements OnInit {
     this.loading = true;
     this.cdr.markForCheck();
     this.products.get(id).subscribe({
-      next: ({ product }) => {
+      next: ({ product }: { product: ProductDetail }) => {
         this.form.patchValue({
           name: product.name,
           description: product.description || '',
@@ -248,7 +248,7 @@ export class ProductFormComponent implements OnInit {
 
   private setVariants(variants: ProductVariant[]): void {
     this.variants.clear();
-    variants.forEach((variant) => this.addVariant(variant));
+    variants.forEach((variant: ProductVariant) => this.addVariant(variant));
   }
 
   hasError(control: string, error: string): boolean {
@@ -267,7 +267,7 @@ export class ProductFormComponent implements OnInit {
     }
 
     const raw = this.form.getRawValue();
-    const payload: Product = {
+    const payload: ProductInput = {
       name: (raw.name || '').trim(),
       description: raw.description || '',
       price: raw.price ?? 0,

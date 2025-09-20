@@ -2,82 +2,143 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { Paginated } from './api.types';
 
 export interface ProductImage {
   url: string;
-  alt?: string;
+  alt?: string | null;
 }
 
-export interface ProductVariant {
-  _id?: string;
-  sku?: string;
-  attributes?: Record<string, string>;
+export interface ProductVariantInput {
+  sku?: string | null;
+  attributes?: Record<string, string> | null;
   price?: number | null;
-  priceDelta?: number | null;
+  compareAtPrice?: number | null;
+  currency?: string | null;
   stock?: number | null;
-  isActive?: boolean;
+  barcode?: string | null;
+  requiresShipping?: boolean | null;
+  priceDelta?: number | null;
+  isActive?: boolean | null;
 }
 
-export interface Product {
+export interface ProductVariant extends ProductVariantInput {
   _id?: string;
+  isActive?: boolean;
+  priceDelta?: number | null;
+}
+
+export interface ProductDimensions {
+  length?: number | null;
+  width?: number | null;
+  height?: number | null;
+  unit?: string | null;
+}
+
+export interface ProductInput {
+  name: string;
+  description?: string | null;
+  longDescription?: string | null;
+  price: number;
+  compareAtPrice?: number | null;
+  costPrice?: number | null;
+  currency?: string | null;
+  images?: ProductImage[] | null;
+  attributes?: Record<string, string> | null;
+  category?: string | null;
+  brand?: string | null;
+  vendor?: string | null;
+  sku?: string | null;
+  tags?: string[] | null;
+  variants?: ProductVariantInput[] | null;
+  requiresShipping?: boolean | null;
+  weight?: number | null;
+  weightUnit?: string | null;
+  dimensions?: ProductDimensions | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  stock?: number | null;
+  isActive?: boolean | null;
+}
+
+export interface ProductSummary {
+  _id: string;
   name: string;
   slug?: string;
-  description?: string;
   price: number;
-  currency?: string;
+  compareAtPrice?: number | null;
+  currency: string;
   images?: ProductImage[];
-  attributes?: Record<string, string>;
-  category?: string | { _id: string; name: string } | null;
-  ratingAvg?: number;
-  ratingCount?: number;
-  variants?: ProductVariant[];
-  stock?: number;
-  isActive?: boolean;
+  category?: { _id: string; name: string; slug?: string } | null;
+  brand?: { _id: string; name: string; slug?: string } | null;
+  rating?: { average: number; count: number } | null;
+  variants?: ProductVariant[] | null;
+  attributes?: Record<string, string> | null;
+  stock?: number | null;
+  isActive?: boolean | null;
+}
+
+export interface ProductDetail extends ProductSummary {
+  description?: string | null;
+  longDescription?: string | null;
+  costPrice?: number | null;
+  vendor?: string | null;
+  sku?: string | null;
+  tags?: string[] | null;
+  requiresShipping?: boolean | null;
+  weight?: number | null;
+  weightUnit?: string | null;
+  dimensions?: ProductDimensions | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }
 
-export interface Paginated<T> {
-  items: T[];
-  total: number;
-  page: number;
-  pages: number;
-}
+export type Product = ProductDetail;
 
 export interface ListProductsParams {
   q?: string;
   category?: string;
+  brand?: string;
   page?: number;
   limit?: number;
+  sort?: string;
 }
 
 @Injectable({ providedIn: 'root' })
-export class ProductsService {
-  private base = `${environment.apiBaseUrl}/products`;
-  constructor(private http: HttpClient) {}
+export class ProductService {
+  protected readonly base = `${environment.apiBaseUrl}/products`;
 
-  list(params: ListProductsParams = {}): Observable<Paginated<Product>> {
-    let p = new HttpParams();
-    if (params.q) p = p.set('q', params.q);
-    if (params.category) p = p.set('category', params.category);
-    if (params.page) p = p.set('page', String(params.page));
-    if (params.limit) p = p.set('limit', String(params.limit));
-    return this.http.get<Paginated<Product>>(this.base, { params: p });
+  constructor(protected readonly http: HttpClient) {}
+
+  list(params: ListProductsParams = {}): Observable<Paginated<ProductSummary>> {
+    let httpParams = new HttpParams();
+    if (params.q) httpParams = httpParams.set('q', params.q);
+    if (params.category) httpParams = httpParams.set('category', params.category);
+    if (params.brand) httpParams = httpParams.set('brand', params.brand);
+    if (params.sort) httpParams = httpParams.set('sort', params.sort);
+    if (params.page) httpParams = httpParams.set('page', String(params.page));
+    if (params.limit) httpParams = httpParams.set('limit', String(params.limit));
+    return this.http.get<Paginated<ProductSummary>>(this.base, { params: httpParams });
   }
 
-  get(id: string): Observable<{ product: Product }> {
-    return this.http.get<{ product: Product }>(`${this.base}/${id}`);
+  get(id: string): Observable<{ product: ProductDetail }> {
+    return this.http.get<{ product: ProductDetail }>(`${this.base}/${id}`);
   }
 
-  create(product: Product): Observable<{ product: Product }> {
-    return this.http.post<{ product: Product }>(this.base, product);
+  create(payload: ProductInput): Observable<{ product: ProductDetail }> {
+    return this.http.post<{ product: ProductDetail }>(this.base, payload);
   }
 
-  update(id: string, product: Product): Observable<{ product: Product }> {
-    return this.http.put<{ product: Product }>(`${this.base}/${id}`, product);
+  update(id: string, payload: Partial<ProductInput>): Observable<{ product: ProductDetail }> {
+    return this.http.put<{ product: ProductDetail }>(`${this.base}/${id}`, payload);
   }
 
   delete(id: string): Observable<{ success: boolean }> {
     return this.http.delete<{ success: boolean }>(`${this.base}/${id}`);
   }
 }
+
+@Injectable({ providedIn: 'root' })
+export class ProductsService extends ProductService {}

@@ -1,12 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-
-export interface MoneyAmount {
-  amount: number;
-  currency: string;
-}
+import { MoneyAmount, Paginated } from './api.types';
+export { MoneyAmount } from './api.types';
 
 export interface CartItemTotals {
   unit?: MoneyAmount | null;
@@ -25,6 +22,7 @@ export interface CartItem {
   itemId?: string | null;
   product?: string | null;
   productId?: string | null;
+  variant?: string | null;
   sku?: string | null;
   name?: string | null;
   price?: number | null;
@@ -72,16 +70,58 @@ export interface Cart {
   updatedAt?: string | null;
 }
 
+export interface CartEstimateInput {
+  shipping?: Record<string, any> | null;
+  taxRate?: number | null;
+}
+
+export interface CartEstimate {
+  subtotal: number;
+  discount?: number | null;
+  shipping?: number | null;
+  tax?: number | null;
+  total: number;
+  currency: string;
+}
+
+export interface SavedCart {
+  _id: string;
+  name?: string | null;
+  description?: string | null;
+  items: CartItem[];
+  totals?: CartTotals | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CartService {
-  private base = `${environment.apiBaseUrl}/cart`;
-  constructor(private http: HttpClient) {}
+  private readonly base = `${environment.apiBaseUrl}/cart`;
+  private readonly savedBase = `${this.base}/saved`;
 
-  get(): Observable<{ cart: Cart }> { return this.http.get<{ cart: Cart }>(this.base); }
-  addItem(productId: string, quantity = 1): Observable<{ cart: Cart }> { return this.http.post<{ cart: Cart }>(`${this.base}/items`, { productId, quantity }); }
-  updateItem(productId: string, quantity: number): Observable<{ cart: Cart }> { return this.http.patch<{ cart: Cart }>(`${this.base}/items/${productId}`, { quantity }); }
-  removeItem(productId: string): Observable<{ cart: Cart }> { return this.http.delete<{ cart: Cart }>(`${this.base}/items/${productId}`); }
-  clear(): Observable<{ cart: Cart }> { return this.http.post<{ cart: Cart }>(`${this.base}/clear`, {}); }
+  constructor(private readonly http: HttpClient) {}
+
+  get(): Observable<{ cart: Cart }> {
+    return this.http.get<{ cart: Cart }>(this.base);
+  }
+
+  addItem(productId: string, quantity = 1, variantId?: string): Observable<{ cart: Cart }> {
+    return this.http.post<{ cart: Cart }>(`${this.base}/items`, { productId, variantId, quantity });
+  }
+
+  updateItem(productId: string, quantity: number, variantId?: string): Observable<{ cart: Cart }> {
+    return this.http.patch<{ cart: Cart }>(`${this.base}/items/${productId}`, { quantity, variantId });
+  }
+
+  removeItem(productId: string, params: { variantId?: string } = {}): Observable<{ cart: Cart }> {
+    let httpParams = new HttpParams();
+    if (params.variantId) httpParams = httpParams.set('variantId', params.variantId);
+    return this.http.delete<{ cart: Cart }>(`${this.base}/items/${productId}`, { params: httpParams });
+  }
+
+  clear(): Observable<{ cart: Cart }> {
+    return this.http.post<{ cart: Cart }>(`${this.base}/clear`, {});
+  }
 
   applyCoupon(code: string): Observable<{ cart: Cart }> {
     return this.http.post<{ cart: Cart }>(`${this.base}/coupon`, { code });
@@ -90,5 +130,31 @@ export class CartService {
   removeCoupon(): Observable<{ cart: Cart }> {
     return this.http.delete<{ cart: Cart }>(`${this.base}/coupon`);
   }
-}
 
+  estimate(payload: CartEstimateInput): Observable<CartEstimate> {
+    return this.http.post<CartEstimate>(`${this.base}/estimate`, payload ?? {});
+  }
+
+  listSaved(params: { page?: number; limit?: number } = {}): Observable<Paginated<SavedCart>> {
+    let httpParams = new HttpParams();
+    if (params.page) httpParams = httpParams.set('page', String(params.page));
+    if (params.limit) httpParams = httpParams.set('limit', String(params.limit));
+    return this.http.get<Paginated<SavedCart>>(this.savedBase, { params: httpParams });
+  }
+
+  getSaved(id: string): Observable<{ savedCart: SavedCart }> {
+    return this.http.get<{ savedCart: SavedCart }>(`${this.savedBase}/${id}`);
+  }
+
+  saveCurrent(payload: { name?: string; description?: string } = {}): Observable<{ savedCart: SavedCart }> {
+    return this.http.post<{ savedCart: SavedCart }>(this.savedBase, payload);
+  }
+
+  restoreSaved(id: string): Observable<{ cart: Cart }> {
+    return this.http.post<{ cart: Cart }>(`${this.savedBase}/${id}/restore`, {});
+  }
+
+  deleteSaved(id: string): Observable<{ success: boolean }> {
+    return this.http.delete<{ success: boolean }>(`${this.savedBase}/${id}`);
+  }
+}

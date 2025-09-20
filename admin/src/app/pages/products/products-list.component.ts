@@ -3,7 +3,7 @@ import { FormBuilder } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { PageEvent } from '@angular/material/paginator';
 import { TranslateService } from '@ngx-translate/core';
-import { ProductsService, Product } from '../../services/products.service';
+import { ProductsService, ProductSummary, ProductVariant } from '../../services/products.service';
 import { CartService } from '../../services/cart.service';
 import { AuthService } from '../../core/auth.service';
 import { ToastService } from '../../core/toast.service';
@@ -28,7 +28,7 @@ export class ProductsListComponent implements OnInit {
   });
 
   displayedColumns: string[] = ['name', 'price', 'stock', 'status', 'actions'];
-  dataSource: Product[] = [];
+  dataSource: ProductSummary[] = [];
   total = 0;
   pageIndex = 0;
   pageSize = 10;
@@ -104,7 +104,7 @@ export class ProductsListComponent implements OnInit {
     this.load();
   }
 
-  addToCart(product: Product): void {
+  addToCart(product: ProductSummary): void {
     if (!product?._id) {
       return;
     }
@@ -118,7 +118,7 @@ export class ProductsListComponent implements OnInit {
     });
   }
 
-  confirmDelete(product: Product): void {
+  confirmDelete(product: ProductSummary): void {
     if (!product?._id) {
       return;
     }
@@ -140,7 +140,7 @@ export class ProductsListComponent implements OnInit {
     });
   }
 
-  private delete(product: Product): void {
+  private delete(product: ProductSummary): void {
     if (!product?._id) {
       return;
     }
@@ -166,7 +166,7 @@ export class ProductsListComponent implements OnInit {
     });
   }
 
-  trackById(_: number, item: Product): string | undefined {
+  trackById(_: number, item: ProductSummary): string | undefined {
     return item._id;
   }
 
@@ -190,11 +190,11 @@ export class ProductsListComponent implements OnInit {
     return match ? match.name : null;
   }
 
-  variantSummary(product: Product) {
-    const variants = product.variants || [];
+  variantSummary(product: ProductSummary) {
+    const variants: ProductVariant[] = product.variants || [];
     let variantStock = 0;
     let active = 0;
-    variants.forEach((variant) => {
+    variants.forEach((variant: ProductVariant) => {
       const stock = Number(variant?.stock);
       if (!Number.isNaN(stock)) {
         variantStock += stock;
