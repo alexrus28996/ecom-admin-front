@@ -64,7 +64,7 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     if (this.auth.token) {
       this.auth
-        .fetchMe()
+        .getCurrentUser()
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({ next: () => {}, error: () => {} });
       // Load preferences (locale) after auth

@@ -10,6 +10,8 @@ export interface PublicUser {
   email: string;
   roles: string[];
   isActive: boolean;
+  isVerified?: boolean;
+  avatarUrl?: string;
 }
 
 export interface UserPreferences {
@@ -21,6 +23,10 @@ export interface LoginResponse {
   token: string;
   user: PublicUser;
   refreshToken?: string;
+}
+
+export interface PreferencesResponse {
+  preferences: UserPreferences;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -45,63 +51,86 @@ export class AuthService {
   get isLoggedIn(): boolean { return !!this.token; }
   get isAdmin(): boolean { return !!this.user?.roles?.includes('admin'); }
 
-  login(email: string, password: string): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${environment.apiBaseUrl}/auth/login`, { email, password }).pipe(
-      tap((res) => {
-        localStorage.setItem(this.tokenKey, res.token);
-        if (res.refreshToken) localStorage.setItem(this.refreshKey, res.refreshToken);
-        localStorage.setItem(this.userKey, JSON.stringify(res.user));
-        this._user$.next(res.user);
-      })
-    );
-  }
-
-  fetchMe(): Observable<{ user: PublicUser }> {
-    return this.http.get<{ user: PublicUser }>(`${environment.apiBaseUrl}/auth/me`).pipe(
-      tap(({ user }) => {
-        this._user$.next(user);
-        localStorage.setItem(this.userKey, JSON.stringify(user));
-      }),
-      catchError((err) => {
-        this.logout();
-        return of({ user: null as any });
-      })
-    );
-  }
-
-  logout() {
-    const refreshToken = localStorage.getItem(this.refreshKey);
-    if (refreshToken) {
-      this.http.post(`${environment.apiBaseUrl}/auth/logout`, { refreshToken }).pipe(catchError(() => of(null))).subscribe();
+  private setUser(user: PublicUser | null): void {
+    if (user) {
+      localStorage.setItem(this.userKey, JSON.stringify(user));
+      this._user$.next(user);
+    } else {
+      localStorage.removeItem(this.userKey);
+      this._user$.next(null);
     }
+  }
+
+  private persistSession(response: LoginResponse | null): void {
+    if (!response) {
+      return;
+    }
+
+    if (response.token) {
+      localStorage.setItem(this.tokenKey, response.token);
+    }
+    if (response.refreshToken) {
+      localStorage.setItem(this.refreshKey, response.refreshToken);
+    }
+    if (response.user) {
+      this.setUser(response.user);
+    }
+  }
+
+  private clearSession(): void {
     localStorage.removeItem(this.tokenKey);
     localStorage.removeItem(this.refreshKey);
-    localStorage.removeItem(this.userKey);
-    this._user$.next(null);
+    this.setUser(null);
   }
 
   register(name: string, email: string, password: string): Observable<{ user: PublicUser }> {
     return this.http.post<{ user: PublicUser }>(`${environment.apiBaseUrl}/auth/register`, { name, email, password });
   }
 
-  refresh(): Observable<LoginResponse> {
-    const refreshToken = localStorage.getItem(this.refreshKey);
-    if (!refreshToken) return of(null as any);
-    return this.http.post<LoginResponse>(`${environment.apiBaseUrl}/auth/refresh`, { refreshToken }).pipe(
-      tap((res) => {
-        if (res?.token) localStorage.setItem(this.tokenKey, res.token);
-        if (res?.refreshToken) localStorage.setItem(this.refreshKey, res.refreshToken);
-        if (res?.user) {
-          localStorage.setItem(this.userKey, JSON.stringify(res.user));
-          this._user$.next(res.user);
-        }
+  login(email: string, password: string): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${environment.apiBaseUrl}/auth/login`, { email, password }).pipe(
+      tap((res) => this.persistSession(res))
+    );
+  }
+
+  refresh(refreshToken?: string): Observable<LoginResponse | null> {
+    const token = refreshToken ?? localStorage.getItem(this.refreshKey);
+    if (!token) {
+      return of(null);
+    }
+
+    return this.http.post<LoginResponse>(`${environment.apiBaseUrl}/auth/refresh`, { refreshToken: token }).pipe(
+      tap((res) => this.persistSession(res))
+    );
+  }
+
+  logout(refreshToken?: string): void {
+    const token = refreshToken ?? localStorage.getItem(this.refreshKey);
+    if (token) {
+      this.http
+        .post(`${environment.apiBaseUrl}/auth/logout`, { refreshToken: token })
+        .pipe(catchError(() => of(null)))
+        .subscribe();
+    }
+
+    this.clearSession();
+  }
+
+  getCurrentUser(): Observable<PublicUser | null> {
+    return this.http.get<{ user: PublicUser }>(`${environment.apiBaseUrl}/auth/me`).pipe(
+      map(({ user }) => user),
+      tap((user) => this.setUser(user)),
+      catchError((err) => {
+        this.clearSession();
+        return of(null);
       })
     );
   }
 
-  updateProfileName(name: string): Observable<{ user: PublicUser }> {
-    return this.http.patch<{ user: PublicUser }>(`${environment.apiBaseUrl}/auth/profile`, { name }).pipe(
-      tap(({ user }) => { this._user$.next(user); localStorage.setItem(this.userKey, JSON.stringify(user)); })
+  updateProfile(data: Partial<Pick<PublicUser, 'name' | 'avatarUrl'>> & Record<string, unknown>): Observable<PublicUser> {
+    return this.http.patch<{ user: PublicUser }>(`${environment.apiBaseUrl}/auth/profile`, data).pipe(
+      map(({ user }) => user),
+      tap((user) => this.setUser(user))
     );
   }
 
@@ -109,7 +138,7 @@ export class AuthService {
     return this.http.post<{ success: boolean }>(`${environment.apiBaseUrl}/auth/password/change`, { currentPassword, newPassword });
   }
 
-  requestPasswordReset(email: string, baseUrl?: string): Observable<{ success: boolean }> {
+  forgotPassword(email: string, baseUrl?: string): Observable<{ success: boolean }> {
     return this.http.post<{ success: boolean }>(`${environment.apiBaseUrl}/auth/password/forgot`, { email, baseUrl });
   }
 
@@ -129,11 +158,11 @@ export class AuthService {
     return this.http.post<{ success: boolean }>(`${environment.apiBaseUrl}/auth/email/change/request`, { newEmail, baseUrl });
   }
 
-  getPreferences(): Observable<{ preferences: UserPreferences }> {
-    return this.http.get<{ preferences: UserPreferences }>(`${environment.apiBaseUrl}/auth/preferences`);
+  getPreferences(): Observable<PreferencesResponse> {
+    return this.http.get<PreferencesResponse>(`${environment.apiBaseUrl}/auth/preferences`);
   }
 
-  updatePreferences(prefs: UserPreferences): Observable<{ success: boolean }> {
-    return this.http.patch<{ success: boolean }>(`${environment.apiBaseUrl}/auth/preferences`, prefs);
+  updatePreferences(prefs: UserPreferences): Observable<PreferencesResponse> {
+    return this.http.patch<PreferencesResponse>(`${environment.apiBaseUrl}/auth/preferences`, prefs);
   }
 }

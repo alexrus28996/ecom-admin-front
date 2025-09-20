@@ -41,6 +41,8 @@
           </mat-error>
         </mat-form-field>
 
+        <app-error-banner [key]="errorKey" [error]="lastError"></app-error-banner>
+
         <div class="login-actions">
           <button mat-raised-button color="primary" type="submit" [disabled]="loading">
             <mat-progress-spinner
@@ -61,11 +63,6 @@
         <div class="login-footer">
           <span>{{ 'login.actions.noAccount' | translate }}</span>
           <a mat-button routerLink="/register">{{ 'login.actions.createAccount' | translate }}</a>
-        </div>
-
-        <div class="login-error" *ngIf="errorKey" aria-live="polite">
-          <mat-icon color="warn">error</mat-icon>
-          <span>{{ errorKey | translate }}</span>
         </div>
       </form>
     </mat-card-content>

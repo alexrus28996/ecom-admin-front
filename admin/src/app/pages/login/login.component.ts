@@ -17,6 +17,7 @@ export class LoginComponent {
 
   loading = false;
   errorKey: string | null = null;
+  lastError: any = null;
 
   constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {}
 
@@ -37,6 +38,7 @@ export class LoginComponent {
 
     this.loading = true;
     this.errorKey = null;
+    this.lastError = null;
 
     this.auth
       .login(email.trim(), password)
@@ -45,7 +47,10 @@ export class LoginComponent {
         next: () => this.router.navigate(['/dashboard']),
         error: (err) => {
           const code = err?.error?.error?.code;
-          this.errorKey = code ? `errors.backend.${code}` : 'login.errors.generic';
+          const message = err?.error?.error?.message;
+          const hasMessage = typeof message === 'string' && message.trim().length > 0;
+          this.errorKey = code ? `errors.backend.${code}` : null;
+          this.lastError = code || hasMessage ? err : { error: { error: { message: 'Unable to sign in. Please check your credentials and try again.' } } };
         }
       });
   }

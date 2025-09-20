@@ -48,7 +48,7 @@ export class ForgotComponent {
     this.cdr.markForCheck();
 
     this.auth
-      .requestPasswordReset(email, window.location.origin)
+      .forgotPassword(email, window.location.origin)
       .pipe(
         finalize(() => {
           this.loading = false;

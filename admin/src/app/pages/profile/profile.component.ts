@@ -31,7 +31,8 @@ export class ProfileComponent {
   saveName() {
     if (this.nameForm.invalid) return;
     this.loading = true; this.err = this.msg = '';
-    this.auth.updateProfileName(this.nameForm.value.name || '').subscribe({
+    const name = this.nameForm.value.name || '';
+    this.auth.updateProfile({ name }).subscribe({
       next: () => { this.loading = false; this.msg = this.i18n.instant('profile.toasts.nameSaved'); this.toast.success(this.msg); },
       error: (e) => { this.loading = false; this.err = this.i18n.instant('profile.errors.nameSaveFailed'); this.toast.error(this.err); }
     });
@@ -89,7 +90,14 @@ export class ProfileComponent {
     const payload = this.prefsForm.getRawValue() as UserPreferences;
     this.prefsLoading = true; this.msg=''; this.err='';
     this.auth.updatePreferences(payload).subscribe({
-      next: () => { this.prefsLoading = false; this.msg = this.i18n.instant('profile.toasts.preferencesSaved'); this.toast.success(this.msg); if (payload.locale) this.i18n.use(payload.locale); },
+      next: ({ preferences }) => {
+        this.prefsLoading = false;
+        this.msg = this.i18n.instant('profile.toasts.preferencesSaved');
+        this.toast.success(this.msg);
+        if (preferences?.locale) {
+          this.i18n.use(preferences.locale);
+        }
+      },
       error: () => { this.prefsLoading = false; this.err = this.i18n.instant('profile.errors.preferencesSaveFailed'); this.toast.error(this.err); }
     });
   }
