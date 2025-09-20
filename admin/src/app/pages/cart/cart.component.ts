@@ -7,6 +7,8 @@ import { ToastService } from '../../core/toast.service';
 import { CartService, Cart, CartItem, MoneyAmount } from '../../services/cart.service';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
 
+type BackendError = unknown;
+
 interface DisplayMoney {
   amount: number;
   currency: string;
@@ -32,11 +34,16 @@ interface DisplayCartItem {
 export class CartComponent implements OnInit {
   cart: Cart | null = null;
   loading = false;
-  error = '';
+  clearing = false;
+  couponLoading = false;
 
-<<<<<<< ours
-  constructor(private cartSvc: CartService) {}
-=======
+  errorKey: string | null = null;
+  lastError: BackendError = null;
+  couponErrorMessage: string | null = null;
+  couponSuccessMessage: string | null = null;
+
+  pendingItemId: string | null = null;
+
   readonly displayedColumns: string[] = ['product', 'price', 'qty', 'line', 'actions'];
 
   readonly couponForm = this.fb.group({
@@ -65,17 +72,11 @@ export class CartComponent implements OnInit {
     private readonly translate: TranslateService,
     private readonly cdr: ChangeDetectorRef
   ) {}
->>>>>>> theirs
 
   ngOnInit(): void {
     this.load();
   }
 
-<<<<<<< ours
-  load() {
-    this.loading = true; this.error = '';
-    this.cartSvc.get().subscribe({ next: ({ cart }) => { this.cart = cart; this.loading = false; }, error: (err) => { this.loading = false; this.error = err?.error?.error?.message || 'Failed'; } });
-=======
   load(): void {
     this.loading = true;
     this.errorKey = null;
@@ -169,24 +170,75 @@ export class CartComponent implements OnInit {
         this.clearCart();
       }
     });
->>>>>>> theirs
   }
 
-  inc(p: string, q: number) {
-    const newQ = q + 1;
-    this.cartSvc.updateItem(p, newQ).subscribe({ next: ({ cart }) => { this.cart = cart; }, error: () => {} });
+  applyCoupon(): void {
+    if (this.couponForm.invalid || this.couponLoading || this.clearing || !!this.pendingItemId) {
+      this.couponForm.markAllAsTouched();
+      return;
+    }
+
+    const rawCode = this.couponForm.value.code ?? '';
+    const code = rawCode.trim();
+    if (!code) {
+      this.couponForm.markAllAsTouched();
+      return;
+    }
+
+    this.couponLoading = true;
+    this.couponErrorMessage = null;
+    this.couponSuccessMessage = null;
+    this.cdr.markForCheck();
+
+    this.cartSvc.applyCoupon(code).subscribe({
+      next: ({ cart }) => {
+        this.updateCart(cart);
+        this.couponLoading = false;
+        const message = this.translate.instant('cart.toasts.couponApplied', { code });
+        this.couponSuccessMessage = message;
+        this.toast.success(message);
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.couponLoading = false;
+        this.couponErrorMessage = this.resolveErrorMessage(err, 'cart.coupon.applyFailed', { code });
+        this.toast.error(this.couponErrorMessage);
+        this.cdr.markForCheck();
+      }
+    });
   }
-  dec(p: string, q: number) {
-    const newQ = Math.max(1, q - 1);
-    this.cartSvc.updateItem(p, newQ).subscribe({ next: ({ cart }) => { this.cart = cart; }, error: () => {} });
+
+  removeCoupon(): void {
+    if (this.couponLoading || this.clearing || !!this.pendingItemId) {
+      return;
+    }
+
+    this.couponLoading = true;
+    this.couponErrorMessage = null;
+    this.couponSuccessMessage = null;
+    this.cdr.markForCheck();
+
+    this.cartSvc.removeCoupon().subscribe({
+      next: ({ cart }) => {
+        this.updateCart(cart);
+        this.couponLoading = false;
+        const message = this.translate.instant('cart.toasts.couponRemoved');
+        this.couponSuccessMessage = message;
+        this.toast.success(message);
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.couponLoading = false;
+        this.couponErrorMessage = this.resolveErrorMessage(err, 'cart.coupon.removeFailed');
+        this.toast.error(this.couponErrorMessage);
+        this.cdr.markForCheck();
+      }
+    });
   }
-  remove(p: string) {
-    this.cartSvc.removeItem(p).subscribe({ next: ({ cart }) => { this.cart = cart; }, error: () => {} });
+
+  trackById(_: number, item: DisplayCartItem): string {
+    return item.id;
   }
-<<<<<<< ours
-  clear() {
-    this.cartSvc.clear().subscribe({ next: ({ cart }) => { this.cart = cart; }, error: () => {} });
-=======
 
   private updateCart(cart: Cart): void {
     const prevCode = this.cart?.coupon?.code || '';
@@ -395,6 +447,5 @@ export class CartComponent implements OnInit {
     }
 
     return null;
->>>>>>> theirs
   }
 }
