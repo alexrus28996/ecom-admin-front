@@ -398,4 +398,3 @@ export class CartComponent implements OnInit {
 >>>>>>> theirs
   }
 }
-
