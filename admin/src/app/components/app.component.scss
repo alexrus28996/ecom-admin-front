@@ -6,6 +6,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
+  min-height: 72px;
 }
 
 .app-toolbar .spacer {
@@ -16,13 +17,6 @@
   display: flex;
   align-items: center;
   gap: 12px;
-}
-
-.app-sidenav-header {
-  padding: 24px 24px 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
 }
 
 .app-content-wrapper {
@@ -38,6 +32,18 @@
 .app-footer {
   padding: 24px;
   text-align: center;
+}
+
+.app-nav {
+  padding-top: 8px;
+}
+
+.app-nav a[mat-list-item] {
+  padding-inline: 18px;
+}
+
+.app-sidenav-footer {
+  padding-top: 8px;
 }
 
 @media (max-width: 959px) {

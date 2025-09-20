@@ -10,7 +10,7 @@ Legend
 - P2 = polish / scale / backlog
 
 ## Execution Plan (Next Up)
-1. Establish Angular Material baseline: configure theme palette, typography, and responsive layout shell (app toolbar + sidenav) to support Material-first UI. [in progress]
+1. Establish Angular Material baseline: configure theme palette, typography, and responsive layout shell (app toolbar + sidenav) to support Material-first UI. [done]
 2. Wire localization scaffolding: ensure i18n module loads, seed translation files, and replace static strings in shell/auth views.
 3. Implement RBAC-aware navigation: use `/api/auth/me` roles to drive menu visibility, protect routes, and surface 403 redirect messaging. [started: 403 handling in interceptor + toasts]
 4. Build dashboard metrics screen: material cards + charts backed by `GET /api/admin/metrics` and `GET /health`, including loading and empty states.
@@ -28,7 +28,7 @@ Legend
 - [ ] Loading states for primary tables/forms to avoid blank flashes while waiting for API responses.
   - Note: Implemented on dashboard, products list, product form, customer orders list, and returns list; consider extracting a shared loading wrapper.
 - [ ] Material design polish: base layouts/screens on Angular Material components with responsive grids, typography, and stateful cards (no barebones UI).
-  - Continued: Customer orders list rebuilt with Material table, paginator, and responsive create-order form.
+  - Continued: Customer orders list rebuilt with Material table, paginator, and responsive create-order form; shell themed with custom palettes/typography and responsive nav.
 - [ ] Localization coverage: route every label, helper, toast, and error through i18n translation files; keep copy out of components.
   - Note: Added returns translations and fixed categories parent "none" label; orders list now fully localized; admin orders statuses now use i18n keys; continue replacing remaining inline strings.
 

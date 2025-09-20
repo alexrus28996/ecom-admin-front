@@ -381,6 +381,10 @@
                                             "inventory":  "Admin / Inventory"
                                         }
                           },
+                  "navSections":  {
+                                     "main":  "Workspace",
+                                     "admin":  "Administration"
+                                   },
                   "auth":  {
                                "login":  "Login",
                                "register":  "Create Account"

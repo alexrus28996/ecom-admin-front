@@ -15,7 +15,8 @@
       </ng-container>
     </div>
 
-    <mat-nav-list>
+    <mat-nav-list class="app-nav">
+      <h3 matSubheader>{{ 'shell.navSections.main' | translate }}</h3>
       <a
         mat-list-item
         *ngFor="let item of primaryNav; trackBy: trackByRoute"
@@ -31,7 +32,8 @@
 
     <mat-divider *ngIf="auth.isAdmin"></mat-divider>
 
-    <mat-nav-list *ngIf="auth.isAdmin">
+    <mat-nav-list *ngIf="auth.isAdmin" class="app-nav">
+      <h3 matSubheader>{{ 'shell.navSections.admin' | translate }}</h3>
       <ng-container *ngFor="let item of adminNav; trackBy: trackByRoute">
         <a
           mat-list-item
@@ -45,6 +47,10 @@
         </a>
       </ng-container>
     </mat-nav-list>
+
+    <div class="app-sidenav-footer">
+      {{ 'shell.footer.backend' | translate }}
+    </div>
   </mat-sidenav>
 
   <mat-sidenav-content class="app-content-wrapper">
