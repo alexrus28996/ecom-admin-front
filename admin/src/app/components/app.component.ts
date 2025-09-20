@@ -14,7 +14,7 @@ interface ShellNavItem {
   labelKey: string;
   icon: string;
   route: string;
-  requiresAdmin?: boolean;
+  requiredRoles?: readonly string[];
 }
 
 @Component({
@@ -26,21 +26,22 @@ interface ShellNavItem {
 export class AppComponent implements OnInit {
   readonly primaryNav: ShellNavItem[] = [
     { labelKey: 'shell.nav.dashboard', icon: 'dashboard', route: '/dashboard' },
-    { labelKey: 'shell.nav.products', icon: 'inventory_2', route: '/products' },
+    { labelKey: 'shell.nav.products', icon: 'inventory_2', route: '/products', requiredRoles: ['admin'] },
     { labelKey: 'shell.nav.addresses', icon: 'location_on', route: '/addresses' },
     { labelKey: 'shell.nav.cart', icon: 'shopping_cart', route: '/cart' },
     { labelKey: 'shell.nav.orders', icon: 'assignment', route: '/orders' }
   ];
 
   readonly adminNav: ShellNavItem[] = [
-    { labelKey: 'shell.nav.admin.users', icon: 'admin_panel_settings', route: '/admin/users', requiresAdmin: true },
-    { labelKey: 'shell.nav.admin.orders', icon: 'insights', route: '/admin/orders', requiresAdmin: true },
-    { labelKey: 'shell.nav.admin.categories', icon: 'category', route: '/admin/categories', requiresAdmin: true },
-    { labelKey: 'shell.nav.admin.returns', icon: 'assignment_return', route: '/admin/returns', requiresAdmin: true },
-    { labelKey: 'shell.nav.admin.inventory', icon: 'inventory', route: '/admin/inventory', requiresAdmin: true }
+    { labelKey: 'shell.nav.admin.users', icon: 'admin_panel_settings', route: '/admin/users', requiredRoles: ['admin'] },
+    { labelKey: 'shell.nav.admin.orders', icon: 'insights', route: '/admin/orders', requiredRoles: ['admin'] },
+    { labelKey: 'shell.nav.admin.categories', icon: 'category', route: '/admin/categories', requiredRoles: ['admin'] },
+    { labelKey: 'shell.nav.admin.returns', icon: 'assignment_return', route: '/admin/returns', requiredRoles: ['admin'] },
+    { labelKey: 'shell.nav.admin.inventory', icon: 'inventory', route: '/admin/inventory', requiredRoles: ['admin'] }
   ];
 
   readonly isHandset$: Observable<boolean>;
+  readonly visibleAdminNav$: Observable<ShellNavItem[]>;
   isHandset = false;
   isDark = false;
   navCollapsed = false;
@@ -55,6 +56,11 @@ export class AppComponent implements OnInit {
   ) {
     this.isHandset$ = breakpointObserver.observe([Breakpoints.Handset, Breakpoints.Tablet]).pipe(
       map((result) => result.matches),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+
+    this.visibleAdminNav$ = this.auth.user$.pipe(
+      map(() => this.adminNav.filter((item) => this.shouldDisplay(item))),
       shareReplay({ bufferSize: 1, refCount: true })
     );
 
@@ -107,7 +113,7 @@ export class AppComponent implements OnInit {
   }
 
   shouldDisplay(item: ShellNavItem): boolean {
-    return !item.requiresAdmin || this.auth.isAdmin;
+    return this.auth.hasAnyRole(item.requiredRoles);
   }
 
   onNavigate(drawer: MatSidenav): void {

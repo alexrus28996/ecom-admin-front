@@ -19,37 +19,13 @@
 
     <mat-nav-list class="app-nav">
       <h3 matSubheader>{{ 'shell.navSections.main' | translate }}</h3>
-      <a
-        mat-list-item
-        *ngFor="let item of primaryNav; trackBy: trackByRoute"
-        [routerLink]="item.route"
-        routerLinkActive="active-link"
-        [routerLinkActiveOptions]="{ exact: true }"
-        (click)="onNavigate(drawer)"
-        [matTooltip]="navCollapsed && !(isHandset$ | async) ? (item.labelKey | translate) : ''"
-        matTooltipPosition="right"
-      >
-        <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-        <span
-          matListItemTitle
-          class="app-nav-label"
-          [class.app-nav-label-collapsed]="navCollapsed && !(isHandset$ | async)"
-          [attr.aria-hidden]="navCollapsed && !(isHandset$ | async) ? 'true' : null"
-          >{{ item.labelKey | translate }}</span
-        >
-      </a>
-    </mat-nav-list>
-
-    <mat-divider *ngIf="auth.isAdmin"></mat-divider>
-
-    <mat-nav-list *ngIf="auth.isAdmin" class="app-nav">
-      <h3 matSubheader>{{ 'shell.navSections.admin' | translate }}</h3>
-      <ng-container *ngFor="let item of adminNav; trackBy: trackByRoute">
+      <ng-container *ngFor="let item of primaryNav; trackBy: trackByRoute">
         <a
           mat-list-item
           *ngIf="shouldDisplay(item)"
           [routerLink]="item.route"
           routerLinkActive="active-link"
+          [routerLinkActiveOptions]="{ exact: true }"
           (click)="onNavigate(drawer)"
           [matTooltip]="navCollapsed && !(isHandset$ | async) ? (item.labelKey | translate) : ''"
           matTooltipPosition="right"
@@ -65,6 +41,32 @@
         </a>
       </ng-container>
     </mat-nav-list>
+
+    <ng-container *ngIf="visibleAdminNav$ | async as visibleAdminNav">
+      <mat-divider *ngIf="visibleAdminNav.length"></mat-divider>
+
+      <mat-nav-list *ngIf="visibleAdminNav.length" class="app-nav">
+        <h3 matSubheader>{{ 'shell.navSections.admin' | translate }}</h3>
+        <a
+          mat-list-item
+          *ngFor="let item of visibleAdminNav; trackBy: trackByRoute"
+          [routerLink]="item.route"
+          routerLinkActive="active-link"
+          (click)="onNavigate(drawer)"
+          [matTooltip]="navCollapsed && !(isHandset$ | async) ? (item.labelKey | translate) : ''"
+          matTooltipPosition="right"
+        >
+          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+          <span
+            matListItemTitle
+            class="app-nav-label"
+            [class.app-nav-label-collapsed]="navCollapsed && !(isHandset$ | async)"
+            [attr.aria-hidden]="navCollapsed && !(isHandset$ | async) ? 'true' : null"
+            >{{ item.labelKey | translate }}</span
+          >
+        </a>
+      </mat-nav-list>
+    </ng-container>
 
     <div class="app-sidenav-footer">
       {{ 'shell.footer.backend' | translate }}

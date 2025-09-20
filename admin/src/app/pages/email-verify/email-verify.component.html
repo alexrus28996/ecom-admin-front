@@ -1,7 +1,8 @@
 <div class="panel" style="max-width:520px; margin:48px auto;">
-  <h2>Email Verification</h2>
-  <p *ngIf="loading" class="muted">Verifying…</p>
-  <p *ngIf="msg" class="muted">{{ msg }}</p>
-  <p *ngIf="err" class="muted">{{ err }}</p>
+  <h2>{{ 'emailVerify.title' | translate }}</h2>
+  <p *ngIf="loading" class="muted">{{ 'emailVerify.loading' | translate }}</p>
+  <p *ngIf="!loading && msgKey" class="muted success">{{ msgKey | translate }}</p>
+  <p *ngIf="!loading && errKey" class="muted">{{ errKey | translate }}</p>
+  <p *ngIf="!loading && errMessage" class="muted">{{ errMessage }}</p>
 </div>
 

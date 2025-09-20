@@ -49,7 +49,33 @@ export class AuthService {
   get token(): string | null { return localStorage.getItem(this.tokenKey); }
   get user(): PublicUser | null { return this._user$.value; }
   get isLoggedIn(): boolean { return !!this.token; }
-  get isAdmin(): boolean { return !!this.user?.roles?.includes('admin'); }
+  get roles(): string[] { return this.user?.roles ?? []; }
+  get isAdmin(): boolean { return this.hasRole('admin'); }
+
+  hasRole(role: string): boolean {
+    if (!role) {
+      return false;
+    }
+    return this.roles.includes(role);
+  }
+
+  hasAnyRole(roles?: readonly string[] | null): boolean {
+    if (!roles || roles.length === 0) {
+      return true;
+    }
+
+    const userRoles = this.roles;
+    return roles.some((role) => userRoles.includes(role));
+  }
+
+  hasAllRoles(roles?: readonly string[] | null): boolean {
+    if (!roles || roles.length === 0) {
+      return true;
+    }
+
+    const userRoles = this.roles;
+    return roles.every((role) => userRoles.includes(role));
+  }
 
   private setUser(user: PublicUser | null): void {
     if (user) {
