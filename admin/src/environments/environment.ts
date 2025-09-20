@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  // If using dev-server proxy, keep '/api'. Otherwise point to full backend URL.
-  apiBaseUrl: '/api'
+  // Point to the local backend API during development.
+  apiBaseUrl: 'http://localhost:4001/api'
 };
 
