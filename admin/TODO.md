@@ -16,7 +16,8 @@ Legend
 4. Build dashboard metrics screen: material cards + charts backed by `GET /api/admin/metrics` and `GET /health`, including loading and empty states.
 5. Ship shared UI primitives: confirmation dialog, error banner, loading indicators packaged for reuse across product/order/returns flows. [confirm + error banner shipped]
 6. Begin admin returns console: table + detail drawer powered by `/api/admin/returns` and approve/reject endpoints. [list + approve/reject shipped]
-7. Follow with inventory console and coupons management before expanding to reviews moderation and bulk tooling.
+7. Stand up shipments management: `/api/admin/orders/{id}/shipments` create modal + `/api/admin/shipments` history, including timeline integration on order detail.
+8. Follow with inventory console and coupons management before expanding to reviews moderation and bulk tooling.
 
 
 ## P0 - Immediate Parity Gaps
@@ -38,11 +39,13 @@ Legend
 - [ ] Reviews moderation view for admins (list via `GET /api/products/{id}/reviews`, approve/hide endpoints).
 - [ ] Admin returns console (`GET /api/admin/returns`, approve/reject endpoints) with inline notes.
   - Started: Returns list + approve/reject actions shipped; added right-side details drawer; inline notes pending.
+- [ ] Shipments workflow (`GET /api/admin/shipments`, `GET/POST /api/admin/orders/{id}/shipments`) including shipment detail drawer and tracking/status chips on the order page.
 - [ ] Inventory console (overview + adjustments + low-stock) using `/api/admin/inventory*` endpoints.
 - [ ] Coupon management (`/api/admin/coupons` CRUD) plus cart coupon apply/remove (`POST/DELETE /api/cart/coupon`).
 - [ ] Orders timeline + invoice links (`GET /api/orders/{id}/timeline|invoice`) surfaced in user+admin views.
   - Started: Admin order detail has invoice open + timeline fetch/table; User order detail updated similarly.
 - [ ] Stripe payment intent trigger from order detail (`POST /api/payments/stripe/intent`) with paid/unpaid badge.
+- [ ] Transactions & refunds ledger (`GET /api/admin/transactions`, `/api/admin/refunds`) surfaced alongside orders for reconciliation.
 - [ ] Product bulk tooling (import/export, price-bulk, category-bulk) with success/error reporting.
 - [ ] Reports suite: sales, top products/customers from `/api/admin/reports/*` with CSV/JSON exports.
 - [ ] Media uploads UI (local + Cloudinary) mapping to `/api/uploads` + `/api/uploads/cloudinary(+/delete)`.
@@ -55,6 +58,23 @@ Legend
 - [ ] Payment provider toggles once Razorpay/PayPal APIs ship (track backend TODOs).
 - [ ] Theme switcher (light/dark), i18n scaffolding, and offline-friendly caches for key screens.
 - [ ] Visual regression stories / Storybook or screenshot tests for critical components.
+
+## Module Status Snapshot
+
+| Module | Done | Total | Coverage |
+| --- | --- | --- | --- |
+| Auth & Session | 4 | 5 | 80% |
+| Users & RBAC | 3 | 5 | 60% |
+| Catalog & Media | 2 | 6 | 33% |
+| Cart & Promotions | 2 | 3 | 67% |
+| Orders & Returns | 2 | 6 | 33% |
+| Shipments & Logistics | 0 | 3 | 0% |
+| Inventory | 0 | 4 | 0% |
+| Analytics & Reports | 1 | 4 | 25% |
+| Payments | 0 | 5 | 0% |
+| System & Settings | 0 | 3 | 0% |
+| UX Infrastructure | 3 | 8 | 38% |
+| Dev & QA | 0 | 4 | 0% |
 
 ## Module Backlog (Reference by API)
 
@@ -100,6 +120,11 @@ Legend
   - Started: Basic returns list with filtering and approve/reject wired.
 - [ ] Payment + fulfillment history timeline chips.
 
+### Shipments & Logistics
+- [ ] Admin shipments list (`GET /api/admin/shipments`) with filters + pagination.
+- [ ] Order shipments tab/detail (`GET /api/admin/orders/{id}/shipments`) with create modal (`POST /api/admin/orders/{id}/shipments`).
+- [ ] Shipment timeline + tracking UI badges coordinated with order detail history.
+
 ### Inventory
 - [ ] Inventory overview grid (`GET /api/admin/inventory`).
   - Started: Overview table with filters and pagination; basic columns (product/variant/stock).
@@ -119,6 +144,8 @@ Legend
 - [ ] Stripe intent initiation + feedback (`POST /api/payments/stripe/intent`).
 - [ ] Payment status badges driven by order `paymentStatus`.
 - [ ] Future: Razorpay/PayPal integration once APIs exist.
+- [ ] Transactions index (`GET /api/admin/transactions`) and detail view for reconciliation.
+- [ ] Refunds index (`GET /api/admin/refunds`) with linkage back to returns/orders.
 
 ### System & Settings
 - [ ] Environment selector (proxy `/api` vs absolute base URL) with persistent choice.
