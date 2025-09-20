@@ -1,4 +1,4 @@
-﻿{
+{
   "common": {
     "loading": "Loading…"
   },
@@ -58,421 +58,464 @@
         "addToCart": "Could not add product to the cart.",
         "deleteFailed": "Could not delete the product."
       }
+    }
+  },
+  "adminOrders": {
+    "list": {
+      "title": "Admin / Orders",
+      "subtitle": "Review and manage customer orders.",
+      "table": {
+        "id": "Order",
+        "total": "Total",
+        "status": "Status",
+        "payment": "Payment",
+        "createdAt": "Created",
+        "actions": "Actions"
+      },
+      "actions": {
+        "view": "View"
+      },
+      "empty": "No orders found.",
+      "errors": {
+        "loadFailed": "Unable to load orders."
+      }
     },
-    "adminOrders":  {
-                        "list":  {
-                                     "title":  "Admin / Orders",
-                                     "subtitle":  "Review and manage customer orders.",
-                                     "table":  {
-                                                   "id":  "Order",
-                                                   "total":  "Total",
-                                                   "status":  "Status",
-                                                   "payment":  "Payment",
-                                                   "createdAt":  "Created",
-                                                   "actions":  "Actions"
-                                               },
-                                     "actions":  {
-                                                      "view":  "View"
-                                                  },
-                                     "empty":  "No orders found.",
-                                     "errors":  {
-                                                    "loadFailed":  "Unable to load orders."
-                                                }
-                                 },
-                        "detail":  {
-                                       "title":  "Admin / Order",
-                                       "fields":  {
-                                                      "id":  "ID",
-                                                      "status":  "Status",
-                                                      "payment":  "Payment"
-                                                  },
-                                       "table":  {
-                                                     "product":  "Product",
-                                                     "price":  "Price",
-                                                     "qty":  "Qty",
-                                                     "line":  "Line"
-                                                 },
-                                       "summary":  {
-                                                       "subtotal":  "Subtotal",
-                                                       "shipping":  "Shipping",
-                                                       "tax":  "Tax",
-                                                       "total":  "Total"
-                                                   },
-                                       "toasts":  {
-                                                      "updated":  "Order updated."
-                                                  },
-                                       "errors":  {
-                                                      "loadFailed":  "Unable to load order.",
-                                                      "updateFailed":  "Unable to update order.",
-                                                      "timelineFailed":  "Unable to load timeline."
-                                                  },
-                                       "actions":  {
-                                                       "save":  "Save",
-                                                       "invoice":  "Invoice (PDF)",
-                                                       "timeline":  "Show timeline"
-                                                   },
-                                       "timeline":  {
-                                                        "title":  "Order timeline",
-                                                        "time":  "Time",
-                                                        "type":  "Type",
-                                                        "message":  "Message"
-                                                    }
-                                   }
-                    },
-    "returns":  {
-                    "list":  {
-                                "title":  "Admin / Returns",
-                                "subtitle":  "Track return requests and resolve them quickly.",
-                                "filters":  {
-                                                "status":  {
-                                                              "label":  "Status",
-                                                              "any":  "Any status"
-                                                          }
-                                            },
-                                "table":  {
-                                              "order":  "Order",
-                                              "amount":  "Amount",
-                                              "status":  "Status",
-                                              "requestedAt":  "Requested",
-                                              "actions":  "Actions"
-                                          },
-                                "actions":  {
-                                                 "approve":  "Approve",
-                                                 "reject":  "Reject"
-                                             },
-                                "status":  {
-                                               "requested":  "Requested",
-                                               "approved":  "Approved",
-                                               "rejected":  "Rejected",
-                                               "refunded":  "Refunded"
-                                           },
-                                "detail":  {
-                                              "id":  "Return ID",
-                                              "reason":  "Reason",
-                                              "note":  "Note"
-                                          },
-                                "empty":  "No returns found.",
-                                "toasts":  {
-                                               "approved":  "Return approved.",
-                                               "rejected":  "Return rejected."
-                                           },
-                                "errors":  {
-                                               "loadFailed":  "Unable to load returns.",
-                                               "updateFailed":  "Unable to update return."
-                                           }
-                             }
-                },
-    "profile":  {
-                    "title":  "My Profile",
-                    "roles":  "Roles",
-                    "sections":  {
-                                     "name":  "Update Name",
-                                     "password":  "Change Password",
-                                     "email":  "Email",
-                                     "preferences":  "Preferences"
-                                 },
-                    "name":  {
-                                 "label":  "Name",
-                                 "placeholder":  "Your name"
-                             },
-                    "actions":  {
-                                    "save":  "Save",
-                                    "change":  "Change"
-                                },
-                    "password":  {
-                                     "current":  "Current password",
-                                     "new":  "New password"
-                                 },
-                    "email":  {
-                                  "verify":  "Send verification link",
-                                  "new":  "New email",
-                                  "requestChange":  "Request email change"
-                              },
-                    "prefs":  {
-                                  "locale":  "Locale",
-                                  "notifications":  {
-                                                        "email":  "Email notifications",
-                                                        "sms":  "SMS notifications",
-                                                        "push":  "Push notifications"
-                                                    }
-                              },
-                    "toasts":  {
-                                   "nameSaved":  "Name updated.",
-                                   "passwordChanged":  "Password changed.",
-                                   "verificationSent":  "Verification email sent.",
-                                   "emailChangeRequested":  "Email change link sent.",
-                                   "preferencesSaved":  "Preferences saved."
-                               },
-                    "errors":  {
-                                   "nameSaveFailed":  "Unable to update name.",
-                                   "passwordChangeFailed":  "Unable to change password.",
-                                   "verifyFailed":  "Unable to send verification link.",
-                                   "emailChangeFailed":  "Unable to request email change.",
-                                   "preferencesSaveFailed":  "Unable to save preferences."
-                               }
-                },
-    "cart":  {
-                 "title":  "My cart",
-                 "subtitle":  "Review items in your cart before creating an order.",
-                 "actions":  {
-                               "refresh":  "Refresh",
-                               "clear":  "Clear cart",
-                               "increase":  "Increase quantity",
-                               "decrease":  "Decrease quantity",
-                               "remove":  "Remove item"
-                             },
-                 "table":  {
-                              "product":  "Product",
-                              "price":  "Price",
-                              "qty":  "Qty",
-                              "line":  "Line",
-                              "actions":  "Actions",
-                              "unknownProduct":  "Unknown product"
-                            },
-                 "empty":  "Your cart is empty.",
-                 "summary":  {
-                                 "title":  "Cart summary",
-                                 "subtotal":  "Subtotal",
-                                 "discounts":  "Discounts",
-                                 "shipping":  "Shipping",
-                                 "tax":  "Tax",
-                                 "total":  "Total",
-                                 "updated":  "Updated {{ date }}"
-                               },
-                 "coupon":  {
-                                "label":  "Coupon code",
-                                "placeholder":  "Enter coupon",
-                                "apply":  "Apply coupon",
-                                "remove":  "Remove coupon",
-                                "savingsLabel":  "Savings",
-                                "errors":  {
-                                                "required":  "Coupon code is required.",
-                                                "minLength":  "Coupon code is too short."
-                                            },
-                                "applyFailed":  "We couldn't apply that coupon.",
-                                "removeFailed":  "We couldn't remove the coupon."
-                              },
-                 "clearConfirm":  {
-                                      "title":  "Clear cart?",
-                                      "message":  "This will remove every item from the cart."
-                                    },
-                 "toasts":  {
-                               "couponApplied":  "Coupon {{ code }} applied.",
-                               "couponRemoved":  "Coupon removed.",
-                               "itemRemoved":  "{{ name }} removed from the cart.",
-                               "cleared":  "Cart cleared."
-                             },
-                 "errors":  {
-                               "loadFailed":  "Unable to load cart.",
-                               "updateFailed":  "Unable to update the cart.",
-                               "removeFailed":  "Unable to remove the item.",
-                               "clearFailed":  "Unable to clear the cart."
-                             }
-             },
-    "orders":  {
-                   "list":  {
-                                 "title":  "My orders",
-                                 "subtitle":  "Review order history, create new orders from your cart, and keep tabs on fulfillment.",
-                                 "actions":  {
-                                                 "refresh":  "Refresh"
-                                             },
-                                 "create":  {
-                                              "title":  "Create order from cart",
-                                              "subtitle":  "Apply shipping and tax to your active cart to generate a new order.",
-                                              "fields":  {
-                                                            "shipping":  "Shipping amount",
-                                                            "shippingHint":  "Flat shipping charge applied to the order.",
-                                                            "taxRate":  "Tax rate",
-                                                            "taxRateHint":  "Enter as a decimal (e.g. 0.07 for 7%)."
-                                                        },
-                                              "errors":  {
-                                                            "shippingMin":  "Shipping cannot be negative.",
-                                                            "taxRateRange":  "Tax rate must be between 0 and 1."
-                                                        },
-                                              "submit":  "Create order"
-                                          },
-                                 "table":  {
-                                              "title":  "Recent orders",
-                                              "count":  "{{ count }} total orders",
-                                              "id":  "Order",
-                                              "total":  "Total",
-                                              "status":  "Status",
-                                              "placed":  "Placed",
-                                              "actions":  "Actions",
-                                              "view":  "View order"
-                                          },
-                                 "status":  {
-                                               "pending":  "Pending",
-                                               "processing":  "Processing",
-                                               "confirmed":  "Confirmed",
-                                               "fulfilled":  "Fulfilled",
-                                               "completed":  "Completed",
-                                               "shipped":  "Shipped",
-                                               "delivered":  "Delivered",
-                                               "cancelled":  "Cancelled",
-                                               "refunded":  "Refunded",
-                                               "failed":  "Failed",
-                                               "unknown":  "Unknown"
-                                           },
-                                 "paymentStatus":  {
-                                                     "paid":  "Paid",
-                                                     "unpaid":  "Unpaid",
-                                                     "pending":  "Pending payment",
-                                                     "refunded":  "Refunded",
-                                                     "failed":  "Payment failed",
-                                                     "unknown":  "Unknown"
-                                                 },
-                                 "empty":  "No orders yet. Create one from your cart to get started.",
-                                 "errors":  {
-                                                "loadFailed":  "Unable to load orders. Please try again.",
-                                                "createFailed":  "We couldn't create the order from your cart."
-                                            },
-                                 "toasts":  {
-                                                "created":  "Order created from your cart."
-                                            }
-                             },
-                   "detail":  {
-                                  "title":  "Order Detail",
-                                  "fields":  {
-                                                 "id":  "ID",
-                                                 "status":  "Status"
-                                             },
-                                  "actions":  {
-                                                  "invoice":  "Invoice (PDF)",
-                                                  "timeline":  "Show timeline"
-                                              },
-                                  "table":  {
-                                                "product":  "Product",
-                                                "price":  "Price",
-                                                "qty":  "Qty",
-                                                "line":  "Line"
-                                            },
-                                  "summary":  {
-                                                  "subtotal":  "Subtotal",
-                                                  "shipping":  "Shipping",
-                                                  "tax":  "Tax",
-                                                  "total":  "Total"
-                                              },
-                                  "timeline":  {
-                                                   "title":  "Order timeline",
-                                                   "time":  "Time",
-                                                   "type":  "Type",
-                                                   "message":  "Message"
-                                               },
-                                  "errors":  {
-                                                 "loadFailed":  "Unable to load order.",
-                                                 "timelineFailed":  "Unable to load timeline."
-                                             }
-                              }
-               },
-    "shell":  {
-                  "brand":  "Ecom Admin",
-                  "nav":  {
-                              "dashboard":  "Dashboard",
-                              "products":  "Products",
-                              "cart":  "Cart",
-                              "orders":  "Orders",
-                              "profile":  "Profile",
-                              "admin":  {
-                                            "users":  "Admin / Users",
-                                            "orders":  "Admin / Orders",
-                                            "categories":  "Admin / Categories",
-                                            "returns":  "Admin / Returns",
-                                            "inventory":  "Admin / Inventory"
-                                        }
-                          },
-                  "navSections":  {
-                                     "main":  "Workspace",
-                                     "admin":  "Administration"
-                                   },
-                  "auth":  {
-                               "login":  "Login",
-                               "register":  "Create Account"
-                           },
-                  "actions":  {
-                                  "logout":  "Sign out",
-                                  "toggleTheme":  "Toggle theme",
-                                  "setDark":  "Switch to dark mode",
-                                  "setLight":  "Switch to light mode"
-                              },
-                  "footer":  {
-                                 "backend":  "Backend: /api",
-                                 "docs":  "API Docs"
-                             },
-                  "a11y":  {
-                               "toggleNav":  "Toggle navigation"
-                           }
-              },
-    "inventory":  {
-                      "title":  "Inventory",
-                      "subtitle":  "Overview and adjustments",
-                      "overview":  {
-                                       "title":  "Overview",
-                                       "empty":  "No inventory rows match the filters."
-                                   },
-                      "filters":  {
-                                      "product":  "Product",
-                                      "variant":  "Variant",
-                                      "location":  "Location",
-                                      "reason":  "Reason",
-                                      "threshold":  "Threshold"
-                                  },
-                      "actions":  {
-                                      "apply":  "Apply",
-                                      "createAdjustment":  "Create adjustment"
-                                  },
-                      "table":  {
-                                    "product":  "Product",
-                                    "variant":  "Variant",
-                                    "stock":  "Stock"
-                                },
-                      "adjust":  {
-                                     "productId":  "Product ID",
-                                     "variantId":  "Variant ID",
-                                     "qtyChange":  "Quantity change",
-                                     "reason":  "Reason",
-                                     "note":  "Note"
-                                 },
-                      "adjustments":  {
-                                          "title":  "Adjustments",
-                                          "empty":  "No adjustments found."
-                                      },
-                      "errors":  {
-                                     "overviewFailed":  "Unable to load inventory.",
-                                     "adjustmentsFailed":  "Unable to load adjustments.",
-                                     "adjustmentCreateFailed":  "Unable to create adjustment."
-                                 },
-                      "low":  {
-                                  "title":  "Low stock",
-                                  "empty":  "No low-stock items found."
-                              }
-                  },
-    "adminUsers":  {
-                       "list":  {
-                                    "title":  "Admin / Users",
-                                    "subtitle":  "Search and manage users",
-                                    "filters":  {
-                                                    "search":  "Search users",
-                                                    "placeholder":  "Name or email"
-                                                },
-                                    "table":  {
-                                                  "name":  "Name",
-                                                  "email":  "Email",
-                                                  "roles":  "Roles",
-                                                  "active":  "Active",
-                                                  "actions":  "Actions"
-                                              },
-                                    "status":  {
-                                                   "active":  "Active",
-                                                   "inactive":  "Inactive"
-                                               },
-                                    "empty":  "No users found.",
-                                    "errors":  {
-                                                   "loadFailed":  "Unable to load users."
-                                               }
-                                }
-                   }
-,
+    "detail": {
+      "title": "Admin / Order",
+      "fields": {
+        "id": "ID",
+        "status": "Status",
+        "payment": "Payment"
+      },
+      "table": {
+        "product": "Product",
+        "price": "Price",
+        "qty": "Qty",
+        "line": "Line"
+      },
+      "summary": {
+        "subtotal": "Subtotal",
+        "shipping": "Shipping",
+        "tax": "Tax",
+        "total": "Total"
+      },
+      "toasts": {
+        "updated": "Order updated."
+      },
+      "errors": {
+        "loadFailed": "Unable to load order.",
+        "updateFailed": "Unable to update order.",
+        "timelineFailed": "Unable to load timeline."
+      },
+      "actions": {
+        "save": "Save",
+        "invoice": "Invoice (PDF)",
+        "timeline": "Show timeline"
+      },
+      "timeline": {
+        "title": "Order timeline",
+        "time": "Time",
+        "type": "Type",
+        "message": "Message"
+      }
+    }
+  },
+  "returns": {
+    "list": {
+      "title": "Admin / Returns",
+      "subtitle": "Track return requests and resolve them quickly.",
+      "filters": {
+        "status": {
+          "label": "Status",
+          "any": "Any status"
+        }
+      },
+      "table": {
+        "order": "Order",
+        "amount": "Amount",
+        "status": "Status",
+        "requestedAt": "Requested",
+        "actions": "Actions"
+      },
+      "actions": {
+        "approve": "Approve",
+        "reject": "Reject"
+      },
+      "status": {
+        "requested": "Requested",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "refunded": "Refunded"
+      },
+      "detail": {
+        "id": "Return ID",
+        "reason": "Reason",
+        "note": "Note"
+      },
+      "empty": "No returns found.",
+      "toasts": {
+        "approved": "Return approved.",
+        "rejected": "Return rejected."
+      },
+      "errors": {
+        "loadFailed": "Unable to load returns.",
+        "updateFailed": "Unable to update return."
+      }
+    }
+  },
+  "profile": {
+    "title": "My Profile",
+    "roles": "Roles",
+    "sections": {
+      "name": "Update Name",
+      "password": "Change Password",
+      "email": "Email",
+      "preferences": "Preferences"
+    },
+    "name": {
+      "label": "Name",
+      "placeholder": "Your name"
+    },
+    "actions": {
+      "save": "Save",
+      "change": "Change"
+    },
+    "password": {
+      "current": "Current password",
+      "new": "New password"
+    },
+    "email": {
+      "verify": "Send verification link",
+      "new": "New email",
+      "requestChange": "Request email change"
+    },
+    "prefs": {
+      "locale": "Locale",
+      "notifications": {
+        "email": "Email notifications",
+        "sms": "SMS notifications",
+        "push": "Push notifications"
+      }
+    },
+    "toasts": {
+      "nameSaved": "Name updated.",
+      "passwordChanged": "Password changed.",
+      "verificationSent": "Verification email sent.",
+      "emailChangeRequested": "Email change link sent.",
+      "preferencesSaved": "Preferences saved."
+    },
+    "errors": {
+      "nameSaveFailed": "Unable to update name.",
+      "passwordChangeFailed": "Unable to change password.",
+      "verifyFailed": "Unable to send verification link.",
+      "emailChangeFailed": "Unable to request email change.",
+      "preferencesSaveFailed": "Unable to save preferences."
+    }
+  },
+  "cart": {
+    "title": "My cart",
+    "subtitle": "Review items in your cart before creating an order.",
+    "actions": {
+      "refresh": "Refresh",
+      "clear": "Clear cart",
+      "increase": "Increase quantity",
+      "decrease": "Decrease quantity",
+      "remove": "Remove item"
+    },
+    "table": {
+      "product": "Product",
+      "price": "Price",
+      "qty": "Qty",
+      "line": "Line",
+      "actions": "Actions",
+      "unknownProduct": "Unknown product"
+    },
+    "empty": "Your cart is empty.",
+    "summary": {
+      "title": "Cart summary",
+      "subtotal": "Subtotal",
+      "discounts": "Discounts",
+      "shipping": "Shipping",
+      "tax": "Tax",
+      "total": "Total",
+      "updated": "Updated {{ date }}"
+    },
+    "coupon": {
+      "label": "Coupon code",
+      "placeholder": "Enter coupon",
+      "apply": "Apply coupon",
+      "remove": "Remove coupon",
+      "savingsLabel": "Savings",
+      "errors": {
+        "required": "Coupon code is required.",
+        "minLength": "Coupon code is too short."
+      },
+      "applyFailed": "We couldn't apply that coupon.",
+      "removeFailed": "We couldn't remove the coupon."
+    },
+    "clearConfirm": {
+      "title": "Clear cart?",
+      "message": "This will remove every item from the cart."
+    },
+    "toasts": {
+      "couponApplied": "Coupon {{ code }} applied.",
+      "couponRemoved": "Coupon removed.",
+      "itemRemoved": "{{ name }} removed from the cart.",
+      "cleared": "Cart cleared."
+    },
+    "errors": {
+      "loadFailed": "Unable to load cart.",
+      "updateFailed": "Unable to update the cart.",
+      "removeFailed": "Unable to remove the item.",
+      "clearFailed": "Unable to clear the cart."
+    }
+  },
+  "orders": {
+    "list": {
+      "title": "My orders",
+      "subtitle": "Review order history, create new orders from your cart, and keep tabs on fulfillment.",
+      "actions": {
+        "refresh": "Refresh"
+      },
+      "create": {
+        "title": "Create order from cart",
+        "subtitle": "Apply shipping and tax to your active cart to generate a new order.",
+        "fields": {
+          "shipping": "Shipping amount",
+          "shippingHint": "Flat shipping charge applied to the order.",
+          "taxRate": "Tax rate",
+          "taxRateHint": "Enter as a decimal (e.g. 0.07 for 7%)."
+        },
+        "errors": {
+          "shippingMin": "Shipping cannot be negative.",
+          "taxRateRange": "Tax rate must be between 0 and 1."
+        },
+        "submit": "Create order"
+      },
+      "table": {
+        "title": "Recent orders",
+        "count": "{{ count }} total orders",
+        "id": "Order",
+        "total": "Total",
+        "status": "Status",
+        "placed": "Placed",
+        "actions": "Actions",
+        "view": "View order"
+      },
+      "status": {
+        "pending": "Pending",
+        "processing": "Processing",
+        "confirmed": "Confirmed",
+        "fulfilled": "Fulfilled",
+        "completed": "Completed",
+        "shipped": "Shipped",
+        "delivered": "Delivered",
+        "cancelled": "Cancelled",
+        "refunded": "Refunded",
+        "failed": "Failed",
+        "unknown": "Unknown"
+      },
+      "paymentStatus": {
+        "paid": "Paid",
+        "unpaid": "Unpaid",
+        "pending": "Pending payment",
+        "refunded": "Refunded",
+        "failed": "Payment failed",
+        "unknown": "Unknown"
+      },
+      "empty": "No orders yet. Create one from your cart to get started.",
+      "errors": {
+        "loadFailed": "Unable to load orders. Please try again.",
+        "createFailed": "We couldn't create the order from your cart."
+      },
+      "toasts": {
+        "created": "Order created from your cart."
+      }
+    },
+    "detail": {
+      "title": "Order Detail",
+      "fields": {
+        "id": "ID",
+        "status": "Status"
+      },
+      "actions": {
+        "invoice": "Invoice (PDF)",
+        "timeline": "Show timeline"
+      },
+      "table": {
+        "product": "Product",
+        "price": "Price",
+        "qty": "Qty",
+        "line": "Line"
+      },
+      "summary": {
+        "subtotal": "Subtotal",
+        "shipping": "Shipping",
+        "tax": "Tax",
+        "total": "Total"
+      },
+      "timeline": {
+        "title": "Order timeline",
+        "time": "Time",
+        "type": "Type",
+        "message": "Message"
+      },
+      "errors": {
+        "loadFailed": "Unable to load order.",
+        "timelineFailed": "Unable to load timeline."
+      }
+    }
+  },
+  "forgot": {
+    "title": "Forgot password",
+    "subtitle": "Enter your email address and we'll send a reset link if it exists.",
+    "email": {
+      "label": "Email address",
+      "placeholder": "you@example.com",
+      "errors": {
+        "required": "Email is required.",
+        "format": "Enter a valid email address."
+      }
+    },
+    "actions": {
+      "submit": "Send reset link",
+      "submitting": "Sending reset link…",
+      "backToLogin": "Back to login"
+    },
+    "success": "If the account exists, you'll receive an email shortly.",
+    "errors": {
+      "generic": "We couldn't send the reset link. Please try again."
+    }
+  },
+  "reset": {
+    "title": "Reset password",
+    "subtitle": "Choose a new password to finish resetting your account.",
+    "password": {
+      "label": "New password",
+      "placeholder": "Enter a new password",
+      "errors": {
+        "required": "Password is required.",
+        "minLength": "Password must be at least {{ min }} characters long."
+      }
+    },
+    "actions": {
+      "submit": "Reset password",
+      "submitting": "Resetting password…",
+      "backToLogin": "Return to login"
+    },
+    "success": "Password updated. You can sign in now.",
+    "errors": {
+      "generic": "We couldn't reset your password. Please try again.",
+      "invalidToken": "Reset link is invalid or has expired."
+    }
+  },
+  "shell": {
+    "brand": "Ecom Admin",
+    "nav": {
+      "dashboard": "Dashboard",
+      "products": "Products",
+      "cart": "Cart",
+      "orders": "Orders",
+      "profile": "Profile",
+      "admin": {
+        "users": "Admin / Users",
+        "orders": "Admin / Orders",
+        "categories": "Admin / Categories",
+        "returns": "Admin / Returns",
+        "inventory": "Admin / Inventory"
+      }
+    },
+    "navSections": {
+      "main": "Workspace",
+      "admin": "Administration"
+    },
+    "auth": {
+      "login": "Login",
+      "register": "Create Account"
+    },
+    "actions": {
+      "logout": "Sign out",
+      "toggleTheme": "Toggle theme",
+      "setDark": "Switch to dark mode",
+      "setLight": "Switch to light mode"
+    },
+    "footer": {
+      "backend": "Backend: /api",
+      "docs": "API Docs"
+    },
+    "a11y": {
+      "toggleNav": "Toggle navigation"
+    }
+  },
+  "inventory": {
+    "title": "Inventory",
+    "subtitle": "Overview and adjustments",
+    "overview": {
+      "title": "Overview",
+      "empty": "No inventory rows match the filters."
+    },
+    "filters": {
+      "product": "Product",
+      "variant": "Variant",
+      "location": "Location",
+      "reason": "Reason",
+      "threshold": "Threshold"
+    },
+    "actions": {
+      "apply": "Apply",
+      "createAdjustment": "Create adjustment"
+    },
+    "table": {
+      "product": "Product",
+      "variant": "Variant",
+      "stock": "Stock"
+    },
+    "adjust": {
+      "productId": "Product ID",
+      "variantId": "Variant ID",
+      "qtyChange": "Quantity change",
+      "reason": "Reason",
+      "note": "Note"
+    },
+    "adjustments": {
+      "title": "Adjustments",
+      "empty": "No adjustments found."
+    },
+    "errors": {
+      "overviewFailed": "Unable to load inventory.",
+      "adjustmentsFailed": "Unable to load adjustments.",
+      "adjustmentCreateFailed": "Unable to create adjustment."
+    },
+    "low": {
+      "title": "Low stock",
+      "empty": "No low-stock items found."
+    }
+  },
+  "adminUsers": {
+    "list": {
+      "title": "Admin / Users",
+      "subtitle": "Search and manage users",
+      "filters": {
+        "search": "Search users",
+        "placeholder": "Name or email"
+      },
+      "table": {
+        "name": "Name",
+        "email": "Email",
+        "roles": "Roles",
+        "active": "Active",
+        "actions": "Actions"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "empty": "No users found.",
+      "errors": {
+        "loadFailed": "Unable to load users."
+      }
+    }
+  },
   "adminUsersRoles": {
     "title": "Manage User Roles",
     "subtitle": "Enter a user ID to promote or demote the admin role.",
@@ -492,6 +535,11 @@
     "confirm": {
       "title": "Confirm action",
       "message": "Are you sure?"
+    }
+  },
+  "errors": {
+    "backend": {
+      "default": "Something went wrong ({{ code }})."
     }
   }
 }
