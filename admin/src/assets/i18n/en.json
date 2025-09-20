@@ -1,4 +1,7 @@
 ﻿{
+    "common": {
+        "loading": "Loading…"
+    },
     "denied":  {
                    "title":  "Access denied",
                    "message":  "You do not have permission to view this page or perform this action.",
@@ -244,6 +247,67 @@
                                }
                 },
     "orders":  {
+                   "list":  {
+                                 "title":  "My orders",
+                                 "subtitle":  "Review order history, create new orders from your cart, and keep tabs on fulfillment.",
+                                 "actions":  {
+                                                 "refresh":  "Refresh"
+                                             },
+                                 "create":  {
+                                              "title":  "Create order from cart",
+                                              "subtitle":  "Apply shipping and tax to your active cart to generate a new order.",
+                                              "fields":  {
+                                                            "shipping":  "Shipping amount",
+                                                            "shippingHint":  "Flat shipping charge applied to the order.",
+                                                            "taxRate":  "Tax rate",
+                                                            "taxRateHint":  "Enter as a decimal (e.g. 0.07 for 7%)."
+                                                        },
+                                              "errors":  {
+                                                            "shippingMin":  "Shipping cannot be negative.",
+                                                            "taxRateRange":  "Tax rate must be between 0 and 1."
+                                                        },
+                                              "submit":  "Create order"
+                                          },
+                                 "table":  {
+                                              "title":  "Recent orders",
+                                              "count":  "{{ count }} total orders",
+                                              "id":  "Order",
+                                              "total":  "Total",
+                                              "status":  "Status",
+                                              "placed":  "Placed",
+                                              "actions":  "Actions",
+                                              "view":  "View order"
+                                          },
+                                 "status":  {
+                                               "pending":  "Pending",
+                                               "processing":  "Processing",
+                                               "confirmed":  "Confirmed",
+                                               "fulfilled":  "Fulfilled",
+                                               "completed":  "Completed",
+                                               "shipped":  "Shipped",
+                                               "delivered":  "Delivered",
+                                               "cancelled":  "Cancelled",
+                                               "refunded":  "Refunded",
+                                               "failed":  "Failed",
+                                               "unknown":  "Unknown"
+                                           },
+                                 "paymentStatus":  {
+                                                     "paid":  "Paid",
+                                                     "unpaid":  "Unpaid",
+                                                     "pending":  "Pending payment",
+                                                     "refunded":  "Refunded",
+                                                     "failed":  "Payment failed",
+                                                     "unknown":  "Unknown"
+                                                 },
+                                 "empty":  "No orders yet. Create one from your cart to get started.",
+                                 "errors":  {
+                                                "loadFailed":  "Unable to load orders. Please try again.",
+                                                "createFailed":  "We couldn't create the order from your cart."
+                                            },
+                                 "toasts":  {
+                                                "created":  "Order created from your cart."
+                                            }
+                             },
                    "detail":  {
                                   "title":  "Order Detail",
                                   "fields":  {
