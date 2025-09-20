@@ -41,6 +41,64 @@ export class CartComponent implements OnInit {
   couponSuccessMessage: string | null = null;
 
   readonly displayedColumns: string[] = ['product', 'price', 'qty', 'line', 'actions'];
+<<<<<<< ours
+
+  readonly couponForm = this.fb.group({
+    code: ['', [Validators.required, Validators.minLength(2)]]
+  });
+
+  viewItems: DisplayCartItem[] = [];
+  summary = {
+    subtotal: { amount: 0, currency: 'USD' } as DisplayMoney,
+    discount: null as DisplayMoney | null,
+    shipping: null as DisplayMoney | null,
+    tax: null as DisplayMoney | null,
+    total: { amount: 0, currency: 'USD' } as DisplayMoney
+  };
+  couponSavings: DisplayMoney | null = null;
+  cartUpdatedAt: string | null = null;
+
+  private cartCurrency = 'USD';
+  private readonly cartItemsById = new Map<string, CartItem>();
+
+  constructor(
+    private readonly cartSvc: CartService,
+    private readonly fb: FormBuilder,
+    private readonly dialog: MatDialog,
+    private readonly toast: ToastService,
+    private readonly translate: TranslateService,
+    private readonly cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit(): void {
+    this.load();
+  }
+
+  load(): void {
+    this.loading = true;
+    this.errorKey = null;
+    this.lastError = null;
+    this.cdr.markForCheck();
+
+    this.cartSvc.get().subscribe({
+      next: ({ cart }) => {
+        this.updateCart(cart);
+        this.loading = false;
+        this.resetCouponMessages();
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.loading = false;
+        this.lastError = err;
+        const code = err?.error?.error?.code;
+        this.errorKey = code ? `errors.backend.${code}` : 'cart.errors.loadFailed';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  inc(itemId: string): void {
+=======
 
   readonly couponForm = this.fb.group({
     code: ['', [Validators.required, Validators.minLength(2)]]
@@ -106,10 +164,29 @@ export class CartComponent implements OnInit {
   }
 
   dec(itemId: string): void {
+>>>>>>> theirs
     const item = this.cartItemsById.get(itemId);
     if (!item) {
       return;
     }
+<<<<<<< ours
+    const next = this.coerceQuantity(item.quantity) + 1;
+    this.updateQuantity(itemId, item, next);
+  }
+
+  dec(itemId: string): void {
+=======
+    const next = Math.max(this.coerceQuantity(item.quantity) - 1, 1);
+    this.updateQuantity(itemId, item, next);
+  }
+
+  remove(itemId: string): void {
+>>>>>>> theirs
+    const item = this.cartItemsById.get(itemId);
+    if (!item) {
+      return;
+    }
+<<<<<<< ours
     const next = Math.max(this.coerceQuantity(item.quantity) - 1, 1);
     this.updateQuantity(itemId, item, next);
   }
@@ -147,6 +224,36 @@ export class CartComponent implements OnInit {
     });
   }
 
+=======
+
+    const endpointId = this.resolveItemEndpointId(item);
+    if (!endpointId) {
+      return;
+    }
+
+    this.pendingItemId = itemId;
+    this.cdr.markForCheck();
+
+    this.cartSvc.removeItem(endpointId).subscribe({
+      next: ({ cart }) => {
+        this.updateCart(cart);
+        this.pendingItemId = null;
+        const message = this.translate.instant('cart.toasts.itemRemoved', {
+          name: this.resolveItemName(item)
+        });
+        this.toast.success(message);
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.pendingItemId = null;
+        const message = this.translate.instant('cart.errors.removeFailed');
+        this.toast.error(message);
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+>>>>>>> theirs
   confirmClear(): void {
     if (!this.viewItems.length || this.clearing || this.loading) {
       return;
@@ -166,6 +273,7 @@ export class CartComponent implements OnInit {
         this.clearCart();
       }
     });
+<<<<<<< ours
   }
 
   applyCoupon(): void {
@@ -295,6 +403,137 @@ export class CartComponent implements OnInit {
     }
   }
 
+=======
+  }
+
+  applyCoupon(): void {
+    if (this.couponLoading || this.couponForm.invalid) {
+      this.couponForm.markAllAsTouched();
+      return;
+    }
+
+    const code = (this.couponForm.value.code || '').trim();
+    if (!code) {
+      this.couponForm.markAllAsTouched();
+      return;
+    }
+
+    this.couponLoading = true;
+    this.couponErrorMessage = null;
+    this.couponSuccessMessage = null;
+    this.cdr.markForCheck();
+
+    this.cartSvc.applyCoupon(code).subscribe({
+      next: ({ cart }) => {
+        this.updateCart(cart);
+        this.couponLoading = false;
+        const appliedCode = cart?.coupon?.code || code;
+        const message = this.translate.instant('cart.toasts.couponApplied', { code: appliedCode });
+        this.couponSuccessMessage = message;
+        this.toast.success(message);
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.couponLoading = false;
+        const message = this.resolveErrorMessage(err, 'cart.coupon.applyFailed', { code });
+        this.couponErrorMessage = message;
+        this.toast.error(message);
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  removeCoupon(): void {
+    if (this.couponLoading || !this.cart?.coupon) {
+      return;
+    }
+
+    this.couponLoading = true;
+    this.couponErrorMessage = null;
+    this.couponSuccessMessage = null;
+    this.cdr.markForCheck();
+
+    this.cartSvc.removeCoupon().subscribe({
+      next: ({ cart }) => {
+        this.updateCart(cart);
+        this.couponLoading = false;
+        const message = this.translate.instant('cart.toasts.couponRemoved');
+        this.couponSuccessMessage = message;
+        this.toast.success(message);
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.couponLoading = false;
+        const message = this.resolveErrorMessage(err, 'cart.coupon.removeFailed');
+        this.couponErrorMessage = message;
+        this.toast.error(message);
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  trackById(_: number, item: DisplayCartItem): string {
+    return item.id;
+  }
+
+  private updateCart(cart: Cart): void {
+    const prevCode = this.cart?.coupon?.code || '';
+    const nextCode = cart?.coupon?.code || '';
+    const currency = this.detectCurrency(cart);
+    this.cartCurrency = currency;
+
+    this.cartItemsById.clear();
+    this.viewItems = (cart.items ?? []).map((item, index) => {
+      const id = this.resolveItemId(item, index);
+      const quantity = this.coerceQuantity(item.quantity);
+      const unit = this.normalizeMoney(item.unitPrice ?? item.totals?.unit ?? item.price, currency);
+      const lineSource = item.lineTotal ?? item.totals?.line ?? (typeof item.price === 'number' ? item.price * quantity : undefined);
+      const line = this.normalizeMoney(lineSource, unit.currency);
+      const productId = this.resolveProductId(item, id);
+      const name = this.resolveItemName(item);
+      const sku = item.sku ?? item.productData?.sku ?? null;
+      const image = item.image ?? null;
+
+      this.cartItemsById.set(id, item);
+
+      return { id, productId, name, sku, quantity, unit, line, image };
+    });
+
+    const subtotal = this.normalizeMoney(cart.totals?.subtotal ?? cart.subtotal, currency);
+    const discountValue = cart.totals?.discountTotal ?? cart.discountTotal ?? cart.coupon?.discountAmount ?? cart.coupon?.amountOff;
+    const discount = this.normalizeMoney(discountValue, currency);
+    const shipping = this.normalizeMoney(cart.totals?.shippingTotal ?? cart.shipping, currency);
+    const tax = this.normalizeMoney(cart.totals?.taxTotal ?? cart.tax, currency);
+    const totalSource =
+      cart.totals?.total ??
+      cart.total ??
+      subtotal.amount - (discount.amount > 0 ? discount.amount : 0) + (shipping.amount > 0 ? shipping.amount : 0) + (tax.amount > 0 ? tax.amount : 0);
+    const total = this.normalizeMoney(totalSource, currency);
+
+    this.summary = {
+      subtotal,
+      discount: discount.amount > 0 ? discount : null,
+      shipping: shipping.amount > 0 ? shipping : null,
+      tax: tax.amount > 0 ? tax : null,
+      total
+    };
+
+    if (cart.coupon) {
+      const couponSavings = this.summary.discount ?? this.normalizeMoney(cart.coupon.discountAmount ?? cart.coupon.amountOff, currency);
+      this.couponSavings = couponSavings.amount > 0 ? couponSavings : null;
+    } else {
+      this.couponSavings = null;
+    }
+
+    this.cartUpdatedAt = this.resolveUpdatedAt(cart);
+
+    this.cart = cart;
+    if (prevCode !== nextCode) {
+      this.couponForm.patchValue({ code: nextCode }, { emitEvent: false });
+    }
+  }
+
+>>>>>>> theirs
   private clearCart(): void {
     this.clearing = true;
     this.cdr.markForCheck();
@@ -430,6 +669,7 @@ export class CartComponent implements OnInit {
       return cart.updatedAt;
     }
 
+<<<<<<< ours
     if (this.isRecord(cart)) {
       const updated = cart['updated'];
       if (typeof updated === 'string') {
@@ -447,5 +687,21 @@ export class CartComponent implements OnInit {
 
   private isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null;
+=======
+    const legacyTimestamps = cart as Cart & {
+      updated?: unknown;
+      updated_at?: unknown;
+    };
+
+    if (typeof legacyTimestamps.updated === 'string') {
+      return legacyTimestamps.updated;
+    }
+
+    if (typeof legacyTimestamps.updated_at === 'string') {
+      return legacyTimestamps.updated_at;
+    }
+
+    return null;
+>>>>>>> theirs
   }
 }
