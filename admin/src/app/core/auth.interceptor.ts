@@ -43,26 +43,36 @@ export class AuthInterceptor implements HttpInterceptor {
     private i18n: TranslateService
   ) {}
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    const token = this.resolveToken();
-    const idempotencyKey = this.shouldAddIdempotencyKey(req) ? this.generateIdempotencyKey() : null;
-    const requestWithHeaders = this.decorateRequest(req, token, idempotencyKey);
+    const token = this.auth.token;
+    const shouldUseIdempotencyKey = this.shouldAddIdempotencyKey(req.method);
 
-    return next.handle(requestWithHeaders).pipe(
+    const setHeaders: Record<string, string> = {};
+    if (token) {
+      setHeaders.Authorization = `Bearer ${token}`;
+    }
+    const writeKey = shouldUseIdempotencyKey ? this.generateIdempotencyKey() : null;
+    if (writeKey) {
+      setHeaders['Idempotency-Key'] = writeKey;
+    }
+
+    const preparedReq = Object.keys(setHeaders).length ? req.clone({ setHeaders }) : req;
+
+    return next.handle(preparedReq).pipe(
       tap((event) => {
         if (event instanceof HttpResponse) {
           this.consecutive401 = 0;
         }
       }),
       catchError((err: HttpErrorResponse) => {
-        const { error: enrichedError } = this.enrichBackendError(err, requestWithHeaders);
-        const url = requestWithHeaders.url || '';
+        const enhancedError = this.enhanceError(err);
+        const url = req.url || '';
         const isAuthEndpoint = url.includes('/auth/login') || url.includes('/auth/refresh');
-        if (enrichedError.status === 401 && !isAuthEndpoint) {
+        if (enhancedError.status === 401 && !isAuthEndpoint) {
           this.consecutive401 += 1;
           // If refresh already failed or we've seen repeated unauthorized responses, end the session.
           if (this.consecutive401 >= 2 || this.refreshing) {
             this.handleSessionExpired();
-            return throwError(() => enrichedError);
+            return throwError(() => enhancedError);
           }
           this.refreshing = true;
           return this.auth.refresh().pipe(
@@ -70,26 +80,30 @@ export class AuthInterceptor implements HttpInterceptor {
               this.refreshing = false;
               if (!res || !res.token) {
                 this.handleSessionExpired();
-                return throwError(() => enrichedError);
+                return throwError(() => enhancedError);
               }
-              const retried = this.decorateRequest(req, res.token, idempotencyKey);
+              const retryHeaders: Record<string, string> = { Authorization: `Bearer ${res.token}` };
+              if (writeKey) {
+                retryHeaders['Idempotency-Key'] = writeKey;
+              }
+              const retried = req.clone({ setHeaders: retryHeaders });
               return next.handle(retried);
             }),
             catchError((e) => {
               this.refreshing = false;
               this.handleSessionExpired();
-              const { error: refreshError } = this.enrichBackendError(e, requestWithHeaders);
-              return throwError(() => refreshError);
+              const fallback = e instanceof HttpErrorResponse ? this.enhanceError(e) : enhancedError;
+              return throwError(() => fallback);
             })
           );
-        } else if (enrichedError.status === 403) {
+        } else if (enhancedError.status === 403) {
           // Access denied for current user/role
           this.toast.error(this.i18n.instant('auth.errors.accessDenied'));
           // if currently on an admin route or action, nudge back to dashboard
           this.router.navigate(['/denied']);
-          return throwError(() => enrichedError);
+          return throwError(() => enhancedError);
         }
-        return throwError(() => enrichedError);
+        return throwError(() => enhancedError);
       })
     );
   }
@@ -102,102 +116,137 @@ export class AuthInterceptor implements HttpInterceptor {
     this.toast.error(this.i18n.instant('auth.errors.sessionExpired'));
   }
 
-  private resolveToken(): string | null {
-    return this.auth.token ?? localStorage.getItem('auth_token');
-  }
-
-  private decorateRequest(
-    req: HttpRequest<any>,
-    token: string | null,
-    idempotencyKey: string | null
-  ): HttpRequest<any> {
-    const headers: Record<string, string> = {};
-    if (token && !req.headers.has('Authorization')) {
-      headers['Authorization'] = `Bearer ${token}`;
+  private shouldAddIdempotencyKey(method: string): boolean {
+    if (!method) {
+      return false;
     }
-    if (idempotencyKey && !req.headers.has('Idempotency-Key')) {
-      headers['Idempotency-Key'] = idempotencyKey;
-    }
-    return Object.keys(headers).length ? req.clone({ setHeaders: headers }) : req;
-  }
-
-  private shouldAddIdempotencyKey(req: HttpRequest<any>): boolean {
-    const method = (req.method || '').toUpperCase();
-    return ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
+    const normalized = method.toUpperCase();
+    return normalized === 'POST' || normalized === 'PUT' || normalized === 'PATCH' || normalized === 'DELETE';
   }
 
   private generateIdempotencyKey(): string {
-    const cryptoRef: Crypto | undefined = typeof globalThis !== 'undefined' ? (globalThis as any).crypto : undefined;
-    if (cryptoRef?.randomUUID) {
-      return cryptoRef.randomUUID();
+    const crypto = globalThis.crypto as Crypto | undefined;
+    if (crypto && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
     }
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-      const r = (Math.random() * 16) | 0;
-      const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    const template = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx';
+    return template.replace(/[xy]/g, (char) => {
+      const r = Math.floor(Math.random() * 16);
+      const v = char === 'x' ? r : (r & 0x3) | 0x8;
       return v.toString(16);
     });
   }
 
-  private enrichBackendError(
-    err: HttpErrorResponse,
-    req: HttpRequest<any>
-  ): { error: HttpErrorResponse; message: string | null } {
-    if (!(err instanceof HttpErrorResponse)) {
-      return { error: err, message: null };
+  private enhanceError(err: HttpErrorResponse): HttpErrorResponse {
+    const clonedBody = this.cloneErrorBody(err.error);
+    const apiError = this.extractApiError(err.error);
+    const code = this.resolveErrorCode(apiError, err);
+    const message = this.resolveErrorMessage(apiError, err, err.error);
+
+    if (!apiError && !code && !message) {
+      return err;
     }
 
-    const payload = err.error as any;
-    const backendError = payload?.error;
-    if (!backendError || typeof backendError !== 'object') {
-      return { error: err, message: null };
+    const nextError = { ...(apiError || {}) } as Record<string, unknown>;
+    if (code) {
+      nextError.code = code;
+    }
+    if (message) {
+      nextError.message = message;
     }
 
-    const code = this.coerceString(backendError.code) ?? this.coerceString(backendError.name);
-    const rawMessage = this.coerceString(backendError.message);
-    const translated = code ? this.translateIfAvailable(`errors.backend.${code}`) : null;
-    const fallback = this.i18n.instant('errors.backend.default', { code: code ?? err.status ?? 'UNKNOWN' });
-    const resolvedMessage = rawMessage ?? translated ?? fallback;
+    clonedBody.error = { ...clonedBody.error, ...nextError };
 
-    const normalizedCode = this.coerceString(backendError.code) ?? this.coerceString(backendError.name) ?? 'UNKNOWN';
-    const normalizedInner = {
-      ...backendError,
-      name: this.coerceString(backendError.name) ?? code ?? 'Error',
-      code: normalizedCode,
-      details: backendError.details ?? null,
-      message: rawMessage ?? resolvedMessage,
-      userMessage: resolvedMessage,
-      displayMessage: resolvedMessage,
-      messageKey: code ? `errors.backend.${code}` : null
-    };
-
-    const normalizedPayload = {
-      ...payload,
-      error: normalizedInner,
-      bannerMessage: resolvedMessage,
-      userMessage: resolvedMessage
-    };
-
-    const enriched = new HttpErrorResponse({
-      error: normalizedPayload,
+    const enhanced = new HttpErrorResponse({
+      error: clonedBody,
       headers: err.headers,
       status: err.status,
       statusText: err.statusText,
-      url: err.url ?? req.url
+      url: err.url ?? undefined
     });
 
-    return { error: enriched, message: resolvedMessage };
+    (enhanced as any).message = err.message;
+    (enhanced as any).name = err.name;
+
+    return enhanced;
   }
 
-  private coerceString(value: unknown): string | null {
-    if (typeof value !== 'string') {
-      return null;
+  private cloneErrorBody(body: unknown): any {
+    if (Array.isArray(body)) {
+      return [...body];
     }
-    const trimmed = value.trim();
-    return trimmed.length ? trimmed : null;
+    if (body && typeof body === 'object') {
+      return { ...(body as Record<string, unknown>) };
+    }
+    return {};
   }
 
-  private translateIfAvailable(key: string): string | null {
-    const translated = this.i18n.instant(key);
-    return translated && translated !== key ? translated : null;
+  private extractApiError(body: unknown): Record<string, unknown> | null {
+    if (body && typeof body === 'object' && 'error' in (body as Record<string, unknown>)) {
+      const nested = (body as Record<string, unknown>)['error'];
+      if (nested && typeof nested === 'object') {
+        return { ...(nested as Record<string, unknown>) };
+      }
+    }
+    return null;
+  }
+
+  private resolveErrorCode(apiError: Record<string, unknown> | null, err: HttpErrorResponse): string {
+    const code = apiError?.['code'];
+    if (typeof code === 'string' && code.trim().length > 0) {
+      return code;
+    }
+    const name = apiError?.['name'];
+    if (typeof name === 'string' && name.trim().length > 0) {
+      return name;
+    }
+    if (err.status) {
+      return `HTTP_${err.status}`;
+    }
+    return 'UNKNOWN_ERROR';
+  }
+
+  private resolveErrorMessage(
+    apiError: Record<string, unknown> | null,
+    err: HttpErrorResponse,
+    rawBody: unknown
+  ): string | null {
+    const message = apiError?.['message'];
+    if (typeof message === 'string' && message.trim().length > 0) {
+      return message.trim();
+    }
+
+    const details = apiError?.['details'];
+    if (typeof details === 'string' && details.trim().length > 0) {
+      return details.trim();
+    }
+    if (Array.isArray(details)) {
+      const combined = details
+        .map((item) => (typeof item === 'string' ? item.trim() : ''))
+        .filter((value) => value.length > 0)
+        .join(', ');
+      if (combined.length > 0) {
+        return combined;
+      }
+    }
+
+    if (typeof rawBody === 'string' && rawBody.trim().length > 0) {
+      return rawBody.trim();
+    }
+
+    const code = apiError?.['code'];
+    if (typeof code === 'string' && code.trim().length > 0) {
+      const backendKey = `errors.backend.${code}`;
+      const translated = this.i18n.instant(backendKey);
+      if (translated && translated !== backendKey) {
+        return translated;
+      }
+    }
+
+    if (err.message && err.message.trim().length > 0) {
+      return err.message.trim();
+    }
+
+    return null;
   }
 }
