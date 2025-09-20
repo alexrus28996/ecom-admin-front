@@ -51,6 +51,7 @@ Legend
 - [ ] Product variant editor UX (stock/price deltas, variant attributes) and quick duplicate action.
 - [ ] Category tree enhancements (drag/drop reorder, breadcrumbs, badges for children count).
 - [ ] Saved carts, clear-confirmation dialogs, and contextual toasts.
+  - Note: Clear confirmation dialog and cart toasts shipped; saved carts still pending.
 - [ ] Payment provider toggles once Razorpay/PayPal APIs ship (track backend TODOs).
 - [ ] Theme switcher (light/dark), i18n scaffolding, and offline-friendly caches for key screens.
 - [ ] Visual regression stories / Storybook or screenshot tests for critical components.
@@ -84,7 +85,9 @@ Legend
 
 ### Cart & Promotions
 - [x] Cart CRUD (`GET/POST/PATCH/DELETE /api/cart*`).
-- [ ] Coupon apply/remove UI (`POST/DELETE /api/cart/coupon`).
+  - Polished: Cart page now consumes `docs/frontend_api_reference.md` totals/money schema with SKU + ID display.
+- [x] Coupon apply/remove UI (`POST/DELETE /api/cart/coupon`).
+  - Polished: Coupon chips and savings surface metadata from the frontend API reference.
 - [ ] Saved cart snapshot or clear-confirm modal.
 
 ### Orders & Returns
