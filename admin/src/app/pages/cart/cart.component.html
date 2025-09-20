@@ -1,31 +1,231 @@
-<div class="panel">
-  <h2>My Cart</h2>
-  <p *ngIf="loading" class="muted">Loading…</p>
-  <p *ngIf="error" class="muted">{{ error }}</p>
-  <div *ngIf="cart">
-    <table>
-      <thead>
-        <tr><th>Product</th><th>Price</th><th>Qty</th><th>Line</th><th></th></tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let it of cart.items">
-          <td>{{ it.name }}</td>
-          <td>{{ it.price | number:'1.2-2' }} {{ it.currency }}</td>
-          <td>
-            <button (click)="dec(it.product, it.quantity)">-</button>
-            <span style="margin:0 8px">{{ it.quantity }}</span>
-            <button (click)="inc(it.product, it.quantity)">+</button>
-          </td>
-          <td>{{ (it.price * it.quantity) | number:'1.2-2' }} {{ it.currency }}</td>
-          <td><button class="danger" (click)="remove(it.product)">Remove</button></td>
-        </tr>
-      </tbody>
-    </table>
-    <div style="display:flex; gap:8px; align-items:center; margin-top:12px;">
-      <strong>Subtotal:</strong> {{ cart.subtotal | number:'1.2-2' }} {{ cart.currency }}
-      <span class="spacer"></span>
-      <button class="danger" (click)="clear()">Clear Cart</button>
+<div class="cart-page">
+  <section class="cart-header panel">
+    <div class="cart-header-text">
+      <h1>{{ 'cart.title' | translate }}</h1>
+      <p class="muted">{{ 'cart.subtitle' | translate }}</p>
     </div>
-  </div>
-</div>
+    <button mat-stroked-button color="primary" type="button" (click)="load()" [disabled]="loading">
+      <mat-icon>refresh</mat-icon>
+      <span>{{ 'cart.actions.refresh' | translate }}</span>
+    </button>
+  </section>
 
+  <section class="cart-body panel">
+    <app-loading [show]="loading" labelKey="common.loading"></app-loading>
+    <app-error-banner [key]="errorKey" [error]="lastError"></app-error-banner>
+
+    <ng-container *ngIf="cart as currentCart">
+      <div class="cart-grid">
+        <div class="cart-table-container">
+          <table mat-table [dataSource]="viewItems" *ngIf="viewItems.length; else emptyState">
+            <ng-container matColumnDef="product">
+              <th mat-header-cell *matHeaderCellDef>{{ 'cart.table.product' | translate }}</th>
+              <td mat-cell *matCellDef="let item">
+                <div class="product-cell">
+                  <span class="product-name">{{ item.name }}</span>
+                  <ng-container *ngIf="item.sku; else productIdentifier">
+                    <span class="product-sku muted">{{ item.sku }}</span>
+                  </ng-container>
+                  <ng-template #productIdentifier>
+                    <span class="product-sku muted">{{ item.productId }}</span>
+                  </ng-template>
+                </div>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="price">
+              <th mat-header-cell *matHeaderCellDef>{{ 'cart.table.price' | translate }}</th>
+              <td mat-cell *matCellDef="let item">
+                {{ item.unit.amount | currency:item.unit.currency:'symbol':'1.2-2' }}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="qty">
+              <th mat-header-cell *matHeaderCellDef>{{ 'cart.table.qty' | translate }}</th>
+              <td mat-cell *matCellDef="let item">
+                <div class="qty-control">
+                  <button
+                    mat-icon-button
+                    type="button"
+                    (click)="dec(item.id)"
+                    [disabled]="pendingItemId === item.id || item.quantity <= 1 || couponLoading || clearing"
+                    [attr.aria-label]="'cart.actions.decrease' | translate"
+                  >
+                    <mat-icon>remove</mat-icon>
+                  </button>
+                  <span class="qty-value">{{ item.quantity }}</span>
+                  <button
+                    mat-icon-button
+                    color="primary"
+                    type="button"
+                    (click)="inc(item.id)"
+                    [disabled]="pendingItemId === item.id || couponLoading || clearing"
+                    [attr.aria-label]="'cart.actions.increase' | translate"
+                  >
+                    <mat-icon>add</mat-icon>
+                  </button>
+                </div>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="line">
+              <th mat-header-cell *matHeaderCellDef>{{ 'cart.table.line' | translate }}</th>
+              <td mat-cell *matCellDef="let item">
+                {{ item.line.amount | currency:item.line.currency:'symbol':'1.2-2' }}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>{{ 'cart.table.actions' | translate }}</th>
+              <td mat-cell *matCellDef="let item">
+                <button
+                  mat-icon-button
+                  color="warn"
+                  type="button"
+                  (click)="remove(item.id)"
+                  [disabled]="pendingItemId === item.id || couponLoading || clearing"
+                  [attr.aria-label]="'cart.actions.remove' | translate"
+                >
+                  <ng-container *ngIf="pendingItemId !== item.id; else removing">
+                    <mat-icon>delete</mat-icon>
+                  </ng-container>
+                  <ng-template #removing>
+                    <mat-progress-spinner diameter="20" mode="indeterminate"></mat-progress-spinner>
+                  </ng-template>
+                </button>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns; trackBy: trackById"></tr>
+          </table>
+
+          <ng-template #emptyState>
+            <div class="empty-state">
+              <mat-icon>shopping_cart</mat-icon>
+              <p>{{ 'cart.empty' | translate }}</p>
+            </div>
+          </ng-template>
+        </div>
+
+        <aside class="cart-sidebar">
+          <div class="cart-summary">
+            <h3>{{ 'cart.summary.title' | translate }}</h3>
+            <div class="cart-summary-row">
+              <span>{{ 'cart.summary.subtotal' | translate }}</span>
+              <span>{{ summary.subtotal.amount | currency:summary.subtotal.currency:'symbol':'1.2-2' }}</span>
+            </div>
+            <div class="cart-summary-row" *ngIf="summary.discount as discount">
+              <span>{{ 'cart.summary.discounts' | translate }}</span>
+              <span class="discount">-{{ discount.amount | currency:discount.currency:'symbol':'1.2-2' }}</span>
+            </div>
+            <div class="cart-summary-row" *ngIf="summary.shipping as shippingRow">
+              <span>{{ 'cart.summary.shipping' | translate }}</span>
+              <span>{{ shippingRow.amount | currency:shippingRow.currency:'symbol':'1.2-2' }}</span>
+            </div>
+            <div class="cart-summary-row" *ngIf="summary.tax as taxRow">
+              <span>{{ 'cart.summary.tax' | translate }}</span>
+              <span>{{ taxRow.amount | currency:taxRow.currency:'symbol':'1.2-2' }}</span>
+            </div>
+            <mat-divider></mat-divider>
+            <div class="cart-summary-row total">
+              <span>{{ 'cart.summary.total' | translate }}</span>
+              <span>{{ summary.total.amount | currency:summary.total.currency:'symbol':'1.2-2' }}</span>
+            </div>
+            <div class="cart-summary-meta" *ngIf="cartUpdatedAt">
+              <mat-icon>schedule</mat-icon>
+              <span>{{ 'cart.summary.updated' | translate:{ date: (cartUpdatedAt | date:'medium') } }}</span>
+            </div>
+          </div>
+
+          <div class="coupon-section">
+            <form [formGroup]="couponForm" (ngSubmit)="applyCoupon()" novalidate>
+              <mat-form-field appearance="fill" class="coupon-field">
+                <mat-label>{{ 'cart.coupon.label' | translate }}</mat-label>
+                <input
+                  matInput
+                  formControlName="code"
+                  [placeholder]="'cart.coupon.placeholder' | translate"
+                  [disabled]="couponLoading || clearing || !!pendingItemId"
+                  autocomplete="off"
+                />
+                <mat-error *ngIf="couponForm.controls.code.hasError('required')">
+                  {{ 'cart.coupon.errors.required' | translate }}
+                </mat-error>
+                <mat-error *ngIf="couponForm.controls.code.hasError('minlength')">
+                  {{ 'cart.coupon.errors.minLength' | translate }}
+                </mat-error>
+              </mat-form-field>
+
+              <div class="coupon-actions">
+                <button
+                  mat-raised-button
+                  color="primary"
+                  type="submit"
+                  [disabled]="couponForm.invalid || couponLoading || clearing || !!pendingItemId"
+                >
+                  <ng-container *ngIf="!couponLoading; else applyingCoupon">
+                    <mat-icon>local_offer</mat-icon>
+                  </ng-container>
+                  <ng-template #applyingCoupon>
+                    <mat-progress-spinner diameter="18" mode="indeterminate"></mat-progress-spinner>
+                  </ng-template>
+                  <span>{{ 'cart.coupon.apply' | translate }}</span>
+                </button>
+
+                <button
+                  mat-stroked-button
+                  color="accent"
+                  type="button"
+                  *ngIf="currentCart.coupon"
+                  (click)="removeCoupon()"
+                  [disabled]="couponLoading || clearing || !!pendingItemId"
+                >
+                  <mat-icon>close</mat-icon>
+                  <span>{{ 'cart.coupon.remove' | translate }}</span>
+                </button>
+              </div>
+            </form>
+
+            <div class="coupon-messages">
+              <p class="coupon-success" *ngIf="couponSuccessMessage">{{ couponSuccessMessage }}</p>
+              <p class="coupon-error" *ngIf="couponErrorMessage">{{ couponErrorMessage }}</p>
+            </div>
+
+            <div class="coupon-applied" *ngIf="currentCart.coupon">
+              <mat-chip-set>
+                <mat-chip color="primary" selected>{{ currentCart.coupon.code }}</mat-chip>
+              </mat-chip-set>
+              <div class="coupon-details">
+                <span *ngIf="currentCart.coupon.name">{{ currentCart.coupon.name }}</span>
+                <span *ngIf="currentCart.coupon.description">{{ currentCart.coupon.description }}</span>
+                <span *ngIf="couponSavings" class="muted">
+                  {{ 'cart.coupon.savingsLabel' | translate }}:
+                  <strong>{{ couponSavings.amount | currency:couponSavings.currency:'symbol':'1.2-2' }}</strong>
+                </span>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </ng-container>
+
+    <div class="cart-actions" *ngIf="viewItems.length">
+      <button
+        mat-stroked-button
+        color="warn"
+        type="button"
+        (click)="confirmClear()"
+        [disabled]="clearing || couponLoading || !!pendingItemId"
+      >
+        <ng-container *ngIf="!clearing; else clearingSpinner">
+          <mat-icon>delete_sweep</mat-icon>
+        </ng-container>
+        <ng-template #clearingSpinner>
+          <mat-progress-spinner diameter="18" mode="indeterminate"></mat-progress-spinner>
+        </ng-template>
+        <span>{{ 'cart.actions.clear' | translate }}</span>
+      </button>
+    </div>
+  </section>
+</div>
