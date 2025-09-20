@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
@@ -8,8 +8,7 @@ import { AuthService } from '../../core/auth.service';
 @Component({
   selector: 'app-register',
   templateUrl: './register.component.html',
-  styleUrls: ['./register.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrls: ['./register.component.scss']
 })
 export class RegisterComponent {
   readonly form = this.fb.group({
@@ -19,16 +18,11 @@ export class RegisterComponent {
   });
 
   loading = false;
-  successKey: string | null = null;
+  successMessage: string | null = null;
   errorKey: string | null = null;
   lastError: any = null;
 
-  constructor(
-    private readonly fb: FormBuilder,
-    private readonly auth: AuthService,
-    private readonly router: Router,
-    private readonly cdr: ChangeDetectorRef
-  ) {}
+  constructor(private readonly fb: FormBuilder, private readonly auth: AuthService, private readonly router: Router) {}
 
   submit(): void {
     if (this.loading) {
@@ -46,38 +40,24 @@ export class RegisterComponent {
     }
 
     this.loading = true;
-    this.successKey = null;
+    this.successMessage = null;
     this.errorKey = null;
     this.lastError = null;
-    this.cdr.markForCheck();
 
     this.auth
       .register(name.trim(), email.trim(), password)
-      .pipe(
-        finalize(() => {
-          this.loading = false;
-          this.cdr.markForCheck();
-        })
-      )
+      .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: () => {
-          this.successKey = 'register.success';
+          this.successMessage = 'Registration successful. You can now sign in.';
           this.form.reset();
-          this.cdr.markForCheck();
         },
         error: (err) => {
           const code = err?.error?.error?.code;
           const message = err?.error?.error?.message;
           const hasMessage = typeof message === 'string' && message.trim().length > 0;
-          this.lastError = err;
-          if (code) {
-            this.errorKey = `errors.backend.${code}`;
-          } else if (!hasMessage) {
-            this.errorKey = 'register.errors.generic';
-          } else {
-            this.errorKey = null;
-          }
-          this.cdr.markForCheck();
+          this.errorKey = code ? `errors.backend.${code}` : null;
+          this.lastError = code || hasMessage ? err : { error: { error: { message: 'Registration failed. Please try again.' } } };
         }
       });
   }
