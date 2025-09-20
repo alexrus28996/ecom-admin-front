@@ -1,0 +1,44 @@
+.reset-shell {
+  display: flex;
+  justify-content: center;
+  padding: 48px 16px;
+}
+
+.reset-card {
+  width: 100%;
+  max-width: 480px;
+}
+
+.reset-field {
+  width: 100%;
+}
+
+.reset-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.reset-success {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(34, 197, 94, 0.12);
+  color: #047857;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

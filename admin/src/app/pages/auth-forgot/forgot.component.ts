@@ -1,18 +1,77 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
+import { FormBuilder, Validators } from '@angular/forms';
+import { finalize } from 'rxjs/operators';
+
 import { AuthService } from '../../core/auth.service';
 
-@Component({ selector: 'app-forgot', templateUrl: './forgot.component.html' })
+@Component({
+  selector: 'app-forgot',
+  templateUrl: './forgot.component.html',
+  styleUrls: ['./forgot.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
 export class ForgotComponent {
-  email = '';
+  readonly form = this.fb.group({
+    email: ['', [Validators.required, Validators.email]]
+  });
+
   loading = false;
-  msg = ''; err = '';
-  constructor(private auth: AuthService) {}
-  submit() {
-    this.loading = true; this.msg=''; this.err='';
-    this.auth.requestPasswordReset(this.email, window.location.origin).subscribe({
-      next: () => { this.loading = false; this.msg = 'If the email exists, a reset link was sent.'; },
-      error: (e) => { this.loading = false; this.err = e?.error?.error?.message || 'Request failed'; }
-    });
+  successKey: string | null = null;
+  errorKey: string | null = null;
+  lastError: any = null;
+
+  constructor(
+    private readonly fb: FormBuilder,
+    private readonly auth: AuthService,
+    private readonly cdr: ChangeDetectorRef
+  ) {}
+
+  submit(): void {
+    if (this.loading) {
+      return;
+    }
+
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    const email = this.form.get('email')?.value?.trim();
+    if (!email) {
+      return;
+    }
+
+    this.loading = true;
+    this.successKey = null;
+    this.errorKey = null;
+    this.lastError = null;
+    this.cdr.markForCheck();
+
+    this.auth
+      .requestPasswordReset(email, window.location.origin)
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.cdr.markForCheck();
+        })
+      )
+      .subscribe({
+        next: () => {
+          this.successKey = 'forgot.success';
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          this.lastError = err;
+          const code = err?.error?.error?.code;
+          this.errorKey = code ? `errors.backend.${code}` : 'forgot.errors.generic';
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  showError(control: 'email', error: string): boolean {
+    const ctrl = this.form.get(control);
+    return !!ctrl && ctrl.touched && ctrl.hasError(error);
   }
 }
 
