@@ -14,14 +14,18 @@
       <mat-form-field appearance="fill">
         <mat-label>{{ 'adminOrders.detail.fields.status' | translate }}</mat-label>
         <mat-select [(ngModel)]="order.status">
-          <mat-option *ngFor="let s of statusOptions" [value]="s">{{ s }}</mat-option>
+          <mat-option *ngFor="let option of statusOptions" [value]="option.value">
+            {{ option.labelKey | translate }}
+          </mat-option>
         </mat-select>
       </mat-form-field>
 
       <mat-form-field appearance="fill">
         <mat-label>{{ 'adminOrders.detail.fields.payment' | translate }}</mat-label>
         <mat-select [(ngModel)]="order.paymentStatus">
-          <mat-option *ngFor="let p of paymentOptions" [value]="p">{{ p }}</mat-option>
+          <mat-option *ngFor="let option of paymentOptions" [value]="option.value">
+            {{ option.labelKey | translate }}
+          </mat-option>
         </mat-select>
       </mat-form-field>
 

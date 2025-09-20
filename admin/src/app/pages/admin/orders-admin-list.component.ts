@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { PageEvent } from '@angular/material/paginator';
 import { AdminService } from '../../services/admin.service';
+import { orderStatusKey, paymentStatusKey } from './order-status.util';
 
 @Component({
   selector: 'app-admin-orders-list',
@@ -17,6 +18,9 @@ export class AdminOrdersListComponent implements OnInit {
 
   loading = false;
   errorKey: string | null = null;
+
+  readonly statusKeyFor = orderStatusKey;
+  readonly paymentStatusKeyFor = paymentStatusKey;
 
   constructor(private admin: AdminService, private cdr: ChangeDetectorRef) {}
 

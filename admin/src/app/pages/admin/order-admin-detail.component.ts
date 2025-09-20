@@ -4,6 +4,15 @@ import { AdminService } from '../../services/admin.service';
 import { OrdersService, OrderTimelineEntry } from '../../services/orders.service';
 import { ToastService } from '../../core/toast.service';
 import { TranslateService } from '@ngx-translate/core';
+import {
+  ORDER_STATUS_OPTIONS,
+  PAYMENT_STATUS_OPTIONS,
+  StatusOption,
+  orderStatusKey,
+  paymentStatusKey,
+  OrderStatusValue,
+  PaymentStatusValue
+} from './order-status.util';
 
 @Component({
   selector: 'app-admin-order-detail',
@@ -18,8 +27,10 @@ export class AdminOrderDetailComponent implements OnInit {
   lastError: any = null;
   saving = false;
 
-  statusOptions = ['pending', 'paid', 'shipped', 'delivered', 'cancelled', 'refunded'];
-  paymentOptions = ['unpaid', 'paid', 'refunded'];
+  readonly statusOptions: StatusOption<OrderStatusValue>[] = ORDER_STATUS_OPTIONS;
+  readonly paymentOptions: StatusOption<PaymentStatusValue>[] = PAYMENT_STATUS_OPTIONS;
+  readonly statusKeyFor = orderStatusKey;
+  readonly paymentStatusKeyFor = paymentStatusKey;
 
   timeline: OrderTimelineEntry[] = [];
   tlLoading = false;

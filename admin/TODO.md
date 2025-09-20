@@ -30,7 +30,7 @@ Legend
 - [ ] Material design polish: base layouts/screens on Angular Material components with responsive grids, typography, and stateful cards (no barebones UI).
   - Continued: Customer orders list rebuilt with Material table, paginator, and responsive create-order form.
 - [ ] Localization coverage: route every label, helper, toast, and error through i18n translation files; keep copy out of components.
-  - Note: Added returns translations and fixed categories parent "none" label; orders list now fully localized; continue replacing remaining inline strings.
+  - Note: Added returns translations and fixed categories parent "none" label; orders list now fully localized; admin orders statuses now use i18n keys; continue replacing remaining inline strings.
 
 ## P1 - Next Wave
 - [ ] Auth preferences UI (`GET/PATCH /api/auth/preferences`): locale dropdown + notification toggles.
