@@ -158,6 +158,25 @@
     }
   },
   "adminOrders": {
+    "list": {
+      "title": "Admin / Orders",
+      "subtitle": "Monitor orders, payments, and fulfillment status.",
+      "table": {
+        "id": "Order ID",
+        "total": "Total",
+        "status": "Status",
+        "payment": "Payment",
+        "createdAt": "Created",
+        "actions": "Actions"
+      },
+      "actions": {
+        "view": "View order"
+      },
+      "empty": "No orders found.",
+      "errors": {
+        "loadFailed": "Unable to load orders. Please try again."
+      }
+    },
     "detail": {
       "title": "Admin / Order",
       "fields": {
@@ -187,7 +206,8 @@
       },
       "actions": {
         "invoice": "Invoice (PDF)",
-        "timeline": "Show timeline"
+        "timeline": "Show timeline",
+        "save": "Save changes"
       },
       "timeline": {
         "title": "Order timeline",
@@ -195,6 +215,21 @@
         "type": "Type",
         "message": "Message"
       }
+    },
+    "status": {
+      "pending": "Pending",
+      "paid": "Paid",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled",
+      "refunded": "Refunded",
+      "unknown": "Unknown status"
+    },
+    "paymentStatus": {
+      "unpaid": "Unpaid",
+      "paid": "Paid",
+      "refunded": "Refunded",
+      "unknown": "Unknown payment status"
     }
   },
   "profile": {
@@ -522,12 +557,6 @@
     "confirm": {
       "title": "Confirm action",
       "message": "Are you sure?"
-    }
-  },
-  "auth": {
-    "errors": {
-      "sessionExpired": "Your session has expired. Please sign in again.",
-      "accessDenied": "You do not have permission to perform that action."
     }
   }
 }
