@@ -37,19 +37,32 @@ export class ErrorBannerComponent {
       return { key: this.key };
     }
 
-    const code = this.error?.error?.error?.code;
-    if (!code) {
-      return null;
+    const backendError = this.error?.error?.error;
+    const code = backendError?.code;
+    const backendKey = code ? `errors.backend.${code}` : null;
+
+    if (backendKey) {
+      const translated = this.translate.instant(backendKey, backendError?.details ?? {});
+      if (translated && translated !== backendKey) {
+        return { key: backendKey, params: backendError?.details };
+      }
     }
 
-    const backendKey = `errors.backend.${code}`;
-    const translated = this.translate.instant(backendKey);
+    const friendlyMessage =
+      this.error?.error?.friendlyMessage ||
+      backendError?.friendlyMessage ||
+      backendError?.message ||
+      (typeof this.error?.error === 'string' ? this.error.error : null);
 
-    if (translated && translated !== backendKey) {
-      return { key: backendKey };
+    if (friendlyMessage) {
+      return { key: friendlyMessage };
     }
 
-    return { key: 'errors.backend.default', params: { code } };
+    if (code) {
+      return { key: 'errors.backend.default', params: { code } };
+    }
+
+    return null;
   }
 }
 

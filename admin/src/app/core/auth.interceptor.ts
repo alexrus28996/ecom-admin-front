@@ -14,6 +14,24 @@ import { ToastService } from './toast.service';
 import { TranslateService } from '@ngx-translate/core';
 import { AuthService } from './auth.service';
 
+type HttpMethodWithBody = 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+
+interface BackendErrorDetails {
+  name?: string;
+  message?: string;
+  code?: string;
+  details?: any;
+  friendlyMessage?: string;
+  translationKey?: string | null;
+}
+
+interface BackendErrorPayload {
+  error?: BackendErrorDetails;
+  friendlyMessage?: string;
+  translationKey?: string | null;
+  [key: string]: any;
+}
+
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
   private refreshing = false;
