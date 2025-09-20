@@ -1,35 +1,147 @@
-<div class="panel">
-  <h2>My Orders</h2>
-  <div class="row" style="align-items:flex-end;">
-    <div><label class="muted">Page</label><input [(ngModel)]="page" type="number" min="1"></div>
-    <div><label class="muted">Limit</label><input [(ngModel)]="limit" type="number" min="1"></div>
-    <div><button (click)="load()">Apply</button></div>
-    <div class="spacer"></div>
-    <div>
-      <label class="muted">Shipping</label>
-      <input [(ngModel)]="shipping" type="number" min="0" step="0.01">
+<div class="orders-shell">
+  <section class="orders-header panel">
+    <div class="orders-header-text">
+      <h1>{{ 'orders.list.title' | translate }}</h1>
+      <p class="muted">{{ 'orders.list.subtitle' | translate }}</p>
     </div>
-    <div>
-      <label class="muted">Tax rate</label>
-      <input [(ngModel)]="taxRate" type="number" min="0" max="1" step="0.01">
-    </div>
-    <div>
-      <button (click)="createOrder()">Create Order from Cart</button>
-    </div>
-  </div>
-  <p *ngIf="loading" class="muted">Loading…</p>
-  <p *ngIf="error" class="muted">{{ error }}</p>
-  <table *ngIf="data">
-    <thead><tr><th>ID</th><th>Total</th><th>Status</th><th>Placed</th><th></th></tr></thead>
-    <tbody>
-      <tr *ngFor="let o of data.items">
-        <td>{{ o._id }}</td>
-        <td>{{ o.total | number:'1.2-2' }} {{ o.currency }}</td>
-        <td>{{ o.status }} / {{ o.paymentStatus }}</td>
-        <td>{{ o['createdAt'] | date:'short' }}</td>
-        <td><a [routerLink]="['/orders', o._id]"><button>View</button></a></td>
-      </tr>
-    </tbody>
-  </table>
-</div>
+    <button mat-stroked-button color="primary" type="button" (click)="load()" [disabled]="loading">
+      <mat-icon>refresh</mat-icon>
+      {{ 'orders.list.actions.refresh' | translate }}
+    </button>
+  </section>
 
+  <section class="orders-create panel">
+    <header class="section-heading">
+      <h2>{{ 'orders.list.create.title' | translate }}</h2>
+      <p class="muted">{{ 'orders.list.create.subtitle' | translate }}</p>
+    </header>
+
+    <form [formGroup]="createForm" (ngSubmit)="createOrder()" class="create-form" novalidate>
+      <div class="form-grid">
+        <mat-form-field appearance="fill">
+          <mat-label>{{ 'orders.list.create.fields.shipping' | translate }}</mat-label>
+          <input matInput type="number" min="0" step="0.01" formControlName="shipping" />
+          <mat-hint>{{ 'orders.list.create.fields.shippingHint' | translate }}</mat-hint>
+          <mat-error *ngIf="createForm.controls.shipping.hasError('min')">
+            {{ 'orders.list.create.errors.shippingMin' | translate }}
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>{{ 'orders.list.create.fields.taxRate' | translate }}</mat-label>
+          <input matInput type="number" min="0" max="1" step="0.01" formControlName="taxRate" />
+          <mat-hint>{{ 'orders.list.create.fields.taxRateHint' | translate }}</mat-hint>
+          <mat-error *ngIf="createForm.controls.taxRate.hasError('min') || createForm.controls.taxRate.hasError('max')">
+            {{ 'orders.list.create.errors.taxRateRange' | translate }}
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="actions">
+        <button
+          mat-stroked-button
+          color="accent"
+          type="submit"
+          [disabled]="createForm.invalid || creating"
+        >
+          <ng-container *ngIf="!creating; else creatingSpinner">
+            <mat-icon>shopping_cart_checkout</mat-icon>
+          </ng-container>
+          <ng-template #creatingSpinner>
+            <mat-progress-spinner diameter="18" mode="indeterminate"></mat-progress-spinner>
+          </ng-template>
+          <span>{{ 'orders.list.create.submit' | translate }}</span>
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <section class="orders-table panel">
+    <header class="section-heading">
+      <h2>{{ 'orders.list.table.title' | translate }}</h2>
+      <p class="muted" *ngIf="total > 0">{{ 'orders.list.table.count' | translate:{ count: total } }}</p>
+    </header>
+
+    <div class="table-container">
+      <app-loading [show]="loading" labelKey="common.loading"></app-loading>
+
+      <table mat-table [dataSource]="dataSource" *ngIf="dataSource.length; else emptyState">
+        <ng-container matColumnDef="id">
+          <th mat-header-cell *matHeaderCellDef>{{ 'orders.list.table.id' | translate }}</th>
+          <td mat-cell *matCellDef="let order">
+            <span class="order-id" [matTooltip]="order._id">{{ order._id }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="total">
+          <th mat-header-cell *matHeaderCellDef>{{ 'orders.list.table.total' | translate }}</th>
+          <td mat-cell *matCellDef="let order">
+            {{ order.total | currency:(order.currency || 'USD'):'symbol':'1.2-2' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>{{ 'orders.list.table.status' | translate }}</th>
+          <td mat-cell *matCellDef="let order">
+            <div class="status-group">
+              <span
+                class="status-chip"
+                [ngClass]="statusChipClass(order.status)"
+                [translate]="statusKey(order.status, 'status')"
+                [translateParams]="{ defaultValue: order.status || '' }"
+              ></span>
+              <span
+                class="status-chip outline"
+                [ngClass]="statusChipClass(order.paymentStatus)"
+                [translate]="statusKey(order.paymentStatus, 'paymentStatus')"
+                [translateParams]="{ defaultValue: order.paymentStatus || '' }"
+              ></span>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="placed">
+          <th mat-header-cell *matHeaderCellDef>{{ 'orders.list.table.placed' | translate }}</th>
+          <td mat-cell *matCellDef="let order">
+            {{ order.createdAt | date:'medium' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>{{ 'orders.list.table.actions' | translate }}</th>
+          <td mat-cell *matCellDef="let order">
+            <button
+              mat-icon-button
+              color="primary"
+              [routerLink]="['/orders', order._id]"
+              [attr.aria-label]="'orders.list.table.view' | translate"
+            >
+              <mat-icon>open_in_new</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let order; columns: displayedColumns; trackBy: trackById"></tr>
+      </table>
+
+      <ng-template #emptyState>
+        <div class="empty-state">
+          <mat-icon>inventory_2</mat-icon>
+          <p>{{ 'orders.list.empty' | translate }}</p>
+        </div>
+      </ng-template>
+    </div>
+
+    <mat-paginator
+      [length]="total"
+      [pageIndex]="pageIndex"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="pageSizeOptions"
+      showFirstLastButtons
+      (page)="onPageChange($event)"
+    ></mat-paginator>
+  </section>
+
+  <app-error-banner [key]="errorKey" [error]="lastError"></app-error-banner>
+</div>

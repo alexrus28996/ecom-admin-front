@@ -26,11 +26,11 @@ Legend
 - [ ] Confirm modal + error banner components reused across delete/demote/approve actions, consuming backend error shape `{ error: { ... } }`.
   - Note: Error banner component shipped and integrated in dashboard, products list, product form, and returns list; continue rollout across remaining screens.
 - [ ] Loading states for primary tables/forms to avoid blank flashes while waiting for API responses.
-  - Note: Implemented on dashboard, products list, product form, and returns list; consider extracting a shared loading wrapper.
+  - Note: Implemented on dashboard, products list, product form, customer orders list, and returns list; consider extracting a shared loading wrapper.
 - [ ] Material design polish: base layouts/screens on Angular Material components with responsive grids, typography, and stateful cards (no barebones UI).
-  - Started: Admin Orders list migrated to Material table + paginator.
+  - Continued: Customer orders list rebuilt with Material table, paginator, and responsive create-order form.
 - [ ] Localization coverage: route every label, helper, toast, and error through i18n translation files; keep copy out of components.
-  - Note: Added returns translations and fixed categories parent "none" label; continue replacing remaining inline strings.
+  - Note: Added returns translations and fixed categories parent "none" label; orders list now fully localized; continue replacing remaining inline strings.
 
 ## P1 - Next Wave
 - [ ] Auth preferences UI (`GET/PATCH /api/auth/preferences`): locale dropdown + notification toggles.
@@ -89,6 +89,7 @@ Legend
 
 ### Orders & Returns
 - [x] Customer orders list/detail (`GET /api/orders*`).
+  - Polished: Customer-facing list now uses Material table + paginator with responsive layout and i18n copy.
 - [ ] Invoice download + timeline view (`GET /api/orders/{id}/invoice|timeline`).
 - [ ] Return request form (`POST /api/orders/{id}/returns`).
 - [x] Admin orders list/detail/update (`/api/admin/orders*`).
