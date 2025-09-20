@@ -22,6 +22,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatExpansionModule } from '@angular/material/expansion';
 
 const MATERIAL = [
   MatToolbarModule,
@@ -46,7 +47,8 @@ const MATERIAL = [
   MatProgressBarModule,
   DragDropModule,
   MatChipsModule,
-  MatTabsModule
+  MatTabsModule,
+  MatExpansionModule
 ];
 
 @NgModule({

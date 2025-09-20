@@ -43,6 +43,7 @@ export class AppComponent implements OnInit {
   readonly isHandset$: Observable<boolean>;
   isHandset = false;
   isDark = false;
+  navCollapsed = false;
 
   constructor(
     public readonly auth: AuthService,
@@ -86,6 +87,14 @@ export class AppComponent implements OnInit {
 
   toggleTheme(): void {
     this.theme.toggle();
+  }
+
+  toggleNavCollapse(): void {
+    if (this.isHandset) {
+      return;
+    }
+
+    this.navCollapsed = !this.navCollapsed;
   }
 
   logout(): void {

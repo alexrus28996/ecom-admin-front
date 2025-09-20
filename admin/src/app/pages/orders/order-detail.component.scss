@@ -1,0 +1,243 @@
+:host {
+  display: block;
+}
+
+.order-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.order-detail__intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: clamp(16px, 3vw, 28px);
+  border-radius: 20px;
+  background: var(--app-panel);
+  border: 1px solid var(--app-border);
+  box-shadow: 0 18px 32px rgba(15, 23, 42, 0.08);
+  flex-wrap: wrap;
+}
+
+.order-detail__intro h1 {
+  margin: 0;
+  font-size: clamp(24px, 2.6vw, 32px);
+}
+
+.order-detail__intro-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.order-detail__action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.order-detail__grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.order-detail__grid mat-card {
+  border-radius: 20px;
+  border: 1px solid var(--app-border);
+  background: var(--app-panel);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+.order-detail__items-card,
+.order-detail__addresses-card,
+.order-detail__timeline-card {
+  grid-column: 1 / -1;
+}
+
+.order-detail__grid mat-card mat-card-header {
+  padding: 24px 24px 0 24px;
+}
+
+.order-detail__grid mat-card mat-card-content {
+  padding: 0 24px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.order-detail__items-card mat-card-content,
+.order-detail__timeline-card mat-card-content {
+  overflow-x: auto;
+}
+
+.order-detail__status-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  font-size: 24px;
+  color: var(--app-panel);
+}
+
+.order-detail__status-avatar.primary {
+  background: rgba(63, 81, 181, 0.9);
+}
+
+.order-detail__status-avatar.accent {
+  background: rgba(0, 184, 212, 0.85);
+}
+
+.order-detail__status-avatar.warn {
+  background: rgba(220, 38, 38, 0.85);
+}
+
+.theme-dark .order-detail__status-avatar {
+  color: #0f172a;
+}
+
+.order-detail__status-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.order-detail__status-chips .mat-mdc-chip {
+  font-weight: 600;
+  border-radius: 999px;
+}
+
+.order-detail__meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px 16px;
+}
+
+.meta-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.meta-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--app-text-muted);
+}
+
+.meta-value {
+  font-weight: 600;
+  color: var(--app-text);
+  word-break: break-word;
+}
+
+.meta-subvalue {
+  color: var(--app-text-muted);
+  font-size: 12px;
+}
+
+.order-detail__items-table,
+.order-detail__timeline-table {
+  width: 100%;
+}
+
+.order-detail__items-table th,
+.order-detail__items-table td,
+.order-detail__timeline-table th,
+.order-detail__timeline-table td {
+  padding: 12px 16px;
+}
+
+.order-detail__item-product {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.order-detail__item-product .item-name {
+  font-weight: 600;
+}
+
+.order-detail__item-image {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid var(--app-border);
+}
+
+.order-detail__empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px 16px;
+  color: var(--app-text-muted);
+}
+
+.order-detail__empty-state mat-icon {
+  font-size: 36px;
+  opacity: 0.6;
+}
+
+.order-detail__totals-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.total-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 14px;
+}
+
+.total-line--highlight {
+  padding-top: 8px;
+  border-top: 1px dashed var(--app-border);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.order-detail__address {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-style: normal;
+  line-height: 1.5;
+}
+
+.order-detail__timeline-card app-error-banner,
+.order-detail__timeline-card app-loading {
+  margin-bottom: 8px;
+}
+
+.order-detail__timeline-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+@media (max-width: 720px) {
+  .order-detail__intro {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .order-detail__action-buttons {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}

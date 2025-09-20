@@ -2,13 +2,15 @@
   <mat-sidenav
     #drawer
     class="app-sidenav"
+    [class.app-sidenav-collapsed]="navCollapsed && !(isHandset$ | async)"
     [mode]="(isHandset$ | async) ? 'over' : 'side'"
     [opened]="!(isHandset$ | async)"
+    [attr.aria-expanded]="!(navCollapsed && !(isHandset$ | async))"
   >
     <div class="app-sidenav-header">
       <span class="app-brand">
         <mat-icon>storefront</mat-icon>
-        {{ 'shell.brand' | translate }}
+        <span class="app-brand-label">{{ 'shell.brand' | translate }}</span>
       </span>
       <ng-container *ngIf="auth.user$ | async as user">
         <span class="mat-body-small app-user-email">{{ user.email }}</span>
@@ -24,9 +26,17 @@
         routerLinkActive="active-link"
         [routerLinkActiveOptions]="{ exact: true }"
         (click)="onNavigate(drawer)"
+        [matTooltip]="navCollapsed && !(isHandset$ | async) ? (item.labelKey | translate) : ''"
+        matTooltipPosition="right"
       >
         <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-        <span matListItemTitle>{{ item.labelKey | translate }}</span>
+        <span
+          matListItemTitle
+          class="app-nav-label"
+          [class.app-nav-label-collapsed]="navCollapsed && !(isHandset$ | async)"
+          [attr.aria-hidden]="navCollapsed && !(isHandset$ | async) ? 'true' : null"
+          >{{ item.labelKey | translate }}</span
+        >
       </a>
     </mat-nav-list>
 
@@ -41,9 +51,17 @@
           [routerLink]="item.route"
           routerLinkActive="active-link"
           (click)="onNavigate(drawer)"
+          [matTooltip]="navCollapsed && !(isHandset$ | async) ? (item.labelKey | translate) : ''"
+          matTooltipPosition="right"
         >
           <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-          <span matListItemTitle>{{ item.labelKey | translate }}</span>
+          <span
+            matListItemTitle
+            class="app-nav-label"
+            [class.app-nav-label-collapsed]="navCollapsed && !(isHandset$ | async)"
+            [attr.aria-hidden]="navCollapsed && !(isHandset$ | async) ? 'true' : null"
+            >{{ item.labelKey | translate }}</span
+          >
         </a>
       </ng-container>
     </mat-nav-list>
@@ -53,7 +71,7 @@
     </div>
   </mat-sidenav>
 
-  <mat-sidenav-content class="app-content-wrapper">
+  <mat-sidenav-content class="app-content-wrapper" [class.app-content-expanded]="navCollapsed && !(isHandset$ | async)">
     <mat-toolbar color="primary" class="app-toolbar">
       <button
         mat-icon-button
@@ -65,9 +83,21 @@
         <mat-icon>menu</mat-icon>
       </button>
 
+      <button
+        mat-icon-button
+        type="button"
+        class="collapse-toggle"
+        *ngIf="(isHandset$ | async) === false"
+        (click)="toggleNavCollapse()"
+        [matTooltip]="(navCollapsed ? 'shell.actions.expandNav' : 'shell.actions.collapseNav') | translate"
+        [attr.aria-label]="(navCollapsed ? 'shell.actions.expandNav' : 'shell.actions.collapseNav') | translate"
+      >
+        <mat-icon>{{ navCollapsed ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+      </button>
+
       <div class="app-brand">
         <mat-icon>storefront</mat-icon>
-        {{ 'shell.brand' | translate }}
+        <span class="app-brand-label">{{ 'shell.brand' | translate }}</span>
       </div>
 
       <span class="spacer"></span>

@@ -118,6 +118,7 @@ a {
   flex-direction: column;
   gap: 12px;
   padding-bottom: 24px;
+  transition: width 180ms ease;
 }
 
 .app-sidenav .mat-mdc-list-item {

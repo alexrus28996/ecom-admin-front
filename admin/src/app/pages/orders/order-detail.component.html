@@ -1,80 +1,342 @@
-﻿<div class="panel" style="position:relative;">
-  <h2>{{ 'orders.detail.title' | translate }}</h2>
+<div class="order-detail">
+  <section class="order-detail__intro">
+    <div class="order-detail__intro-text">
+      <h1>{{ 'orders.detail.title' | translate }}</h1>
+      <p class="muted" *ngIf="order as current">
+        {{ 'orders.detail.subtitle' | translate:{ id: current.number || current._id } }}
+      </p>
+    </div>
+    <div class="order-detail__action-buttons">
+      <button
+        mat-stroked-button
+        color="accent"
+        type="button"
+        (click)="load()"
+        [disabled]="loading"
+        [attr.aria-label]="'orders.detail.actions.refresh' | translate"
+      >
+        <mat-icon>refresh</mat-icon>
+        <span>{{ 'orders.detail.actions.refresh' | translate }}</span>
+      </button>
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        (click)="openInvoice()"
+        *ngIf="order"
+        [disabled]="loading"
+        [attr.aria-label]="'orders.detail.actions.invoice' | translate"
+      >
+        <mat-icon>picture_as_pdf</mat-icon>
+        <span>{{ 'orders.detail.actions.invoice' | translate }}</span>
+      </button>
+      <button
+        mat-stroked-button
+        color="primary"
+        type="button"
+        (click)="loadTimeline()"
+        *ngIf="order"
+        [disabled]="tlLoading"
+        [attr.aria-label]="'orders.detail.actions.timeline' | translate"
+      >
+        <mat-icon>timeline</mat-icon>
+        <span>{{ 'orders.detail.actions.timeline' | translate }}</span>
+      </button>
+    </div>
+  </section>
 
   <app-loading [show]="loading" labelKey="common.loading"></app-loading>
   <app-error-banner [key]="errorKey"></app-error-banner>
 
-  <div *ngIf="order">
-    <div class="row" style="display:flex;gap:8px;align-items:center;">
-      <strong>{{ 'orders.detail.fields.id' | translate }}:</strong>
-      <span>{{ order._id }}</span>
-    </div>
-    <div class="row" style="display:flex;gap:8px;align-items:center;">
-      <strong>{{ 'orders.detail.fields.status' | translate }}:</strong>
-      <span>{{ order.status }} — {{ order.paymentStatus }}</span>
-    </div>
+  <ng-container *ngIf="order as current">
+    <div class="order-detail__grid">
+      <mat-card class="order-detail__summary-card">
+        <mat-card-header>
+          <div mat-card-avatar class="order-detail__status-avatar" [ngClass]="statusColor(current.status)">
+            <mat-icon>receipt_long</mat-icon>
+          </div>
+          <mat-card-title>{{ current.number || current._id }}</mat-card-title>
+          <mat-card-subtitle>{{ 'orders.detail.summary.metaTitle' | translate }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <mat-chip-set class="order-detail__status-chips" aria-label="{{ 'orders.detail.fields.status' | translate }}">
+            <mat-chip
+              selected
+              [color]="statusColor(current.status)"
+              [disableRipple]="true"
+            >
+              {{ statusKey(current.status) | translate:{ defaultValue: current.status || '' } }}
+            </mat-chip>
+            <mat-chip
+              selected
+              [color]="statusColor(current.paymentStatus)"
+              [disableRipple]="true"
+            >
+              {{ statusKey(current.paymentStatus, 'payment') | translate:{ defaultValue: current.paymentStatus || '' } }}
+            </mat-chip>
+          </mat-chip-set>
 
-    <div style="margin-top:12px; display:flex; gap:8px;">
-      <button mat-stroked-button color="primary" (click)="openInvoice()">
-        <mat-icon>picture_as_pdf</mat-icon>
-        {{ 'orders.detail.actions.invoice' | translate }}
-      </button>
-      <button mat-stroked-button (click)="loadTimeline()">
-        <mat-icon>timeline</mat-icon>
-        {{ 'orders.detail.actions.timeline' | translate }}
-      </button>
+          <div class="order-detail__meta-grid">
+            <div class="meta-field" *ngIf="customerName(current) as customer">
+              <span class="meta-label">{{ 'orders.detail.fields.customer' | translate }}</span>
+              <span class="meta-value">{{ customer }}</span>
+              <span class="meta-subvalue" *ngIf="customerEmail(current) as email">{{ email }}</span>
+            </div>
+            <div class="meta-field">
+              <span class="meta-label">{{ 'orders.detail.fields.status' | translate }}</span>
+              <span class="meta-value">
+                {{ statusKey(current.status) | translate:{ defaultValue: current.status || '' } }}
+              </span>
+            </div>
+            <div class="meta-field">
+              <span class="meta-label">{{ 'orders.detail.fields.paymentStatus' | translate }}</span>
+              <span class="meta-value">
+                {{ statusKey(current.paymentStatus, 'payment') | translate:{ defaultValue: current.paymentStatus || '' } }}
+              </span>
+            </div>
+            <div class="meta-field" *ngIf="current.couponCode">
+              <span class="meta-label">{{ 'orders.detail.fields.couponCode' | translate }}</span>
+              <span class="meta-value">{{ current.couponCode }}</span>
+            </div>
+            <div class="meta-field" *ngIf="current.createdAt">
+              <span class="meta-label">{{ 'orders.detail.fields.createdAt' | translate }}</span>
+              <span class="meta-value">{{ current.createdAt | date:'medium' }}</span>
+            </div>
+            <div class="meta-field" *ngIf="current.updatedAt">
+              <span class="meta-label">{{ 'orders.detail.fields.updatedAt' | translate }}</span>
+              <span class="meta-value">{{ current.updatedAt | date:'medium' }}</span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="order-detail__items-card">
+        <mat-card-header>
+          <mat-card-title>{{ 'orders.detail.sections.items' | translate }}</mat-card-title>
+          <mat-card-subtitle>{{ 'orders.detail.sections.itemsHint' | translate }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <table
+            mat-table
+            [dataSource]="current.items || []"
+            class="order-detail__items-table mat-elevation-z1"
+            *ngIf="current.items?.length; else emptyItems"
+          >
+            <ng-container matColumnDef="product">
+              <th mat-header-cell *matHeaderCellDef>{{ 'orders.detail.table.product' | translate }}</th>
+              <td mat-cell *matCellDef="let it">
+                <div class="order-detail__item-product">
+                  <img
+                    *ngIf="it.image"
+                    [src]="it.image"
+                    class="order-detail__item-image"
+                    [attr.alt]="('orders.detail.table.productImageAlt' | translate:{ name: it.name })"
+                  />
+                  <div>
+                    <div class="item-name">{{ it.name }}</div>
+                    <div class="muted" *ngIf="it.variant">{{ it.variant }}</div>
+                    <div class="muted" *ngIf="it.product">
+                      {{ 'orders.detail.table.productId' | translate:{ id: it.product } }}
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="price">
+              <th mat-header-cell *matHeaderCellDef>{{ 'orders.detail.table.price' | translate }}</th>
+              <td mat-cell *matCellDef="let it">
+                <ng-container *ngIf="itemPrice(it, current.currency) as price">
+                  {{ price.amount | number:'1.2-2' }} {{ price.currency }}
+                </ng-container>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="qty">
+              <th mat-header-cell *matHeaderCellDef>{{ 'orders.detail.table.qty' | translate }}</th>
+              <td mat-cell *matCellDef="let it">{{ it.quantity }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="line">
+              <th mat-header-cell *matHeaderCellDef>{{ 'orders.detail.table.line' | translate }}</th>
+              <td mat-cell *matCellDef="let it">
+                <ng-container *ngIf="itemLineTotal(it, current.currency) as line">
+                  {{ line.amount | number:'1.2-2' }} {{ line.currency }}
+                </ng-container>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="['product', 'price', 'qty', 'line']"></tr>
+            <tr mat-row *matRowDef="let row; columns: ['product', 'price', 'qty', 'line']"></tr>
+          </table>
+
+          <ng-template #emptyItems>
+            <div class="order-detail__empty-state">
+              <mat-icon>inventory_2</mat-icon>
+              <p>{{ 'orders.detail.items.empty' | translate }}</p>
+            </div>
+          </ng-template>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="order-detail__totals-card">
+        <mat-card-header>
+          <mat-card-title>{{ 'orders.detail.sections.totals' | translate }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="order-detail__totals-grid">
+            <div class="total-line">
+              <span class="meta-label">{{ 'orders.detail.summary.subtotal' | translate }}</span>
+              <span class="meta-value" *ngIf="money(current.subtotal, current.currency) as subtotal">
+                {{ subtotal.amount | number:'1.2-2' }} {{ subtotal.currency }}
+              </span>
+            </div>
+            <div class="total-line" *ngIf="current.discount">
+              <span class="meta-label">{{ 'orders.detail.summary.discount' | translate }}</span>
+              <span class="meta-value" *ngIf="money(current.discount, current.currency) as discount">
+                {{ discount.amount | number:'1.2-2' }} {{ discount.currency }}
+              </span>
+            </div>
+            <div class="total-line">
+              <span class="meta-label">{{ 'orders.detail.summary.shipping' | translate }}</span>
+              <span class="meta-value" *ngIf="money(current.shipping, current.currency) as shipping">
+                {{ shipping.amount | number:'1.2-2' }} {{ shipping.currency }}
+              </span>
+            </div>
+            <div class="total-line">
+              <span class="meta-label">{{ 'orders.detail.summary.tax' | translate }}</span>
+              <span class="meta-value" *ngIf="money(current.tax, current.currency) as tax">
+                {{ tax.amount | number:'1.2-2' }} {{ tax.currency }}
+              </span>
+            </div>
+            <div class="total-line total-line--highlight">
+              <span class="meta-label">{{ 'orders.detail.summary.total' | translate }}</span>
+              <span class="meta-value" *ngIf="money(current.total, current.currency) as total">
+                {{ total.amount | number:'1.2-2' }} {{ total.currency }}
+              </span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card *ngIf="current.shippingAddress || current.billingAddress" class="order-detail__addresses-card">
+        <mat-card-header>
+          <mat-card-title>{{ 'orders.detail.sections.addresses' | translate }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <mat-accordion displayMode="flat">
+            <mat-expansion-panel *ngIf="current.shippingAddress as shipping" expanded>
+              <mat-expansion-panel-header>
+                <mat-panel-title>{{ 'orders.detail.addresses.shipping' | translate }}</mat-panel-title>
+              </mat-expansion-panel-header>
+              <address class="order-detail__address">
+                <span>{{ shipping.name }}</span>
+                <span *ngIf="shipping.company">{{ shipping.company }}</span>
+                <span>{{ shipping.line1 }}</span>
+                <span *ngIf="shipping.line2">{{ shipping.line2 }}</span>
+                <span>
+                  {{ shipping.city }}
+                  <span *ngIf="shipping.region">{{ shipping.region }}</span>
+                  <span *ngIf="shipping.postalCode">{{ shipping.postalCode }}</span>
+                </span>
+                <span *ngIf="shipping.country">{{ shipping.country }}</span>
+                <span *ngIf="shipping.phone">{{ shipping.phone }}</span>
+              </address>
+            </mat-expansion-panel>
+
+            <mat-expansion-panel *ngIf="current.billingAddress as billing">
+              <mat-expansion-panel-header>
+                <mat-panel-title>{{ 'orders.detail.addresses.billing' | translate }}</mat-panel-title>
+              </mat-expansion-panel-header>
+              <address class="order-detail__address">
+                <span>{{ billing.name }}</span>
+                <span *ngIf="billing.company">{{ billing.company }}</span>
+                <span>{{ billing.line1 }}</span>
+                <span *ngIf="billing.line2">{{ billing.line2 }}</span>
+                <span>
+                  {{ billing.city }}
+                  <span *ngIf="billing.region">{{ billing.region }}</span>
+                  <span *ngIf="billing.postalCode">{{ billing.postalCode }}</span>
+                </span>
+                <span *ngIf="billing.country">{{ billing.country }}</span>
+                <span *ngIf="billing.phone">{{ billing.phone }}</span>
+              </address>
+            </mat-expansion-panel>
+          </mat-accordion>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="order-detail__timeline-card">
+        <mat-card-header>
+          <mat-card-title>{{ 'orders.detail.sections.timeline' | translate }}</mat-card-title>
+          <mat-card-subtitle>{{ 'orders.detail.timeline.subtitle' | translate }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="order-detail__timeline-actions">
+            <button
+              mat-stroked-button
+              color="primary"
+              type="button"
+              (click)="loadTimeline()"
+              [disabled]="tlLoading"
+              [attr.aria-label]="'orders.detail.actions.timeline' | translate"
+            >
+              <mat-icon>refresh</mat-icon>
+              <span>{{ 'orders.detail.actions.timeline' | translate }}</span>
+            </button>
+          </div>
+          <app-error-banner [key]="tlErrorKey"></app-error-banner>
+          <app-loading [show]="tlLoading" labelKey="common.loading"></app-loading>
+
+          <table
+            mat-table
+            [dataSource]="timeline"
+            class="order-detail__timeline-table mat-elevation-z1"
+            *ngIf="timeline?.length; else emptyTimeline"
+          >
+            <ng-container matColumnDef="time">
+              <th mat-header-cell *matHeaderCellDef>{{ 'orders.detail.timeline.time' | translate }}</th>
+              <td mat-cell *matCellDef="let entry">{{ (entry.time || entry.createdAt) | date:'medium' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="type">
+              <th mat-header-cell *matHeaderCellDef>{{ 'orders.detail.timeline.type' | translate }}</th>
+              <td mat-cell *matCellDef="let entry">
+                {{ timelineTypeKey(entry) | translate:{ defaultValue: entry.type || '' } }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="actor">
+              <th mat-header-cell *matHeaderCellDef>{{ 'orders.detail.timeline.actor' | translate }}</th>
+              <td mat-cell *matCellDef="let entry">
+                <ng-container *ngIf="entry.actor?.name; else actorFallback">
+                  {{ entry.actor?.name }}
+                </ng-container>
+                <ng-template #actorFallback>
+                  <span *ngIf="entry.actor?._id; else systemActor" class="muted">
+                    {{ entry.actor?._id }}
+                  </span>
+                  <ng-template #systemActor>
+                    <span>{{ 'orders.detail.timeline.system' | translate }}</span>
+                  </ng-template>
+                </ng-template>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="message">
+              <th mat-header-cell *matHeaderCellDef>{{ 'orders.detail.timeline.message' | translate }}</th>
+              <td mat-cell *matCellDef="let entry">{{ entry.message || ('orders.detail.timeline.noMessage' | translate) }}</td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="['time', 'type', 'actor', 'message']"></tr>
+            <tr mat-row *matRowDef="let row; columns: ['time', 'type', 'actor', 'message']"></tr>
+          </table>
+
+          <ng-template #emptyTimeline>
+            <div class="order-detail__empty-state">
+              <mat-icon>schedule</mat-icon>
+              <p>{{ 'orders.detail.timeline.empty' | translate }}</p>
+            </div>
+          </ng-template>
+        </mat-card-content>
+      </mat-card>
     </div>
-
-    <section class="table-wrapper" style="margin-top:12px;">
-      <table mat-table [dataSource]="order.items || []">
-        <ng-container matColumnDef="product">
-          <th mat-header-cell *matHeaderCellDef>{{ 'orders.detail.table.product' | translate }}</th>
-          <td mat-cell *matCellDef="let it">{{ it.name }}</td>
-        </ng-container>
-        <ng-container matColumnDef="price">
-          <th mat-header-cell *matHeaderCellDef>{{ 'orders.detail.table.price' | translate }}</th>
-          <td mat-cell *matCellDef="let it">{{ it.price | number:'1.2-2' }} {{ it.currency }}</td>
-        </ng-container>
-        <ng-container matColumnDef="qty">
-          <th mat-header-cell *matHeaderCellDef>{{ 'orders.detail.table.qty' | translate }}</th>
-          <td mat-cell *matCellDef="let it">{{ it.quantity }}</td>
-        </ng-container>
-        <ng-container matColumnDef="line">
-          <th mat-header-cell *matHeaderCellDef>{{ 'orders.detail.table.line' | translate }}</th>
-          <td mat-cell *matCellDef="let it">{{ (it.price * it.quantity) | number:'1.2-2' }} {{ it.currency }}</td>
-        </ng-container>
-        <tr mat-header-row *matHeaderRowDef="['product','price','qty','line']"></tr>
-        <tr mat-row *matRowDef="let row; columns: ['product','price','qty','line']"></tr>
-      </table>
-    </section>
-
-    <div style="margin-top:12px; display:grid; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap:8px;">
-      <div>{{ 'orders.detail.summary.subtotal' | translate }}: {{ order.subtotal | number:'1.2-2' }} {{ order.currency }}</div>
-      <div>{{ 'orders.detail.summary.shipping' | translate }}: {{ order.shipping | number:'1.2-2' }} {{ order.currency }}</div>
-      <div>{{ 'orders.detail.summary.tax' | translate }}: {{ order.tax | number:'1.2-2' }} {{ order.currency }}</div>
-      <div><strong>{{ 'orders.detail.summary.total' | translate }}: {{ order.total | number:'1.2-2' }} {{ order.currency }}</strong></div>
-    </div>
-
-    <section *ngIf="timeline?.length" style="margin-top:16px;">
-      <h3 style="margin:0 0 8px 0;">{{ 'orders.detail.timeline.title' | translate }}</h3>
-      <table mat-table [dataSource]="timeline">
-        <ng-container matColumnDef="time">
-          <th mat-header-cell *matHeaderCellDef>{{ 'orders.detail.timeline.time' | translate }}</th>
-          <td mat-cell *matCellDef="let t">{{ t.time | date:'short' }}</td>
-        </ng-container>
-        <ng-container matColumnDef="type">
-          <th mat-header-cell *matHeaderCellDef>{{ 'orders.detail.timeline.type' | translate }}</th>
-          <td mat-cell *matCellDef="let t">{{ t.type }}</td>
-        </ng-container>
-        <ng-container matColumnDef="message">
-          <th mat-header-cell *matHeaderCellDef>{{ 'orders.detail.timeline.message' | translate }}</th>
-          <td mat-cell *matCellDef="let t">{{ t.message }}</td>
-        </ng-container>
-        <tr mat-header-row *matHeaderRowDef="['time','type','message']"></tr>
-        <tr mat-row *matRowDef="let row; columns: ['time','type','message']"></tr>
-      </table>
-      <app-error-banner [key]="tlErrorKey"></app-error-banner>
-      <app-loading [show]="tlLoading" labelKey="common.loading"></app-loading>
-    </section>
-  </div>
+  </ng-container>
 </div>

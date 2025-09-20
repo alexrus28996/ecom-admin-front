@@ -46,6 +46,55 @@
   padding-top: 8px;
 }
 
+.app-nav-label {
+  transition: opacity 160ms ease, transform 160ms ease;
+  transform-origin: left center;
+}
+
+.app-nav-label-collapsed {
+  opacity: 0;
+  transform: scaleX(0.6);
+  width: 0;
+  overflow: hidden;
+}
+
+.app-sidenav.app-sidenav-collapsed {
+  width: 88px;
+  padding-inline: 12px;
+}
+
+.app-sidenav.app-sidenav-collapsed .app-sidenav-header,
+.app-sidenav.app-sidenav-collapsed .app-sidenav-footer {
+  align-items: center;
+  text-align: center;
+}
+
+.app-sidenav.app-sidenav-collapsed .app-sidenav-header {
+  padding-inline: 0;
+  padding-block: 16px;
+}
+
+.app-sidenav.app-sidenav-collapsed .mat-mdc-list-item {
+  padding-inline: 12px;
+}
+
+.app-sidenav.app-sidenav-collapsed .app-sidenav-header .app-brand-label,
+.app-sidenav.app-sidenav-collapsed .app-sidenav-header .app-user-email {
+  display: none;
+}
+
+.app-sidenav.app-sidenav-collapsed .mat-mdc-list-item {
+  justify-content: center;
+}
+
+.app-sidenav.app-sidenav-collapsed h3[matSubheader] {
+  display: none;
+}
+
+.app-content-wrapper.app-content-expanded main {
+  padding-inline-start: 12px;
+}
+
 @media (max-width: 959px) {
   .app-toolbar {
     gap: 8px;

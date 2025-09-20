@@ -816,31 +816,90 @@
     },
     "detail": {
       "title": "Order Detail",
+      "subtitle": "Detailed timeline and fulfillment for order {{ id }}.",
       "fields": {
         "id": "ID",
-        "status": "Status"
+        "status": "Status",
+        "paymentStatus": "Payment status",
+        "couponCode": "Coupon",
+        "createdAt": "Created",
+        "updatedAt": "Updated",
+        "customer": "Customer"
       },
       "actions": {
         "invoice": "Invoice (PDF)",
-        "timeline": "Show timeline"
+        "timeline": "Show timeline",
+        "refresh": "Refresh order"
       },
       "table": {
         "product": "Product",
         "price": "Price",
         "qty": "Qty",
-        "line": "Line"
+        "line": "Line",
+        "productId": "Product ID: {{ id }}",
+        "productImageAlt": "Product image for {{ name }}"
       },
       "summary": {
+        "metaTitle": "Order overview",
         "subtotal": "Subtotal",
+        "discount": "Discount",
         "shipping": "Shipping",
         "tax": "Tax",
         "total": "Total"
       },
+      "sections": {
+        "items": "Items",
+        "itemsHint": "Line items included in this order.",
+        "totals": "Financial summary",
+        "addresses": "Addresses",
+        "timeline": "Timeline"
+      },
+      "status": {
+        "unknown": "Unknown status",
+        "unknownPayment": "Unknown payment status",
+        "order": {
+          "pending": "Pending",
+          "processing": "Processing",
+          "confirmed": "Confirmed",
+          "completed": "Completed",
+          "cancelled": "Cancelled",
+          "fulfilled": "Fulfilled",
+          "delivered": "Delivered",
+          "shipped": "Shipped",
+          "refunded": "Refunded"
+        },
+        "payment": {
+          "pending": "Payment pending",
+          "paid": "Paid",
+          "unpaid": "Unpaid",
+          "refunded": "Refunded",
+          "failed": "Payment failed"
+        }
+      },
+      "items": {
+        "empty": "No items are associated with this order yet."
+      },
+      "addresses": {
+        "shipping": "Shipping address",
+        "billing": "Billing address"
+      },
       "timeline": {
         "title": "Order timeline",
+        "subtitle": "Chronological record of status updates and notifications.",
         "time": "Time",
         "type": "Type",
-        "message": "Message"
+        "actor": "Actor",
+        "message": "Message",
+        "empty": "Timeline events will appear here once loaded.",
+        "system": "System",
+        "noMessage": "No additional details",
+        "types": {
+          "unknown": "Order event",
+          "order_created": "Order created",
+          "status_updated": "Status updated",
+          "payment_updated": "Payment updated",
+          "shipment_created": "Shipment created"
+        }
       },
       "errors": {
         "loadFailed": "Unable to load order.",
@@ -877,7 +936,9 @@
       "logout": "Sign out",
       "toggleTheme": "Toggle theme",
       "setDark": "Switch to dark mode",
-      "setLight": "Switch to light mode"
+      "setLight": "Switch to light mode",
+      "collapseNav": "Collapse navigation",
+      "expandNav": "Expand navigation"
     },
     "footer": {
       "backend": "Backend: /api",
