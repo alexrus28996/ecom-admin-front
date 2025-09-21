@@ -18,6 +18,7 @@ Legend
 6. Begin admin returns console: table + detail drawer powered by `/api/admin/returns` and approve/reject endpoints. [list + approve/reject shipped]
 7. Stand up shipments management: `/api/admin/orders/{id}/shipments` create modal + `/api/admin/shipments` history, including timeline integration on order detail.
 8. Follow with inventory console and coupons management before expanding to reviews moderation and bulk tooling.
+9. Flesh out placeholder workspaces (coupons, shipments, reviews, platform settings) with real data sources and CRUD flows once APIs are ready.
 
 
 ## P0 - Immediate Parity Gaps

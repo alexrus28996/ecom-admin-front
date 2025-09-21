@@ -42,10 +42,17 @@ export class AdminService {
     return this.http.patch<{ user: any }>(`${this.base}/users/${id}`, { isActive });
   }
 
-  listOrders(params: { page?: number; limit?: number } = {}): Observable<{ items: any[]; total: number; page: number; pages: number; }> {
+  listOrders(params: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    paymentStatus?: string;
+  } = {}): Observable<{ items: any[]; total: number; page: number; pages: number; }> {
     const usp = new URLSearchParams();
     if (params.page) usp.set('page', String(params.page));
     if (params.limit) usp.set('limit', String(params.limit));
+    if (params.status) usp.set('status', params.status);
+    if (params.paymentStatus) usp.set('paymentStatus', params.paymentStatus);
     const qs = usp.toString();
     return this.http.get<{ items: any[]; total: number; page: number; pages: number; }>(`${this.base}/orders${qs ? ('?' + qs) : ''}`);
   }

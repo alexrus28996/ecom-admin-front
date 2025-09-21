@@ -1,0 +1,102 @@
+<div class="layout-shell" [class.layout-shell--collapsed]="navCollapsed">
+  <aside class="layout-shell__sidebar" [class.layout-shell__sidebar--open]="mobileNavOpen">
+    <div class="sidebar__brand">
+      <button mat-icon-button type="button" class="sidebar__close" (click)="closeMobileNav()" *ngIf="(isHandset$ | async) === true">
+        <mat-icon>close</mat-icon>
+      </button>
+      <div class="sidebar__brandmark">
+        <span class="sidebar__logo">EA</span>
+        <div class="sidebar__titles">
+          <span class="sidebar__title">Ecom Admin</span>
+          <span class="sidebar__subtitle">Enterprise Suite</span>
+        </div>
+      </div>
+    </div>
+
+    <nav class="sidebar__nav" *ngIf="visibleNav$ | async as nav">
+      <a
+        *ngFor="let item of nav"
+        [routerLink]="item.route"
+        routerLinkActive="sidebar__link--active"
+        class="sidebar__link"
+        (click)="closeMobileNav()"
+      >
+        <mat-icon class="sidebar__icon">{{ item.icon }}</mat-icon>
+        <span class="sidebar__label">{{ item.label }}</span>
+      </a>
+    </nav>
+
+    <div class="sidebar__footer">
+      <div class="sidebar__status">
+        <mat-icon>verified_user</mat-icon>
+        <span>Secure admin access</span>
+      </div>
+      <button mat-stroked-button color="primary" type="button" class="sidebar__collapse" (click)="toggleSidebar()" *ngIf="(isHandset$ | async) === false">
+        <mat-icon>{{ navCollapsed ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+        <span>{{ navCollapsed ? 'Expand navigation' : 'Collapse navigation' }}</span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="layout-shell__backdrop" *ngIf="mobileNavOpen" (click)="closeMobileNav()"></div>
+
+  <section class="layout-shell__main">
+    <header class="layout-shell__topbar">
+      <div class="topbar__left">
+        <button mat-icon-button type="button" class="topbar__menu" (click)="openMobileNav()" *ngIf="(isHandset$ | async) === true">
+          <mat-icon>menu</mat-icon>
+        </button>
+        <div class="topbar__breadcrumbs">
+          <span class="topbar__title">Control Center</span>
+          <span class="topbar__subtitle">Monitor and orchestrate commerce operations</span>
+        </div>
+      </div>
+      <form class="topbar__search" (ngSubmit)="submitSearch()" novalidate>
+        <mat-form-field appearance="outline">
+          <mat-label>Global search</mat-label>
+          <input matInput [formControl]="searchControl" placeholder="Search orders, users, products" />
+          <button mat-icon-button matSuffix type="submit" aria-label="Search">
+            <mat-icon>search</mat-icon>
+          </button>
+        </mat-form-field>
+      </form>
+      <div class="topbar__actions">
+        <button mat-icon-button type="button" (click)="toggleTheme()" [matTooltip]="isDark ? 'Switch to light mode' : 'Switch to dark mode'">
+          <mat-icon>{{ isDark ? 'light_mode' : 'dark_mode' }}</mat-icon>
+        </button>
+        <button mat-icon-button type="button">
+          <mat-icon>notifications</mat-icon>
+        </button>
+        <button mat-button [matMenuTriggerFor]="profileMenu" class="topbar__profile" *ngIf="auth.user$ | async as user">
+          <span class="topbar__avatar">{{ (user.name || user.email || '?') | slice:0:2 | uppercase }}</span>
+          <span class="topbar__name">
+            <strong>{{ user.name || 'Admin' }}</strong>
+            <small>{{ user.email }}</small>
+          </span>
+          <mat-icon>expand_more</mat-icon>
+        </button>
+        <mat-menu #profileMenu="matMenu">
+          <button mat-menu-item routerLink="/profile">
+            <mat-icon>badge</mat-icon>
+            <span>Profile</span>
+          </button>
+          <button mat-menu-item routerLink="/admin/settings">
+            <mat-icon>tune</mat-icon>
+            <span>Preferences</span>
+          </button>
+          <mat-divider></mat-divider>
+          <button mat-menu-item (click)="logout()">
+            <mat-icon>logout</mat-icon>
+            <span>Logout</span>
+          </button>
+        </mat-menu>
+      </div>
+    </header>
+
+    <main class="layout-shell__content">
+      <div class="layout-shell__content-surface">
+        <router-outlet></router-outlet>
+      </div>
+    </main>
+  </section>
+</div>

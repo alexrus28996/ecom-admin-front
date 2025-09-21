@@ -1,0 +1,22 @@
+<section class="placeholder">
+  <header class="placeholder__header">
+    <mat-icon>rate_review</mat-icon>
+    <div>
+      <h1>{{ title }}</h1>
+      <p>{{ description }}</p>
+    </div>
+  </header>
+
+  <mat-card class="placeholder__card">
+    <mat-card-header>
+      <mat-card-title>Moderation workspace coming soon</mat-card-title>
+      <mat-card-subtitle>Integrating reviews APIs and workflow tooling</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <ul>
+        <li *ngFor="let item of checklist">{{ item }}</li>
+      </ul>
+      <p class="placeholder__note">Engineering is validating data contracts with the backend.</p>
+    </mat-card-content>
+  </mat-card>
+</section>

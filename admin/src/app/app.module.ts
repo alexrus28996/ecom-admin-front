@@ -36,6 +36,11 @@ import { ConfirmDialogComponent } from './shared/confirm-dialog.component';
 import { LoadingComponent } from './shared/loading.component';
 import { AccessDeniedComponent } from './pages/denied/access-denied.component';
 import { ErrorBannerComponent } from './shared/error-banner.component';
+import { LayoutShellComponent } from './core/layout/layout-shell.component';
+import { AdminCouponsPlaceholderComponent } from './pages/admin/placeholders/admin-coupons-placeholder.component';
+import { AdminReviewsPlaceholderComponent } from './pages/admin/placeholders/admin-reviews-placeholder.component';
+import { AdminShipmentsPlaceholderComponent } from './pages/admin/placeholders/admin-shipments-placeholder.component';
+import { AdminSettingsPlaceholderComponent } from './pages/admin/placeholders/admin-settings-placeholder.component';
 
 import { MaterialModule } from './shared/material.module';
 import { AuthInterceptor } from './core/auth.interceptor';
@@ -73,7 +78,12 @@ export function translateHttpLoaderFactory(http: HttpClient) {
     LoadingComponent,
     AccessDeniedComponent,
     AddressManagementComponent,
-    AddressFormDialogComponent
+    AddressFormDialogComponent,
+    LayoutShellComponent,
+    AdminCouponsPlaceholderComponent,
+    AdminReviewsPlaceholderComponent,
+    AdminShipmentsPlaceholderComponent,
+    AdminSettingsPlaceholderComponent
   ],
   imports: [
     BrowserModule,

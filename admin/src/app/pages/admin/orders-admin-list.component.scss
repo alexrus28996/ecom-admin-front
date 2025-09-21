@@ -1,0 +1,32 @@
+:host {
+  display: block;
+}
+
+.order-id {
+  display: grid;
+  gap: 4px;
+}
+
+.order-id .muted {
+  font-size: 12px;
+  color: var(--app-text-muted);
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.12);
+  color: #1d4ed8;
+  font-size: 12px;
+}
+
+.status-badge--muted {
+  background: rgba(148, 163, 184, 0.18);
+  color: #334155;
+}
+
+.table-actions {
+  display: inline-flex;
+}

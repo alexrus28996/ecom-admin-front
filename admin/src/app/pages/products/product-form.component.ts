@@ -23,6 +23,7 @@ export class ProductFormComponent implements OnInit {
   id: string | null = null;
   loading = false;
   errorKey: string | null = null;
+  lastError: any = null;
 
   readonly form: UntypedFormGroup = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
@@ -218,10 +219,12 @@ export class ProductFormComponent implements OnInit {
         this.setAttributes(product.attributes || {});
         this.setVariants(product.variants || []);
         this.loading = false;
+        this.lastError = null;
         this.cdr.markForCheck();
       },
       error: (err) => {
         this.errorKey = err?.error?.error?.code ? `errors.backend.${err.error.error.code}` : 'products.form.errors.loadFailed';
+        this.lastError = err;
         this.loading = false;
         this.cdr.markForCheck();
       }
@@ -284,6 +287,7 @@ export class ProductFormComponent implements OnInit {
 
     this.loading = true;
     this.errorKey = null;
+    this.lastError = null;
     this.cdr.markForCheck();
 
     const request$ = this.id ? this.products.update(this.id, payload) : this.products.create(payload);
@@ -298,6 +302,7 @@ export class ProductFormComponent implements OnInit {
       error: (err) => {
         this.errorKey = err?.error?.error?.code ? `errors.backend.${err.error.error.code}` : 'products.form.errors.saveFailed';
         this.toast.error(this.translate.instant('products.form.errors.saveFailed'));
+        this.lastError = err;
         this.loading = false;
         this.cdr.markForCheck();
       }

@@ -23,6 +23,11 @@ import { EmailVerifyComponent } from './pages/email-verify/email-verify.componen
 import { AddressManagementComponent } from './pages/addresses/address-management.component';
 import { AuthGuard } from './core/auth.guard';
 import { AdminGuard } from './core/admin.guard';
+import { LayoutShellComponent } from './core/layout/layout-shell.component';
+import { AdminCouponsPlaceholderComponent } from './pages/admin/placeholders/admin-coupons-placeholder.component';
+import { AdminReviewsPlaceholderComponent } from './pages/admin/placeholders/admin-reviews-placeholder.component';
+import { AdminShipmentsPlaceholderComponent } from './pages/admin/placeholders/admin-shipments-placeholder.component';
+import { AdminSettingsPlaceholderComponent } from './pages/admin/placeholders/admin-settings-placeholder.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -31,67 +36,103 @@ const routes: Routes = [
   { path: 'reset/:token', component: ResetComponent },
   { path: 'verify-email/:token', component: EmailVerifyComponent },
   { path: 'denied', component: AccessDeniedComponent },
-  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-  { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard] },
-  { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] },
-  { path: 'products', component: ProductsListComponent, canActivate: [AuthGuard] },
   {
-    path: 'products/new',
-    component: ProductFormComponent,
-    canActivate: [AuthGuard, AdminGuard],
-    data: { roles: ['admin'] }
-  },
-  {
-    path: 'products/:id',
-    component: ProductFormComponent,
-    canActivate: [AuthGuard, AdminGuard],
-    data: { roles: ['admin'] }
-  },
-  { path: 'cart', component: CartComponent, canActivate: [AuthGuard] },
-  { path: 'addresses', component: AddressManagementComponent, canActivate: [AuthGuard] },
-  { path: 'orders', component: OrdersListComponent, canActivate: [AuthGuard] },
-  { path: 'orders/:id', component: OrderDetailComponent, canActivate: [AuthGuard] },
-  {
-    path: 'admin/users',
-    component: AdminUsersListComponent,
-    canActivate: [AuthGuard, AdminGuard],
-    data: { roles: ['admin'] }
-  },
-  {
-    path: 'admin/roles',
-    component: AdminUsersComponent,
-    canActivate: [AuthGuard, AdminGuard],
-    data: { roles: ['admin'] }
-  },
-  {
-    path: 'admin/orders',
-    component: AdminOrdersListComponent,
-    canActivate: [AuthGuard, AdminGuard],
-    data: { roles: ['admin'] }
-  },
-  {
-    path: 'admin/orders/:id',
-    component: AdminOrderDetailComponent,
-    canActivate: [AuthGuard, AdminGuard],
-    data: { roles: ['admin'] }
-  },
-  {
-    path: 'admin/returns',
-    component: AdminReturnsListComponent,
-    canActivate: [AuthGuard, AdminGuard],
-    data: { roles: ['admin'] }
-  },
-  {
-    path: 'admin/inventory',
-    component: AdminInventoryComponent,
-    canActivate: [AuthGuard, AdminGuard],
-    data: { roles: ['admin'] }
-  },
-  {
-    path: 'admin/categories',
-    component: CategoriesComponent,
-    canActivate: [AuthGuard, AdminGuard],
-    data: { roles: ['admin'] }
+    path: '',
+    component: LayoutShellComponent,
+    canActivate: [AuthGuard],
+    children: [
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: 'dashboard', component: DashboardComponent },
+      { path: 'profile', component: ProfileComponent },
+      { path: 'cart', component: CartComponent },
+      { path: 'addresses', component: AddressManagementComponent },
+      { path: 'orders', component: OrdersListComponent },
+      { path: 'orders/:id', component: OrderDetailComponent },
+      {
+        path: 'products',
+        component: ProductsListComponent,
+        canActivate: [AdminGuard],
+        data: { roles: ['admin'] }
+      },
+      {
+        path: 'products/new',
+        component: ProductFormComponent,
+        canActivate: [AdminGuard],
+        data: { roles: ['admin'] }
+      },
+      {
+        path: 'products/:id',
+        component: ProductFormComponent,
+        canActivate: [AdminGuard],
+        data: { roles: ['admin'] }
+      },
+      {
+        path: 'admin/users',
+        component: AdminUsersListComponent,
+        canActivate: [AdminGuard],
+        data: { roles: ['admin'] }
+      },
+      {
+        path: 'admin/roles',
+        component: AdminUsersComponent,
+        canActivate: [AdminGuard],
+        data: { roles: ['admin'] }
+      },
+      {
+        path: 'admin/orders',
+        component: AdminOrdersListComponent,
+        canActivate: [AdminGuard],
+        data: { roles: ['admin'] }
+      },
+      {
+        path: 'admin/orders/:id',
+        component: AdminOrderDetailComponent,
+        canActivate: [AdminGuard],
+        data: { roles: ['admin'] }
+      },
+      {
+        path: 'admin/returns',
+        component: AdminReturnsListComponent,
+        canActivate: [AdminGuard],
+        data: { roles: ['admin'] }
+      },
+      {
+        path: 'admin/inventory',
+        component: AdminInventoryComponent,
+        canActivate: [AdminGuard],
+        data: { roles: ['admin'] }
+      },
+      {
+        path: 'admin/coupons',
+        component: AdminCouponsPlaceholderComponent,
+        canActivate: [AdminGuard],
+        data: { roles: ['admin'] }
+      },
+      {
+        path: 'admin/reviews',
+        component: AdminReviewsPlaceholderComponent,
+        canActivate: [AdminGuard],
+        data: { roles: ['admin'] }
+      },
+      {
+        path: 'admin/shipments',
+        component: AdminShipmentsPlaceholderComponent,
+        canActivate: [AdminGuard],
+        data: { roles: ['admin'] }
+      },
+      {
+        path: 'admin/settings',
+        component: AdminSettingsPlaceholderComponent,
+        canActivate: [AdminGuard],
+        data: { roles: ['admin'] }
+      },
+      {
+        path: 'admin/categories',
+        component: CategoriesComponent,
+        canActivate: [AdminGuard],
+        data: { roles: ['admin'] }
+      }
+    ]
   },
   { path: '**', redirectTo: 'dashboard' }
 ];

@@ -57,6 +57,7 @@
       },
       "actions": {
         "create": "New product",
+        "refresh": "Refresh",
         "edit": "Edit product",
         "addToCart": "Add to cart",
         "delete": "Delete product",
@@ -91,6 +92,18 @@
         "addToCart": "Could not add product to the cart.",
         "deleteFailed": "Could not delete the product."
       }
+    },
+    "form": {
+      "tabs": {
+        "details": "Details",
+        "variants": "Variants",
+        "stock": "Stock",
+        "media": "Media"
+      },
+      "sections": {
+        "stock": "Stock management",
+        "variantsEmpty": "No variants yet. Create your first variant to define size or color options."
+      }
     }
   },
   "denied": {
@@ -104,6 +117,12 @@
     "list": {
       "title": "Admin / Orders",
       "subtitle": "Review and manage customer orders.",
+      "filters": {
+        "status": "Order status",
+        "paymentStatus": "Payment status",
+        "any": "All",
+        "apply": "Apply filters"
+      },
       "table": {
         "id": "Order",
         "total": "Total",
@@ -113,7 +132,8 @@
         "actions": "Actions"
       },
       "actions": {
-        "view": "View"
+        "view": "View",
+        "refresh": "Refresh"
       },
       "empty": "No orders found.",
       "errors": {
@@ -168,7 +188,8 @@
         "status": {
           "label": "Status",
           "any": "Any status"
-        }
+        },
+        "apply": "Apply filters"
       },
       "table": {
         "order": "Order",
@@ -179,7 +200,9 @@
       },
       "actions": {
         "approve": "Approve",
-        "reject": "Reject"
+        "reject": "Reject",
+        "refresh": "Refresh",
+        "view": "View"
       },
       "status": {
         "requested": "Requested",
@@ -953,6 +976,7 @@
     "subtitle": "Overview and adjustments",
     "overview": {
       "title": "Overview",
+      "subtitle": "Monitor current stock across products",
       "empty": "No inventory rows match the filters."
     },
     "filters": {
@@ -964,7 +988,8 @@
     },
     "actions": {
       "apply": "Apply",
-      "createAdjustment": "Create adjustment"
+      "createAdjustment": "Create adjustment",
+      "refresh": "Refresh overview"
     },
     "table": {
       "product": "Product",
@@ -986,6 +1011,7 @@
     },
     "adjustments": {
       "title": "Adjustments",
+      "subtitle": "Log and audit stock corrections",
       "empty": "No adjustments found."
     },
     "errors": {
@@ -995,6 +1021,7 @@
     },
     "low": {
       "title": "Low stock",
+      "subtitle": "Guard against outages with threshold alerts",
       "empty": "No low-stock items found."
     }
   },
@@ -1006,12 +1033,18 @@
         "search": "Search users",
         "placeholder": "Name or email"
       },
+      "actions": {
+        "refresh": "Refresh",
+        "manageRoles": "Manage roles",
+        "viewDetail": "View details"
+      },
       "table": {
         "name": "Name",
         "email": "Email",
         "roles": "Roles",
         "active": "Active",
-        "actions": "Actions"
+        "actions": "Actions",
+        "unknown": "Unnamed user"
       },
       "status": {
         "active": "Active",

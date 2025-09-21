@@ -79,6 +79,10 @@ export class AdminReturnsListComponent implements OnInit {
     this.load();
   }
 
+  reload(): void {
+    this.load();
+  }
+
   onPage(event: any): void {
     this.pageSize = event.pageSize;
     this.page = event.pageIndex;

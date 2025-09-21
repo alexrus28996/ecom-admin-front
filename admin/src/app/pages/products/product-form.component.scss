@@ -3,22 +3,23 @@
 }
 
 .product-form-shell {
-  display: flex;
-  justify-content: center;
-  padding: 32px 0;
+  gap: 24px;
 }
 
 .product-form-card {
-  width: 100%;
-  max-width: 900px;
-  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.12);
+  box-shadow: var(--app-shadow-soft);
+}
+
+.tab-content {
+  display: grid;
+  gap: 24px;
+  padding-top: 16px;
 }
 
 .product-form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 16px;
-  margin-top: 16px;
 }
 
 .product-form-description {
@@ -26,41 +27,33 @@
 }
 
 .form-section {
-  margin-top: 32px;
+  display: grid;
+  gap: 12px;
 }
 
 .section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 12px;
+  gap: 12px;
 }
 
 .section-header h3 {
   margin: 0;
 }
 
-.section-body {
+.section-body,
+.variant-attribute-row,
+.media-row {
   display: flex;
   gap: 12px;
   align-items: flex-end;
-  margin-bottom: 12px;
 }
 
-.section-body .grow {
+.section-body .grow,
+.variant-attribute-row .grow,
+.media-row .grow {
   flex: 1 1 0;
-}
-
-.product-form-error {
-  margin-top: 16px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  border-radius: 12px;
-  background: rgba(248, 113, 113, 0.12);
-  color: #b91c1c;
 }
 
 .variant-card {
@@ -69,13 +62,11 @@
 
 .variant-summary {
   display: flex;
-  gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 12px;
+  gap: 16px;
 }
 
 .variant-summary .label {
-  display: block;
   font-size: 12px;
   color: var(--app-text-muted);
 }
@@ -87,40 +78,26 @@
 
 .variant-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 12px;
-  margin-bottom: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 }
 
 .variant-attributes {
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 12px;
 }
 
 .variant-attributes-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-}
-
-.variant-attribute-row {
-  display: flex;
+  justify-content: space-between;
   gap: 12px;
-  align-items: flex-end;
-}
-
-.variant-attribute-row .grow {
-  flex: 1 1 0;
 }
 
 @media (max-width: 599px) {
-  .product-form-card {
-    margin: 0 16px;
-  }
-
   .section-body,
-  .variant-attribute-row {
+  .variant-attribute-row,
+  .media-row {
     flex-direction: column;
     align-items: stretch;
   }

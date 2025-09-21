@@ -1,32 +1,114 @@
-﻿<div class="panel">
-  <section class="header" style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;">
-    <div>
-      <h2>{{ 'adminUsers.list.title' | translate }}</h2>
-      <p class="muted">{{ 'adminUsers.list.subtitle' | translate }}</p>
+<div class="page page--panel">
+  <section class="page__header">
+    <div class="page__headline">
+      <div>
+        <span class="page__eyebrow">People</span>
+        <h1>{{ 'adminUsers.list.title' | translate }}</h1>
+        <p>{{ 'adminUsers.list.subtitle' | translate }}</p>
+      </div>
+      <div class="page__actions">
+        <button mat-stroked-button color="primary" type="button" (click)="onSearch()" [disabled]="loading">
+          <mat-icon>refresh</mat-icon>
+          {{ 'adminUsers.list.actions.refresh' | translate }}
+        </button>
+        <a mat-raised-button color="primary" routerLink="/admin/roles">
+          <mat-icon>admin_panel_settings</mat-icon>
+          {{ 'adminUsers.list.actions.manageRoles' | translate }}
+        </a>
+      </div>
     </div>
-    <form (ngSubmit)="onSearch()" class="filters" novalidate style="display:flex;gap:12px;align-items:flex-end;">
-      <mat-form-field appearance="fill">
+    <form class="page__filters" (ngSubmit)="onSearch()" novalidate>
+      <mat-form-field appearance="outline">
         <mat-label>{{ 'adminUsers.list.filters.search' | translate }}</mat-label>
         <input matInput [formControl]="q" [placeholder]="'adminUsers.list.filters.placeholder' | translate" />
-        <button mat-icon-button matSuffix type="submit"><mat-icon>search</mat-icon></button>
+        <button mat-icon-button matSuffix type="submit" [disabled]="loading">
+          <mat-icon>search</mat-icon>
+        </button>
       </mat-form-field>
     </form>
   </section>
 
-  <section class="table-wrapper" style="position:relative;">
+  <section class="page__body">
     <app-loading [show]="loading" labelKey="common.loading"></app-loading>
-    <table mat-table [dataSource]="rows" *ngIf="rows.length; else emptyState">
-      <ng-container matColumnDef="name"><th mat-header-cell *matHeaderCellDef>{{ 'adminUsers.list.table.name' | translate }}</th><td mat-cell *matCellDef="let u">{{ u.name }}</td></ng-container>
-      <ng-container matColumnDef="email"><th mat-header-cell *matHeaderCellDef>{{ 'adminUsers.list.table.email' | translate }}</th><td mat-cell *matCellDef="let u">{{ u.email }}</td></ng-container>
-      <ng-container matColumnDef="roles"><th mat-header-cell *matHeaderCellDef>{{ 'adminUsers.list.table.roles' | translate }}</th><td mat-cell *matCellDef="let u">{{ (u.roles || []).join(', ') }}</td></ng-container>
-      <ng-container matColumnDef="active"><th mat-header-cell *matHeaderCellDef>{{ 'adminUsers.list.table.active' | translate }}</th><td mat-cell *matCellDef="let u"><mat-slide-toggle [checked]="u.isActive" (change)="toggle(u)">{{ u.isActive ? ('adminUsers.list.status.active' | translate) : ('adminUsers.list.status.inactive' | translate) }}</mat-slide-toggle></td></ng-container>
-      <ng-container matColumnDef="actions"><th mat-header-cell *matHeaderCellDef>{{ 'adminUsers.list.table.actions' | translate }}</th><td mat-cell *matCellDef="let u"></td></ng-container>
-      <tr mat-header-row *matHeaderRowDef="displayed"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayed"></tr>
-    </table>
-    <ng-template #emptyState><div class="empty-state"><mat-icon>group</mat-icon><p>{{ 'adminUsers.list.empty' | translate }}</p></div></ng-template>
+    <div class="data-table" *ngIf="rows.length; else emptyState">
+      <table mat-table [dataSource]="rows" class="data-table__table">
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>{{ 'adminUsers.list.table.name' | translate }}</th>
+          <td mat-cell *matCellDef="let u">
+            <div class="user-name">
+              <span>{{ u.name || ('adminUsers.list.table.unknown' | translate) }}</span>
+              <small class="muted">{{ u.id }}</small>
+            </div>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef>{{ 'adminUsers.list.table.email' | translate }}</th>
+          <td mat-cell *matCellDef="let u">{{ u.email }}</td>
+        </ng-container>
+        <ng-container matColumnDef="roles">
+          <th mat-header-cell *matHeaderCellDef>{{ 'adminUsers.list.table.roles' | translate }}</th>
+          <td mat-cell *matCellDef="let u">
+            <mat-chip-set aria-label="Roles">
+              <mat-chip *ngFor="let role of u.roles">{{ role }}</mat-chip>
+            </mat-chip-set>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="active">
+          <th mat-header-cell *matHeaderCellDef>{{ 'adminUsers.list.table.active' | translate }}</th>
+          <td mat-cell *matCellDef="let u">
+            <mat-slide-toggle [checked]="u.isActive" (change)="toggle(u)">
+              {{ u.isActive ? ('adminUsers.list.status.active' | translate) : ('adminUsers.list.status.inactive' | translate) }}
+            </mat-slide-toggle>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>{{ 'adminUsers.list.table.actions' | translate }}</th>
+          <td mat-cell *matCellDef="let u">
+            <div class="table-actions">
+              <button
+                mat-icon-button
+                color="primary"
+                [routerLink]="['/admin/roles']"
+                matTooltip="{{ 'adminUsers.list.actions.manageRoles' | translate }}"
+                aria-label="{{ 'adminUsers.list.actions.manageRoles' | translate }}"
+              >
+                <mat-icon>admin_panel_settings</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                color="primary"
+                type="button"
+                disabled
+                matTooltip="{{ 'adminUsers.list.actions.viewDetail' | translate }}"
+                aria-label="{{ 'adminUsers.list.actions.viewDetail' | translate }}"
+              >
+                <mat-icon>open_in_new</mat-icon>
+              </button>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayed; sticky: true"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayed"></tr>
+      </table>
+    </div>
+    <ng-template #emptyState>
+      <div class="empty-state">
+        <mat-icon>group</mat-icon>
+        <p>{{ 'adminUsers.list.empty' | translate }}</p>
+      </div>
+    </ng-template>
     <app-error-banner [key]="errorKey"></app-error-banner>
   </section>
 
-  <mat-paginator [length]="total" [pageIndex]="pageIndex" [pageSize]="pageSize" [pageSizeOptions]="pageSizeOptions" (page)="onPage($event)" showFirstLastButtons></mat-paginator>
+  <section class="page__footer">
+    <mat-paginator
+      [length]="total"
+      [pageIndex]="pageIndex"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="pageSizeOptions"
+      (page)="onPage($event)"
+      showFirstLastButtons
+    ></mat-paginator>
+  </section>
 </div>

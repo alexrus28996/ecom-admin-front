@@ -1,0 +1,29 @@
+:host {
+  display: block;
+}
+
+.user-name {
+  display: grid;
+  gap: 4px;
+}
+
+.user-name .muted {
+  font-size: 12px;
+  color: var(--app-text-muted);
+}
+
+.table-actions {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+mat-chip-set {
+  gap: 6px;
+}
+
+@media (max-width: 599px) {
+  .table-actions {
+    gap: 4px;
+  }
+}

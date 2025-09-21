@@ -1,6 +1,56 @@
-:host { display: block; }
+:host {
+  display: block;
+}
 
-.filters { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin: 8px 0; }
-.table-wrapper { position: relative; }
-.empty-state { text-align: center; padding: 24px 0; color: var(--app-text-muted); }
+.inventory-shell {
+  gap: 32px;
+}
 
+.inventory-sections {
+  display: grid;
+  gap: 24px;
+}
+
+.inventory-card {
+  border-radius: 24px;
+  box-shadow: var(--app-shadow-soft);
+}
+
+.inventory-card__content {
+  display: grid;
+  gap: 24px;
+}
+
+.inventory-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.inventory-filters .mat-mdc-form-field {
+  min-width: 200px;
+}
+
+.inventory-table {
+  position: relative;
+  margin-top: 16px;
+}
+
+@media (max-width: 959px) {
+  .inventory-filters .mat-mdc-form-field {
+    min-width: 160px;
+  }
+}
+
+@media (max-width: 599px) {
+  .inventory-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .inventory-filters .mat-mdc-form-field {
+    width: 100%;
+    min-width: 0;
+  }
+}
