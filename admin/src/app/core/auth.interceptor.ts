@@ -36,6 +36,7 @@ interface BackendErrorPayload {
 export class AuthInterceptor implements HttpInterceptor {
   private refreshing = false;
   private consecutive401 = 0;
+  private readonly idempotentMethods = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
   constructor(
     private auth: AuthService,
     private router: Router,

@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  // Local development API base
+  // Local API base for development server calls.
   apiBaseUrl: 'http://localhost:4001/api'
 };
 
