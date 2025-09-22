@@ -770,6 +770,7 @@
       "title": "Inventory adjustment",
       "fields": {
         "product": "Product",
+        "productPlaceholder": "Search products",
         "variant": "Variant",
         "direction": "Direction",
         "quantity": "Quantity",
@@ -778,7 +779,7 @@
         "location": "Location"
       },
       "labels": {
-        "sku": "SKU",
+        "sku": "SKU: {{ sku }}",
         "allVariants": "All variants",
         "increase": "Increase",
         "decrease": "Decrease"
@@ -794,7 +795,8 @@
         "productRequired": "Select a product to adjust.",
         "quantityRequired": "Quantity is required.",
         "quantityPositive": "Enter a quantity greater than zero."
-      }
+      },
+      "loadingVariants": "Loading variants…"
     },
     "errors": {
       "overviewFailed": "Unable to load inventory.",
@@ -824,32 +826,6 @@
       "in-stock": "In stock",
       "low": "Low stock",
       "out-of-stock": "Out of stock"
-    },
-    "adjustDialog": {
-      "title": "Adjust stock",
-      "fields": {
-        "product": "Product",
-        "productPlaceholder": "Search products",
-        "variant": "Variant",
-        "variantAny": "All variants",
-        "quantity": "Quantity",
-        "direction": "Adjustment direction",
-        "reason": "Reason",
-        "note": "Internal note"
-      },
-      "directions": {
-        "add": "Add",
-        "remove": "Remove"
-      },
-      "actions": {
-        "save": "Save adjustment"
-      },
-      "errors": {
-        "productRequired": "Select a product to adjust.",
-        "quantityRequired": "Quantity is required.",
-        "quantityPositive": "Enter a value greater than zero."
-      },
-      "loadingVariants": "Loading variants…"
     }
   },
   "adminUsers": {
