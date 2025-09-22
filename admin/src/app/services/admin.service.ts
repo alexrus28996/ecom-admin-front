@@ -185,7 +185,7 @@ export class AdminService {
     return this.http.get<{ items: any[]; total: number; page: number; pages: number }>(`${this.base}/inventory/adjustments${qs ? ('?' + qs) : ''}`);
   }
 
-  createInventoryAdjustment(payload: { productId: string; variantId?: string; qtyChange: number; reason?: string; note?: string })
+  createInventoryAdjustment(payload: { productId: string; variantId?: string; qtyChange: number; reason?: string; note?: string; location?: string })
     : Observable<{ success?: boolean }>
   {
     return this.http.post<{ success?: boolean }>(`${this.base}/inventory/adjustments`, payload);

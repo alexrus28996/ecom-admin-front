@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, OnDestroy, OnInit } from '@angular/core';
-import { UntypedFormBuilder, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
-import { Observable, Subject, debounceTime, distinctUntilChanged, map, startWith, switchMap, takeUntil, tap } from 'rxjs';
+import { Observable, Subject, catchError, debounceTime, finalize, map, of, switchMap, takeUntil } from 'rxjs';
 import { AdminService } from '../../services/admin.service';
-import { ProductsService, ProductSummary } from '../../services/products.service';
+import { ProductDetail, ProductsService, ProductSummary, ProductVariant } from '../../services/products.service';
 import { ToastService } from '../../core/toast.service';
 import { TranslateService } from '@ngx-translate/core';
 
@@ -13,21 +13,24 @@ export interface InventoryAdjustmentDialogData {
   productName?: string;
   productSku?: string;
   variantId?: string;
-}
-
-interface AdjustmentFormValue {
-  productSearch: string;
-  productId: string;
-  variantId: string;
-  direction: 'add' | 'remove';
-  quantity: number;
-  reason: string;
-  note: string;
+  defaultDirection?: 'increase' | 'decrease' | 'add' | 'remove';
+  defaultQuantity?: number;
+  defaultReason?: string;
+  defaultNote?: string;
+  defaultLocation?: string;
 }
 
 export interface InventoryAdjustmentDialogResult {
   refresh?: boolean;
 }
+
+interface ProductOption {
+  product: ProductSummary;
+  label: string;
+  secondaryLabel?: string | null;
+}
+
+type AdjustmentDirection = 'increase' | 'decrease';
 
 @Component({
   selector: 'app-inventory-adjustment-dialog',
@@ -36,17 +39,19 @@ export interface InventoryAdjustmentDialogResult {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class InventoryAdjustmentDialogComponent implements OnInit, OnDestroy {
-  form = this.fb.group({
-    productSearch: [''],
+  readonly productControl = new FormControl<ProductOption | string | null>(null, Validators.required);
+
+  readonly form = this.fb.group({
     productId: ['', Validators.required],
     variantId: [''],
-    direction: ['add' as 'add' | 'remove'],
-    quantity: [1, [Validators.required, Validators.min(1)]],
-    reason: ['manual'],
-    note: ['']
+    direction: [this.mapInitialDirection(this.data?.defaultDirection) ?? 'increase', Validators.required],
+    quantity: [this.data?.defaultQuantity ?? 1, [Validators.required, Validators.min(1)]],
+    reason: [this.data?.defaultReason ?? 'manual'],
+    note: [this.data?.defaultNote ?? '', Validators.maxLength(240)],
+    location: [this.data?.defaultLocation ?? '', Validators.maxLength(120)]
   });
 
-  reasons = [
+  readonly reasons = [
     { value: 'manual', labelKey: 'inventory.adjustments.reasons.manual' },
     { value: 'restock', labelKey: 'inventory.adjustments.reasons.restock' },
     { value: 'damage', labelKey: 'inventory.adjustments.reasons.damage' },
@@ -54,40 +59,42 @@ export class InventoryAdjustmentDialogComponent implements OnInit, OnDestroy {
     { value: 'other', labelKey: 'inventory.adjustments.reasons.other' }
   ];
 
-  productResults$!: Observable<ProductSummary[]>;
-  selectedProduct?: ProductSummary;
-  variants: { id: string; label: string }[] = [];
+  productOptions: ProductOption[] = [];
+  variantOptions: { id: string; label: string }[] = [];
+  selectedProduct: ProductSummary | null = null;
+  loadingProducts = false;
   loadingVariants = false;
   saving = false;
 
   private readonly destroy$ = new Subject<void>();
 
   constructor(
-    private readonly fb: UntypedFormBuilder,
-    private readonly admin: AdminService,
+    private readonly dialogRef: MatDialogRef<InventoryAdjustmentDialogComponent, InventoryAdjustmentDialogResult | null>,
+    private readonly fb: FormBuilder,
     private readonly products: ProductsService,
-    private readonly dialogRef: MatDialogRef<InventoryAdjustmentDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) private readonly data: InventoryAdjustmentDialogData,
+    private readonly admin: AdminService,
+    @Inject(MAT_DIALOG_DATA) public readonly data: InventoryAdjustmentDialogData,
     private readonly toast: ToastService,
-    private readonly i18n: TranslateService,
+    private readonly translate: TranslateService,
     private readonly cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    this.productResults$ = this.form.controls.productSearch.valueChanges.pipe(
-      startWith(this.data?.productName || ''),
-      debounceTime(300),
-      distinctUntilChanged(),
-      switchMap((term) => this.searchProducts(term || ''))
-    );
+    this.productControl.valueChanges
+      .pipe(
+        debounceTime(250),
+        takeUntil(this.destroy$),
+        switchMap((value) => this.fetchProductOptions(value))
+      )
+      .subscribe((options) => {
+        this.productOptions = options;
+        this.cdr.markForCheck();
+      });
 
     if (this.data?.productId) {
-      this.form.patchValue({
-        productId: this.data.productId,
-        productSearch: this.data.productName || '',
-        variantId: this.data.variantId || ''
-      }, { emitEvent: false });
-      this.loadProductById(this.data.productId, this.data.variantId);
+      this.loadInitialProduct(this.data.productId, this.data.variantId || null);
+    } else if (this.data?.productName) {
+      this.productControl.setValue(this.data.productName);
     }
   }
 
@@ -96,114 +103,215 @@ export class InventoryAdjustmentDialogComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  displayProduct(product?: ProductSummary | string | null): string {
-    if (!product) {
+  displayProductOption(option: ProductOption | string | null): string {
+    if (!option) {
       return '';
     }
-    if (typeof product === 'string') {
-      return product;
+
+    if (typeof option === 'string') {
+      return option;
     }
-    return product.name || product._id || '';
+
+    return option.label;
   }
 
   onProductSelected(event: MatAutocompleteSelectedEvent): void {
-    const product = event.option.value as ProductSummary;
-    this.selectedProduct = product;
-    const productWithId = product as ProductSummary & { id?: string };
-    const productId = productWithId?._id || productWithId?.id;
-    this.form.patchValue({
-      productId: productId || '',
-      variantId: '',
-      productSearch: product?.name || ''
-    }, { emitEvent: false });
-    if (productId) {
-      this.loadProductById(productId);
-    }
-  }
-
-  onSubmit(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
+    const option = event.option.value as ProductOption | null;
+    if (!option) {
       return;
     }
-    const raw = this.form.getRawValue() as AdjustmentFormValue;
-    const quantity = Math.abs(raw.quantity || 0);
+
+    this.applySelectedProduct(option.product, true, null);
+  }
+
+  clearProductSelection(): void {
+    this.productControl.setValue(null);
+    this.form.patchValue({
+      productId: '',
+      variantId: ''
+    });
+    this.selectedProduct = null;
+    this.variantOptions = [];
+    this.cdr.markForCheck();
+  }
+
+  submit(): void {
+    if (!this.selectedProduct) {
+      this.productControl.markAsTouched();
+    }
+
+    if (this.form.invalid || !this.selectedProduct) {
+      this.form.markAllAsTouched();
+      this.cdr.markForCheck();
+      return;
+    }
+
+    const raw = this.form.getRawValue();
+    const quantity = Math.abs(raw.quantity ?? 0);
+
     if (!quantity) {
       this.form.controls.quantity.setErrors({ min: true });
+      this.cdr.markForCheck();
       return;
     }
-    const qtyChange = raw.direction === 'remove' ? -quantity : quantity;
-    const payload = {
-      productId: raw.productId,
-      variantId: raw.variantId || undefined,
+
+    const qtyChange = raw.direction === 'decrease' ? -quantity : quantity;
+    const productId = raw.productId ?? '';
+
+    const payload: {
+      productId: string;
+      variantId?: string;
+      qtyChange: number;
+      reason?: string;
+      note?: string;
+      location?: string;
+    } = {
+      productId,
       qtyChange,
+      variantId: raw.variantId ? raw.variantId : undefined,
       reason: raw.reason || undefined,
-      note: raw.note || undefined
+      note: raw.note?.trim() ? raw.note.trim() : undefined,
+      location: raw.location?.trim() ? raw.location.trim() : undefined
     };
+
     this.saving = true;
     this.cdr.markForCheck();
-    this.admin.createInventoryAdjustment(payload).pipe(takeUntil(this.destroy$)).subscribe({
-      next: () => {
-        this.saving = false;
-        this.toast.success(this.i18n.instant('inventory.adjustments.toasts.created'));
-        this.dialogRef.close({ refresh: true });
-      },
-      error: () => {
-        this.saving = false;
-        this.toast.error(this.i18n.instant('inventory.errors.adjustmentCreateFailed'));
-        this.cdr.markForCheck();
-      }
-    });
-  }
 
-  private searchProducts(term: string): Observable<ProductSummary[]> {
-    const query = term.trim();
-    return this.products.list({ q: query, limit: 10 }).pipe(
-      map((res) => res.items || []),
-      tap((items) => {
-        if (!items.length && !query && this.data?.productId && this.data?.productName) {
-          this.selectedProduct = {
-            _id: this.data.productId,
-            name: this.data.productName,
-            sku: this.data.productSku || undefined,
-            price: 0,
-            currency: ''
-          } as unknown as ProductSummary;
+    this.admin
+      .createInventoryAdjustment(payload)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.saving = false;
+          this.toast.success(this.translate.instant('inventory.adjustments.toasts.created'));
+          this.dialogRef.close({ refresh: true });
+        },
+        error: () => {
+          this.saving = false;
+          this.toast.error(this.translate.instant('inventory.errors.adjustmentCreateFailed'));
           this.cdr.markForCheck();
         }
+      });
+  }
+
+  private mapInitialDirection(direction?: InventoryAdjustmentDialogData['defaultDirection']): AdjustmentDirection {
+    if (direction === 'add' || direction === 'increase' || direction === undefined) {
+      return 'increase';
+    }
+
+    if (direction === 'remove' || direction === 'decrease') {
+      return 'decrease';
+    }
+
+    return 'increase';
+  }
+
+  private fetchProductOptions(value: ProductOption | string | null): Observable<ProductOption[]> {
+    if (value && typeof value !== 'string') {
+      return of(this.productOptions);
+    }
+
+    const query = (value ?? '').toString().trim();
+    this.loadingProducts = true;
+    this.cdr.markForCheck();
+
+    return this.products.list({ q: query, limit: 10 }).pipe(
+      map((response) => (response.items ?? []).map((product) => this.toProductOption(product))),
+      catchError(() => of([] as ProductOption[])),
+      finalize(() => {
+        this.loadingProducts = false;
+        this.cdr.markForCheck();
       })
     );
   }
 
-  private loadProductById(id: string, preselectVariant?: string): void {
+  private applySelectedProduct(product: ProductSummary, updateControl = false, variantId: string | null = null): void {
+    this.selectedProduct = product;
+    const productId = this.resolveProductId(product);
+
+    if (updateControl) {
+      const option = this.toProductOption(product);
+      this.productControl.setValue(option, { emitEvent: false });
+    }
+
+    this.form.patchValue({
+      productId,
+      variantId: variantId ?? ''
+    });
+
+    this.variantOptions = this.createVariantOptions(product.variants ?? []);
+    if (!this.variantOptions.length) {
+      this.form.patchValue({ variantId: '' });
+    }
+
+    this.cdr.markForCheck();
+  }
+
+  private loadInitialProduct(productId: string, variantId: string | null): void {
     this.loadingVariants = true;
     this.cdr.markForCheck();
-    this.products.get(id).pipe(takeUntil(this.destroy$)).subscribe({
-      next: (res) => {
-        const product = res?.product;
-        if (product) {
-          this.selectedProduct = product;
-          this.variants = (product.variants || []).map((variant) => ({
-            id: variant?._id || variant?.sku || '',
-            label: [variant?.sku, variant?.attributes ? Object.values(variant.attributes).join(' / ') : null]
-              .filter(Boolean)
-              .join(' • ')
-          }));
-          if (preselectVariant) {
-            const match = this.variants.find((v) => v.id === preselectVariant);
-            if (match) {
-              this.form.patchValue({ variantId: match.id }, { emitEvent: false });
-            }
+
+    this.products
+      .get(productId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: { product: ProductDetail }) => {
+          const product = response?.product;
+          if (!product) {
+            return;
           }
+
+          this.productOptions = [this.toProductOption(product)];
+          this.applySelectedProduct(product, true, variantId);
+        },
+        error: () => {
+          this.toast.error(this.translate.instant('inventory.errors.productLoadFailed'));
+          if (this.data?.productName) {
+            const fallback: ProductSummary = {
+              _id: productId,
+              name: this.data.productName,
+              sku: this.data.productSku || undefined,
+              price: 0,
+              currency: ''
+            } as ProductSummary;
+            this.productOptions = [this.toProductOption(fallback)];
+            this.applySelectedProduct(fallback, true, variantId);
+          }
+          this.loadingVariants = false;
+          this.cdr.markForCheck();
+        },
+        complete: () => {
+          this.loadingVariants = false;
+          this.cdr.markForCheck();
         }
-        this.loadingVariants = false;
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        this.loadingVariants = false;
-        this.toast.error(this.i18n.instant('inventory.errors.productLoadFailed'));
-        this.cdr.markForCheck();
-      }
-    });
+      });
+  }
+
+  private resolveProductId(product: ProductSummary): string {
+    const candidate = (product as ProductSummary & { id?: string }).id;
+    return product._id || candidate || '';
+  }
+
+  private toProductOption(product: ProductSummary): ProductOption {
+    const sku = (product as ProductSummary & { sku?: string }).sku ?? (product as ProductSummary & { defaultSku?: string }).defaultSku;
+    return {
+      product,
+      label: product.name || sku || this.resolveProductId(product),
+      secondaryLabel: sku || null
+    };
+  }
+
+  private createVariantOptions(variants: ProductVariant[]): { id: string; label: string }[] {
+    return variants
+      .map((variant) => {
+        const id = variant?._id || variant?.sku || '';
+        const attributeLabel = variant?.attributes ? Object.values(variant.attributes).filter(Boolean).join(' • ') : '';
+        const parts = [variant?.sku, attributeLabel].filter(Boolean);
+        return {
+          id,
+          label: parts.length ? parts.join(' • ') : this.translate.instant('inventory.adjustDialog.labels.allVariants')
+        };
+      })
+      .filter((variant) => !!variant.id);
   }
 }
