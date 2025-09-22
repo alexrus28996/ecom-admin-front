@@ -43,11 +43,12 @@ export class InventoryService {
 
   constructor(private readonly http: HttpClient) {}
 
-  list(params: { product?: string; variant?: string; location?: string; page?: number; limit?: number } = {}): Observable<Paginated<InventorySnapshot>> {
+  list(params: { product?: string; variant?: string; location?: string; status?: string; page?: number; limit?: number } = {}): Observable<Paginated<InventorySnapshot>> {
     let httpParams = new HttpParams();
     if (params.product) httpParams = httpParams.set('product', params.product);
     if (params.variant) httpParams = httpParams.set('variant', params.variant);
     if (params.location) httpParams = httpParams.set('location', params.location);
+    if (params.status) httpParams = httpParams.set('status', params.status);
     if (params.page) httpParams = httpParams.set('page', String(params.page));
     if (params.limit) httpParams = httpParams.set('limit', String(params.limit));
     return this.http.get<Paginated<InventorySnapshot>>(this.base, { params: httpParams });

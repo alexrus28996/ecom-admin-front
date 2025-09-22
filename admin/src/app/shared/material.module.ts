@@ -26,6 +26,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
 const MATERIAL = [
   MatToolbarModule,
@@ -47,6 +48,7 @@ const MATERIAL = [
   MatSelectModule,
   MatSlideToggleModule,
   MatDialogModule,
+  MatButtonToggleModule,
   MatProgressBarModule,
   DragDropModule,
   MatChipsModule,
@@ -54,7 +56,8 @@ const MATERIAL = [
   MatExpansionModule,
   MatAutocompleteModule,
   MatDatepickerModule,
-  MatNativeDateModule
+  MatNativeDateModule,
+  MatButtonToggleModule
 ];
 
 @NgModule({

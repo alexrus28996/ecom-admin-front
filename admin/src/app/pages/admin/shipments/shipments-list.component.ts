@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnIni
 import { FormBuilder } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatDrawer } from '@angular/material/sidenav';
+import { TranslateService } from '@ngx-translate/core';
 import { Subject, takeUntil } from 'rxjs';
 import { AdminService } from '../../../services/admin.service';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog.component';
@@ -49,11 +50,11 @@ export class ShipmentsListComponent implements OnInit, OnDestroy {
 
   readonly displayedColumns = ['id', 'order', 'carrier', 'trackingNumber', 'status', 'createdAt', 'updatedAt', 'actions'];
   readonly statusOptions = [
-    { value: '', label: 'All statuses' },
-    { value: 'pending', label: 'Pending' },
-    { value: 'shipped', label: 'Shipped' },
-    { value: 'delivered', label: 'Delivered' },
-    { value: 'cancelled', label: 'Cancelled' }
+    { value: '', labelKey: 'shipments.list.filters.status.options.all' },
+    { value: 'pending', labelKey: 'shipments.list.filters.status.options.pending' },
+    { value: 'shipped', labelKey: 'shipments.list.filters.status.options.shipped' },
+    { value: 'delivered', labelKey: 'shipments.list.filters.status.options.delivered' },
+    { value: 'cancelled', labelKey: 'shipments.list.filters.status.options.cancelled' }
   ];
   readonly skeletonRows = Array.from({ length: 6 });
   readonly pageSizeOptions = [10, 25, 50];
@@ -76,7 +77,8 @@ export class ShipmentsListComponent implements OnInit, OnDestroy {
     private readonly fb: FormBuilder,
     private readonly dialog: MatDialog,
     private readonly toast: ToastService,
-    private readonly cdr: ChangeDetectorRef
+    private readonly cdr: ChangeDetectorRef,
+    private readonly translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -160,7 +162,7 @@ export class ShipmentsListComponent implements OnInit, OnDestroy {
     });
     ref.afterClosed().subscribe((changed) => {
       if (changed) {
-        this.toast.success('Shipment created successfully.');
+        this.toast.success(this.translate.instant('shipments.list.toasts.created'));
         this.load();
       }
     });
@@ -177,7 +179,7 @@ export class ShipmentsListComponent implements OnInit, OnDestroy {
 
     ref.afterClosed().subscribe((changed) => {
       if (changed) {
-        this.toast.success('Shipment updated successfully.');
+        this.toast.success(this.translate.instant('shipments.list.toasts.updated'));
         this.load();
       }
     });
@@ -187,10 +189,10 @@ export class ShipmentsListComponent implements OnInit, OnDestroy {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '360px',
       data: {
-        titleKey: 'Delete shipment',
-        messageKey: 'Are you sure you want to delete this shipment?',
-        confirmKey: 'Delete',
-        cancelKey: 'Cancel'
+        titleKey: 'shipments.list.dialogs.delete.title',
+        messageKey: 'shipments.list.dialogs.delete.message',
+        confirmKey: 'shipments.list.dialogs.delete.confirm',
+        cancelKey: 'common.actions.cancel'
       }
     });
 
@@ -205,7 +207,7 @@ export class ShipmentsListComponent implements OnInit, OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: () => {
-            this.toast.success('Shipment deleted successfully.');
+            this.toast.success(this.translate.instant('shipments.list.toasts.deleted'));
             if (this.selected?.id === shipment.id) {
               this.closeDetails();
             }
@@ -216,7 +218,7 @@ export class ShipmentsListComponent implements OnInit, OnDestroy {
             this.lastError = err;
             const code = err?.error?.error?.code;
             this.errorKey = code ? `errors.backend.${code}` : 'shipments.list.errors.deleteFailed';
-            this.toast.error('Unable to delete shipment.');
+            this.toast.error(this.translate.instant('shipments.list.errors.deleteFailedToast'));
             this.cdr.markForCheck();
           }
         });

@@ -1,4 +1,5 @@
 {
+  "__todo": "Translate strings",
   "common": {
     "loading": "Loading…",
     "confirm": {
@@ -764,36 +765,6 @@
       },
       "toasts": {
         "created": "Stock adjusted successfully."
-      }
-    },
-    "adjustDialog": {
-      "title": "Inventory adjustment",
-      "fields": {
-        "product": "Product",
-        "variant": "Variant",
-        "direction": "Direction",
-        "quantity": "Quantity",
-        "reason": "Reason",
-        "note": "Internal note",
-        "location": "Location"
-      },
-      "labels": {
-        "sku": "SKU",
-        "allVariants": "All variants",
-        "increase": "Increase",
-        "decrease": "Decrease"
-      },
-      "actions": {
-        "submit": "Save adjustment",
-        "clearProduct": "Clear product"
-      },
-      "emptyStates": {
-        "noProducts": "No products match your search."
-      },
-      "validation": {
-        "productRequired": "Select a product to adjust.",
-        "quantityRequired": "Quantity is required.",
-        "quantityPositive": "Enter a quantity greater than zero."
       }
     },
     "errors": {

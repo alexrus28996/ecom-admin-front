@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnIni
 import { FormBuilder } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { PageEvent } from '@angular/material/paginator';
+import { TranslateService } from '@ngx-translate/core';
 import { Subject, takeUntil } from 'rxjs';
 import { AdminService } from '../../../services/admin.service';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog.component';
@@ -57,9 +58,9 @@ export class CouponsListComponent implements OnInit, OnDestroy {
   ];
 
   readonly statusOptions = [
-    { value: '', label: 'All statuses' },
-    { value: 'active', label: 'Active' },
-    { value: 'expired', label: 'Expired' }
+    { value: '', labelKey: 'coupons.list.filters.status.options.all' },
+    { value: 'active', labelKey: 'coupons.list.filters.status.options.active' },
+    { value: 'expired', labelKey: 'coupons.list.filters.status.options.expired' }
   ];
 
   readonly pageSizeOptions = [10, 25, 50];
@@ -78,7 +79,8 @@ export class CouponsListComponent implements OnInit, OnDestroy {
     private readonly fb: FormBuilder,
     private readonly dialog: MatDialog,
     private readonly toast: ToastService,
-    private readonly cdr: ChangeDetectorRef
+    private readonly cdr: ChangeDetectorRef,
+    private readonly translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -157,7 +159,7 @@ export class CouponsListComponent implements OnInit, OnDestroy {
 
     ref.afterClosed().subscribe((changed) => {
       if (changed) {
-        this.toast.success('Coupon created successfully.');
+        this.toast.success(this.translate.instant('coupons.list.toasts.created'));
         this.load();
       }
     });
@@ -174,7 +176,7 @@ export class CouponsListComponent implements OnInit, OnDestroy {
 
     ref.afterClosed().subscribe((changed) => {
       if (changed) {
-        this.toast.success('Coupon updated successfully.');
+        this.toast.success(this.translate.instant('coupons.list.toasts.updated'));
         this.load();
       }
     });
@@ -184,10 +186,11 @@ export class CouponsListComponent implements OnInit, OnDestroy {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '360px',
       data: {
-        titleKey: 'Delete coupon',
-        messageKey: `Are you sure you want to delete coupon "${coupon.code}"?`,
-        confirmKey: 'Delete',
-        cancelKey: 'Cancel'
+        titleKey: 'coupons.list.dialogs.delete.title',
+        messageKey: 'coupons.list.dialogs.delete.message',
+        messageParams: { code: coupon.code },
+        confirmKey: 'coupons.list.dialogs.delete.confirm',
+        cancelKey: 'common.actions.cancel'
       }
     });
 
@@ -203,12 +206,13 @@ export class CouponsListComponent implements OnInit, OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: () => {
-            this.toast.success('Coupon deleted successfully.');
+            this.toast.success(this.translate.instant('coupons.list.toasts.deleted'));
             this.load();
           },
           error: () => {
             this.loading = false;
             this.cdr.markForCheck();
+            this.toast.error(this.translate.instant('coupons.list.errors.deleteFailed'));
           }
         });
     });

@@ -158,13 +158,14 @@ export class AdminService {
   }
 
   // Inventory
-  listInventory(params: { product?: string; variant?: string; location?: string; page?: number; limit?: number } = {})
+  listInventory(params: { product?: string; variant?: string; location?: string; status?: string; page?: number; limit?: number } = {})
     : Observable<{ items: any[]; total: number; page: number; pages: number }>
   {
     const usp = new URLSearchParams();
     if (params.product) usp.set('product', params.product);
     if (params.variant) usp.set('variant', params.variant);
     if (params.location) usp.set('location', params.location);
+    if (params.status) usp.set('status', params.status);
     if (params.page) usp.set('page', String(params.page));
     if (params.limit) usp.set('limit', String(params.limit));
     const qs = usp.toString();

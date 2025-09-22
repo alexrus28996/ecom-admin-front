@@ -2,34 +2,34 @@
   <section class="page__header">
     <div class="page__headline">
       <div>
-        <span class="page__eyebrow">Promotions</span>
-        <h1>Coupons</h1>
-        <p>Manage coupon lifecycle, redemptions, and eligibility rules.</p>
+        <span class="page__eyebrow">{{ 'coupons.list.eyebrow' | translate }}</span>
+        <h1>{{ 'coupons.list.title' | translate }}</h1>
+        <p>{{ 'coupons.list.subtitle' | translate }}</p>
       </div>
       <div class="page__actions">
         <button mat-stroked-button color="primary" type="button" (click)="load()" [disabled]="loading">
           <mat-icon>refresh</mat-icon>
-          Refresh
+          {{ 'coupons.list.actions.refresh' | translate }}
         </button>
         <button mat-flat-button color="primary" type="button" (click)="openCreate()">
           <mat-icon>add</mat-icon>
-          Create Coupon
+          {{ 'coupons.list.actions.create' | translate }}
         </button>
       </div>
     </div>
     <form class="page__filters" [formGroup]="filterForm" (ngSubmit)="applyFilters()" novalidate>
       <mat-form-field appearance="outline">
-        <mat-label>Status</mat-label>
+        <mat-label>{{ 'coupons.list.filters.status.label' | translate }}</mat-label>
         <mat-select formControlName="status">
-          <mat-option *ngFor="let option of statusOptions" [value]="option.value">{{ option.label }}</mat-option>
+          <mat-option *ngFor="let option of statusOptions" [value]="option.value">{{ option.labelKey | translate }}</mat-option>
         </mat-select>
       </mat-form-field>
       <div class="range-field" formGroupName="range">
         <mat-form-field appearance="outline" class="range-field__field">
-          <mat-label>Validity range</mat-label>
+          <mat-label>{{ 'coupons.list.filters.range.label' | translate }}</mat-label>
           <mat-date-range-input [rangePicker]="picker">
-            <input matStartDate placeholder="Start" formControlName="start" />
-            <input matEndDate placeholder="End" formControlName="end" />
+            <input matStartDate [placeholder]="'coupons.list.filters.range.start' | translate" formControlName="start" />
+            <input matEndDate [placeholder]="'coupons.list.filters.range.end' | translate" formControlName="end" />
           </mat-date-range-input>
           <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
           <mat-date-range-picker #picker></mat-date-range-picker>
@@ -37,11 +37,11 @@
       </div>
       <div class="page__filters-actions">
         <button mat-stroked-button type="button" (click)="resetFilters()" [disabled]="loading">
-          Reset
+          {{ 'coupons.list.filters.reset' | translate }}
         </button>
         <button mat-raised-button color="primary" type="submit" [disabled]="loading">
           <mat-icon>filter_alt</mat-icon>
-          Apply
+          {{ 'common.actions.apply' | translate }}
         </button>
       </div>
     </form>
@@ -52,27 +52,27 @@
     <div class="data-table" *ngIf="coupons.length; else emptyState">
       <table mat-table [dataSource]="coupons" class="data-table__table" [trackBy]="trackById">
         <ng-container matColumnDef="code">
-          <th mat-header-cell *matHeaderCellDef>Coupon Code</th>
+          <th mat-header-cell *matHeaderCellDef>{{ 'coupons.list.table.code' | translate }}</th>
           <td mat-cell *matCellDef="let coupon">
             <strong>{{ coupon.code }}</strong>
           </td>
         </ng-container>
 
         <ng-container matColumnDef="description">
-          <th mat-header-cell *matHeaderCellDef>Description</th>
+          <th mat-header-cell *matHeaderCellDef>{{ 'coupons.list.table.description' | translate }}</th>
           <td mat-cell *matCellDef="let coupon">
-            <span class="muted" *ngIf="!coupon.description">—</span>
+            <span class="muted" *ngIf="!coupon.description">{{ 'common.empty' | translate }}</span>
             <span *ngIf="coupon.description">{{ coupon.description }}</span>
           </td>
         </ng-container>
 
         <ng-container matColumnDef="type">
-          <th mat-header-cell *matHeaderCellDef>Discount Type</th>
-          <td mat-cell *matCellDef="let coupon">{{ coupon.type === 'percent' ? 'Percentage' : 'Fixed' }}</td>
+          <th mat-header-cell *matHeaderCellDef>{{ 'coupons.list.table.type' | translate }}</th>
+          <td mat-cell *matCellDef="let coupon">{{ coupon.type === 'percent' ? ('coupons.list.types.percent' | translate) : ('coupons.list.types.fixed' | translate) }}</td>
         </ng-container>
 
         <ng-container matColumnDef="value">
-          <th mat-header-cell *matHeaderCellDef>Discount Value</th>
+          <th mat-header-cell *matHeaderCellDef>{{ 'coupons.list.table.value' | translate }}</th>
           <td mat-cell *matCellDef="let coupon">
             <ng-container [ngSwitch]="coupon.type">
               <span *ngSwitchCase="'percent'">{{ coupon.value }}%</span>
@@ -82,48 +82,48 @@
         </ng-container>
 
         <ng-container matColumnDef="usageLimits">
-          <th mat-header-cell *matHeaderCellDef>Usage Limit (per user / global)</th>
+          <th mat-header-cell *matHeaderCellDef>{{ 'coupons.list.table.usageLimits' | translate }}</th>
           <td mat-cell *matCellDef="let coupon">
-            <span>{{ coupon.maxRedemptionsPerUser ?? '—' }}</span>
+            <span>{{ coupon.maxRedemptionsPerUser ?? ('common.empty' | translate) }}</span>
             <span class="muted">/</span>
-            <span>{{ coupon.maxRedemptions ?? '—' }}</span>
+            <span>{{ coupon.maxRedemptions ?? ('common.empty' | translate) }}</span>
           </td>
         </ng-container>
 
         <ng-container matColumnDef="usageCount">
-          <th mat-header-cell *matHeaderCellDef>Used Count</th>
+          <th mat-header-cell *matHeaderCellDef>{{ 'coupons.list.table.usageCount' | translate }}</th>
           <td mat-cell *matCellDef="let coupon">{{ coupon.usageCount ?? 0 }}</td>
         </ng-container>
 
         <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <th mat-header-cell *matHeaderCellDef>{{ 'coupons.list.table.status' | translate }}</th>
           <td mat-cell *matCellDef="let coupon">
-            <span [ngClass]="statusClass(coupon)">{{ resolveStatus(coupon) | titlecase }}</span>
+            <span [ngClass]="statusClass(coupon)">{{ ('coupons.list.status.' + resolveStatus(coupon)) | translate }}</span>
           </td>
         </ng-container>
 
         <ng-container matColumnDef="startsAt">
-          <th mat-header-cell *matHeaderCellDef>Start Date</th>
+          <th mat-header-cell *matHeaderCellDef>{{ 'coupons.list.table.startsAt' | translate }}</th>
           <td mat-cell *matCellDef="let coupon">
             <span *ngIf="coupon.startsAt; else dash">{{ coupon.startsAt | date: 'mediumDate' }}</span>
           </td>
         </ng-container>
 
         <ng-container matColumnDef="expiresAt">
-          <th mat-header-cell *matHeaderCellDef>End Date</th>
+          <th mat-header-cell *matHeaderCellDef>{{ 'coupons.list.table.expiresAt' | translate }}</th>
           <td mat-cell *matCellDef="let coupon">
             <span *ngIf="coupon.expiresAt; else dash">{{ coupon.expiresAt | date: 'mediumDate' }}</span>
           </td>
         </ng-container>
 
         <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <th mat-header-cell *matHeaderCellDef>{{ 'coupons.list.table.actions' | translate }}</th>
           <td mat-cell *matCellDef="let coupon">
             <div class="table-actions">
-              <button mat-icon-button color="primary" type="button" (click)="editCoupon(coupon)" matTooltip="Edit coupon">
+              <button mat-icon-button color="primary" type="button" (click)="editCoupon(coupon)" matTooltip="{{ 'coupons.list.actions.edit' | translate }}">
                 <mat-icon>edit</mat-icon>
               </button>
-              <button mat-icon-button color="warn" type="button" (click)="deleteCoupon(coupon)" matTooltip="Delete coupon">
+              <button mat-icon-button color="warn" type="button" (click)="deleteCoupon(coupon)" matTooltip="{{ 'coupons.list.actions.delete' | translate }}">
                 <mat-icon>delete</mat-icon>
               </button>
             </div>
@@ -137,7 +137,7 @@
     <ng-template #emptyState>
       <div class="empty-state">
         <mat-icon>confirmation_number</mat-icon>
-        <p>No coupons found for the selected filters.</p>
+        <p>{{ 'coupons.list.empty' | translate }}</p>
       </div>
     </ng-template>
     <app-error-banner [key]="errorKey"></app-error-banner>
@@ -156,5 +156,5 @@
 </div>
 
 <ng-template #dash>
-  <span class="muted">—</span>
+  <span class="muted">{{ 'common.empty' | translate }}</span>
 </ng-template>

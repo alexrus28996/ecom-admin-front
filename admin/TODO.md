@@ -134,6 +134,9 @@ Legend
 - [ ] Low stock report with threshold input (`GET /api/admin/inventory/low`).
   - Started: Low stock section with threshold filter, table, and pagination.
 - [ ] Location/warehouse filters when backend adds data.
+- [ ] Multi-location stock management with per-warehouse allocations and transfer workflows.
+- [ ] Export inventory snapshots and low-stock reports to CSV for offline analysis.
+- [ ] Inventory audit trail covering cycle counts and discrepancy reconciliation.
 
 ### Analytics & Reports
 - [x] Dashboard KPIs (`GET /api/admin/metrics`).

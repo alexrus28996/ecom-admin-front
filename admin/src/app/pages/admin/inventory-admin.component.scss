@@ -1,8 +1,9 @@
-:host {
+.page {
   display: block;
 }
 
 .inventory-shell {
+  display: grid;
   gap: 32px;
 }
 
@@ -16,6 +17,10 @@
   box-shadow: var(--app-shadow-soft);
 }
 
+.inventory-tabs {
+  margin-top: 8px;
+}
+
 .inventory-card__content {
   display: grid;
   gap: 24px;
@@ -26,15 +31,113 @@
   flex-wrap: wrap;
   gap: 16px;
   align-items: flex-end;
+  margin-top: 16px;
 }
 
 .inventory-filters .mat-mdc-form-field {
   min-width: 200px;
 }
 
+.inventory-filters__actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
 .inventory-table {
   position: relative;
   margin-top: 16px;
+}
+
+.inventory-product {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.inventory-product__thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--app-surface-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.inventory-product__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.inventory-product__thumb--empty {
+  color: var(--app-text-muted);
+}
+
+.inventory-product__meta {
+  display: grid;
+  gap: 4px;
+}
+
+.inventory-product__name {
+  font-weight: 600;
+}
+
+.inventory-product__sku {
+  font-size: 12px;
+  color: var(--app-text-muted);
+}
+
+.inventory-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.inventory-stock {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.inventory-stock__value {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.inventory-stock__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--app-surface-muted);
+  color: var(--app-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.inventory-stock--low .inventory-stock__badge,
+.inventory-stock__badge--alert {
+  background: rgba(229, 57, 53, 0.1);
+  color: #d32f2f;
+}
+
+.inventory-stock--out-of-stock .inventory-stock__badge {
+  background: rgba(229, 57, 53, 0.18);
+  color: #b71c1c;
+}
+
+.qty-positive {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.qty-negative {
+  color: #c62828;
+  font-weight: 600;
 }
 
 @media (max-width: 959px) {
@@ -52,5 +155,14 @@
   .inventory-filters .mat-mdc-form-field {
     width: 100%;
     min-width: 0;
+  }
+
+  .inventory-filters__actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .inventory-actions {
+    justify-content: flex-start;
   }
 }

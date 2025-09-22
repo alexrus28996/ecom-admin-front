@@ -1,0 +1,103 @@
+<<<<<<< ours
+.adjust-dialog {
+  display: grid;
+  gap: 16px;
+  min-width: 440px;
+}
+
+.adjust-dialog__field {
+  width: 100%;
+}
+
+.adjust-dialog__spinner {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.adjust-dialog__option-name {
+  font-weight: 600;
+  display: block;
+}
+
+.adjust-dialog__option-sku {
+  font-size: 12px;
+  color: var(--app-text-muted);
+}
+
+.adjust-dialog__quantity {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.adjust-dialog__quantity .mat-mdc-form-field {
+  flex: 1;
+}
+
+.adjust-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.adjust-dialog__actions mat-progress-spinner {
+  margin-right: 12px;
+}
+
+@media (max-width: 599px) {
+  .adjust-dialog {
+    min-width: 100%;
+  }
+
+  .adjust-dialog__quantity {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .adjust-dialog__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+=======
+:host {
+  display: block;
+  width: 100%;
+  max-width: 520px;
+}
+
+.dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 8px;
+}
+
+.dialog-field {
+  width: 100%;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.field-label {
+  display: inline-block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.option-title {
+  font-weight: 500;
+}
+
+.option-meta {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+mat-dialog-actions {
+  padding: 16px 24px 24px;
+>>>>>>> theirs
+}

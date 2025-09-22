@@ -21,6 +21,7 @@ import { AdminOrdersListComponent } from './pages/admin/orders-admin-list.compon
 import { AdminOrderDetailComponent } from './pages/admin/order-admin-detail.component';
 import { AdminReturnsListComponent } from './pages/admin/returns-admin-list.component';
 import { AdminInventoryComponent } from './pages/admin/inventory-admin.component';
+import { InventoryAdjustmentDialogComponent } from './pages/admin/inventory-adjustment-dialog.component';
 import { CategoriesComponent } from './pages/categories/categories.component';
 import { AddressManagementComponent, AddressFormDialogComponent } from './pages/addresses/address-management.component';
 import { RegisterComponent } from './pages/register/register.component';
@@ -79,6 +80,7 @@ export function translateHttpLoaderFactory(http: HttpClient) {
     ConfirmDialogComponent,
     AdminReturnsListComponent,
     AdminInventoryComponent,
+    InventoryAdjustmentDialogComponent,
     ErrorBannerComponent,
     LoadingComponent,
     AccessDeniedComponent,
