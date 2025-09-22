@@ -797,30 +797,36 @@
       "out-of-stock": "Out of stock"
     },
     "adjustDialog": {
-      "title": "Adjust stock",
+      "title": "Ajustement de stock",
       "fields": {
-        "product": "Product",
-        "productPlaceholder": "Search products",
-        "variant": "Variant",
-        "variantAny": "All variants",
-        "quantity": "Quantity",
-        "direction": "Adjustment direction",
-        "reason": "Reason",
-        "note": "Internal note"
+        "product": "Produit",
+        "productPlaceholder": "Rechercher des produits",
+        "variant": "Variante",
+        "direction": "Sens de l'ajustement",
+        "quantity": "Quantité",
+        "reason": "Motif",
+        "note": "Note interne",
+        "location": "Emplacement"
       },
-      "directions": {
-        "add": "Add",
-        "remove": "Remove"
+      "labels": {
+        "sku": "SKU : {{ sku }}",
+        "allVariants": "Toutes les variantes",
+        "increase": "Augmenter",
+        "decrease": "Réduire"
       },
       "actions": {
-        "save": "Save adjustment"
+        "submit": "Enregistrer l'ajustement",
+        "clearProduct": "Effacer le produit"
       },
-      "errors": {
-        "productRequired": "Select a product to adjust.",
-        "quantityRequired": "Quantity is required.",
-        "quantityPositive": "Enter a value greater than zero."
+      "emptyStates": {
+        "noProducts": "Aucun produit ne correspond à votre recherche."
       },
-      "loadingVariants": "Loading variants…"
+      "validation": {
+        "productRequired": "Sélectionnez un produit à ajuster.",
+        "quantityRequired": "La quantité est requise.",
+        "quantityPositive": "Saisissez une quantité supérieure à zéro."
+      },
+      "loadingVariants": "Chargement des variantes…"
     }
   },
   "adminUsers": {

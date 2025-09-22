@@ -797,28 +797,34 @@
       "out-of-stock": "Out of stock"
     },
     "adjustDialog": {
-      "title": "Adjust stock",
+      "title": "Inventory adjustment",
       "fields": {
         "product": "Product",
         "productPlaceholder": "Search products",
         "variant": "Variant",
-        "variantAny": "All variants",
+        "direction": "Direction",
         "quantity": "Quantity",
-        "direction": "Adjustment direction",
         "reason": "Reason",
-        "note": "Internal note"
+        "note": "Internal note",
+        "location": "Location"
       },
-      "directions": {
-        "add": "Add",
-        "remove": "Remove"
+      "labels": {
+        "sku": "SKU: {{ sku }}",
+        "allVariants": "All variants",
+        "increase": "Increase",
+        "decrease": "Decrease"
       },
       "actions": {
-        "save": "Save adjustment"
+        "submit": "Save adjustment",
+        "clearProduct": "Clear product"
       },
-      "errors": {
+      "emptyStates": {
+        "noProducts": "No products match your search."
+      },
+      "validation": {
         "productRequired": "Select a product to adjust.",
         "quantityRequired": "Quantity is required.",
-        "quantityPositive": "Enter a value greater than zero."
+        "quantityPositive": "Enter a quantity greater than zero."
       },
       "loadingVariants": "Loading variants…"
     }

@@ -1,36 +1,64 @@
 <h2 mat-dialog-title>{{ 'inventory.adjustDialog.title' | translate }}</h2>
+<<<<<<< HEAD
 <<<<<<< ours
 <<<<<<< ours
+=======
+>>>>>>> 046f03433d66abea81f3dd9b6e43279f1e64c827
 <mat-dialog-content class="adjust-dialog">
-  <form [formGroup]="form" (ngSubmit)="onSubmit()">
-    <mat-form-field appearance="outline" class="adjust-dialog__field">
-      <mat-label>{{ 'inventory.adjustDialog.fields.product' | translate }}</mat-label>
-      <input
-        matInput
-        formControlName="productSearch"
-        [matAutocomplete]="productAuto"
-        [placeholder]="'inventory.adjustDialog.fields.productPlaceholder' | translate"
-      />
-      <mat-progress-spinner
-        *ngIf="form.controls.productId.invalid && form.touched"
-        diameter="16"
-        mode="indeterminate"
-        class="adjust-dialog__spinner"
-      ></mat-progress-spinner>
-      <mat-autocomplete #productAuto="matAutocomplete" (optionSelected)="onProductSelected($event)" [displayWith]="displayProduct">
-        <mat-option *ngFor="let product of productResults$ | async" [value]="product">
-          <span class="adjust-dialog__option-name">{{ product.name }}</span>
-          <span class="adjust-dialog__option-sku" *ngIf="product.sku">{{ product.sku }}</span>
-        </mat-option>
-      </mat-autocomplete>
-      <mat-error *ngIf="form.controls.productId.invalid">{{ 'inventory.adjustDialog.errors.productRequired' | translate }}</mat-error>
-    </mat-form-field>
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="adjust-dialog__product">
+      <mat-form-field appearance="outline" class="adjust-dialog__field">
+        <mat-label>{{ 'inventory.adjustDialog.fields.product' | translate }}</mat-label>
+        <input
+          matInput
+          [formControl]="productControl"
+          [matAutocomplete]="productAuto"
+          [placeholder]="'inventory.adjustDialog.fields.productPlaceholder' | translate"
+        />
+        <button
+          mat-icon-button
+          matSuffix
+          type="button"
+          *ngIf="productControl.value"
+          (click)="clearProductSelection()"
+          [disabled]="saving"
+          [attr.aria-label]="'inventory.adjustDialog.actions.clearProduct' | translate"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+        <mat-progress-spinner
+          *ngIf="loadingProducts"
+          matSuffix
+          diameter="18"
+          mode="indeterminate"
+          class="adjust-dialog__spinner"
+        ></mat-progress-spinner>
+        <mat-autocomplete
+          #productAuto="matAutocomplete"
+          (optionSelected)="onProductSelected($event)"
+          [displayWith]="displayProductOption"
+        >
+          <mat-option *ngIf="!loadingProducts && !productOptions.length" disabled>
+            {{ 'inventory.adjustDialog.emptyStates.noProducts' | translate }}
+          </mat-option>
+          <mat-option *ngFor="let option of productOptions" [value]="option">
+            <span class="adjust-dialog__option-title">{{ option.label }}</span>
+            <span class="adjust-dialog__option-subtitle" *ngIf="option.secondaryLabel">
+              {{ 'inventory.adjustDialog.labels.sku' | translate: { sku: option.secondaryLabel } }}
+            </span>
+          </mat-option>
+        </mat-autocomplete>
+        <mat-error *ngIf="productControl.hasError('required')">
+          {{ 'inventory.adjustDialog.validation.productRequired' | translate }}
+        </mat-error>
+      </mat-form-field>
+    </div>
 
     <mat-form-field appearance="outline" class="adjust-dialog__field">
       <mat-label>{{ 'inventory.adjustDialog.fields.variant' | translate }}</mat-label>
-      <mat-select formControlName="variantId" [disabled]="loadingVariants || !variants.length">
-        <mat-option value="">{{ 'inventory.adjustDialog.fields.variantAny' | translate }}</mat-option>
-        <mat-option *ngFor="let variant of variants" [value]="variant.id">{{ variant.label || variant.id }}</mat-option>
+      <mat-select formControlName="variantId" [disabled]="loadingVariants || !variantOptions.length">
+        <mat-option value="">{{ 'inventory.adjustDialog.labels.allVariants' | translate }}</mat-option>
+        <mat-option *ngFor="let variant of variantOptions" [value]="variant.id">{{ variant.label }}</mat-option>
       </mat-select>
       <mat-hint *ngIf="loadingVariants">{{ 'inventory.adjustDialog.loadingVariants' | translate }}</mat-hint>
     </mat-form-field>
@@ -39,15 +67,22 @@
       <mat-form-field appearance="outline">
         <mat-label>{{ 'inventory.adjustDialog.fields.quantity' | translate }}</mat-label>
         <input matInput type="number" formControlName="quantity" min="1" />
-        <mat-error *ngIf="form.controls.quantity.hasError('required')">{{ 'inventory.adjustDialog.errors.quantityRequired' | translate }}</mat-error>
-        <mat-error *ngIf="form.controls.quantity.hasError('min')">{{ 'inventory.adjustDialog.errors.quantityPositive' | translate }}</mat-error>
+        <mat-error *ngIf="form.controls.quantity.hasError('required')">
+          {{ 'inventory.adjustDialog.validation.quantityRequired' | translate }}
+        </mat-error>
+        <mat-error *ngIf="form.controls.quantity.hasError('min')">
+          {{ 'inventory.adjustDialog.validation.quantityPositive' | translate }}
+        </mat-error>
       </mat-form-field>
+<<<<<<< HEAD
 <<<<<<< ours
 <<<<<<< ours
       <mat-button-toggle-group formControlName="direction" aria-label="{{ 'inventory.adjustDialog.fields.direction' | translate }}">
         <mat-button-toggle value="add">{{ 'inventory.adjustDialog.directions.add' | translate }}</mat-button-toggle>
         <mat-button-toggle value="remove">{{ 'inventory.adjustDialog.directions.remove' | translate }}</mat-button-toggle>
 =======
+=======
+>>>>>>> 046f03433d66abea81f3dd9b6e43279f1e64c827
       <mat-button-toggle-group
         formControlName="direction"
         [attr.aria-label]="'inventory.adjustDialog.fields.direction' | translate"
@@ -58,12 +93,15 @@
         <mat-button-toggle value="decrease">
           {{ 'inventory.adjustDialog.labels.decrease' | translate }}
         </mat-button-toggle>
+<<<<<<< HEAD
 >>>>>>> theirs
 =======
       <mat-button-toggle-group formControlName="direction" [attr.aria-label]="'inventory.adjustDialog.fields.direction' | translate">
         <mat-button-toggle value="add">{{ 'inventory.adjustDialog.directions.add' | translate }}</mat-button-toggle>
         <mat-button-toggle value="remove">{{ 'inventory.adjustDialog.directions.remove' | translate }}</mat-button-toggle>
 >>>>>>> theirs
+=======
+>>>>>>> 046f03433d66abea81f3dd9b6e43279f1e64c827
       </mat-button-toggle-group>
     </div>
 
@@ -75,6 +113,11 @@
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="adjust-dialog__field">
+      <mat-label>{{ 'inventory.adjustDialog.fields.location' | translate }}</mat-label>
+      <input matInput formControlName="location" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="adjust-dialog__field">
       <mat-label>{{ 'inventory.adjustDialog.fields.note' | translate }}</mat-label>
       <textarea matInput formControlName="note" rows="3"></textarea>
     </mat-form-field>
@@ -83,13 +126,14 @@
       <button mat-button type="button" mat-dialog-close [disabled]="saving">
         {{ 'common.actions.cancel' | translate }}
       </button>
-      <button mat-raised-button color="primary" type="submit" [disabled]="saving || form.invalid">
+      <button mat-flat-button color="primary" type="submit" [disabled]="saving || form.invalid || productControl.invalid">
         <mat-progress-spinner *ngIf="saving" mode="indeterminate" diameter="18"></mat-progress-spinner>
-        <span>{{ 'inventory.adjustDialog.actions.save' | translate }}</span>
+        <span>{{ 'inventory.adjustDialog.actions.submit' | translate }}</span>
       </button>
     </div>
   </form>
 </mat-dialog-content>
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> theirs
@@ -210,3 +254,5 @@
 >>>>>>> theirs
 =======
 >>>>>>> theirs
+=======
+>>>>>>> 046f03433d66abea81f3dd9b6e43279f1e64c827

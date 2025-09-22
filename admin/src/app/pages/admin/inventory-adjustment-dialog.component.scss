@@ -1,9 +1,18 @@
+<<<<<<< HEAD
 <<<<<<< ours
 <<<<<<< ours
+=======
+>>>>>>> 046f03433d66abea81f3dd9b6e43279f1e64c827
 .adjust-dialog {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
-  min-width: 440px;
+  min-width: 480px;
+}
+
+.adjust-dialog__product {
+  display: flex;
+  flex-direction: column;
 }
 
 .adjust-dialog__field {
@@ -11,29 +20,30 @@
 }
 
 .adjust-dialog__spinner {
-  position: absolute;
-  top: 8px;
-  right: 8px;
+  margin-left: 8px;
 }
 
-.adjust-dialog__option-name {
+.adjust-dialog__option-title {
   font-weight: 600;
   display: block;
 }
 
-.adjust-dialog__option-sku {
+.adjust-dialog__option-subtitle {
+  display: block;
   font-size: 12px;
   color: var(--app-text-muted);
 }
 
 .adjust-dialog__quantity {
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   align-items: flex-end;
 }
 
 .adjust-dialog__quantity .mat-mdc-form-field {
   flex: 1;
+  min-width: 180px;
 }
 
 .adjust-dialog__actions {
@@ -61,6 +71,7 @@
     flex-direction: column;
     align-items: stretch;
   }
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> theirs
@@ -106,4 +117,6 @@ mat-dialog-actions {
 >>>>>>> theirs
 =======
 >>>>>>> theirs
+=======
+>>>>>>> 046f03433d66abea81f3dd9b6e43279f1e64c827
 }
