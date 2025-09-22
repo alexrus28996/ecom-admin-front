@@ -1,5 +1,6 @@
 <h2 mat-dialog-title>{{ 'inventory.adjustDialog.title' | translate }}</h2>
 <<<<<<< ours
+<<<<<<< ours
 <mat-dialog-content class="adjust-dialog">
   <form [formGroup]="form" (ngSubmit)="onSubmit()">
     <mat-form-field appearance="outline" class="adjust-dialog__field">
@@ -41,9 +42,28 @@
         <mat-error *ngIf="form.controls.quantity.hasError('required')">{{ 'inventory.adjustDialog.errors.quantityRequired' | translate }}</mat-error>
         <mat-error *ngIf="form.controls.quantity.hasError('min')">{{ 'inventory.adjustDialog.errors.quantityPositive' | translate }}</mat-error>
       </mat-form-field>
+<<<<<<< ours
+<<<<<<< ours
       <mat-button-toggle-group formControlName="direction" aria-label="{{ 'inventory.adjustDialog.fields.direction' | translate }}">
         <mat-button-toggle value="add">{{ 'inventory.adjustDialog.directions.add' | translate }}</mat-button-toggle>
         <mat-button-toggle value="remove">{{ 'inventory.adjustDialog.directions.remove' | translate }}</mat-button-toggle>
+=======
+      <mat-button-toggle-group
+        formControlName="direction"
+        [attr.aria-label]="'inventory.adjustDialog.fields.direction' | translate"
+      >
+        <mat-button-toggle value="increase">
+          {{ 'inventory.adjustDialog.labels.increase' | translate }}
+        </mat-button-toggle>
+        <mat-button-toggle value="decrease">
+          {{ 'inventory.adjustDialog.labels.decrease' | translate }}
+        </mat-button-toggle>
+>>>>>>> theirs
+=======
+      <mat-button-toggle-group formControlName="direction" [attr.aria-label]="'inventory.adjustDialog.fields.direction' | translate">
+        <mat-button-toggle value="add">{{ 'inventory.adjustDialog.directions.add' | translate }}</mat-button-toggle>
+        <mat-button-toggle value="remove">{{ 'inventory.adjustDialog.directions.remove' | translate }}</mat-button-toggle>
+>>>>>>> theirs
       </mat-button-toggle-group>
     </div>
 
@@ -71,6 +91,8 @@
   </form>
 </mat-dialog-content>
 =======
+=======
+>>>>>>> theirs
 
 <mat-dialog-content class="dialog-content" [formGroup]="form">
   <mat-form-field appearance="outline" class="dialog-field full-width">
@@ -184,4 +206,7 @@
     {{ 'inventory.adjustDialog.actions.submit' | translate }}
   </button>
 </mat-dialog-actions>
+<<<<<<< ours
+>>>>>>> theirs
+=======
 >>>>>>> theirs
