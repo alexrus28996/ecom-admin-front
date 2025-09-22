@@ -63,6 +63,45 @@ export class AdminService {
     return this.http.patch<{ order: any }>(`${this.base}/orders/${id}`, payload);
   }
 
+  listShipments(params: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    carrier?: string;
+    from?: string;
+    to?: string;
+    orderId?: string;
+  } = {}): Observable<{ items: any[]; total: number; page: number; pages: number; }> {
+    const usp = new URLSearchParams();
+    if (params.page) usp.set('page', String(params.page));
+    if (params.limit) usp.set('limit', String(params.limit));
+    if (params.status) usp.set('status', params.status);
+    if (params.carrier) usp.set('carrier', params.carrier);
+    if (params.from) usp.set('from', params.from);
+    if (params.to) usp.set('to', params.to);
+    if (params.orderId) usp.set('orderId', params.orderId);
+    const qs = usp.toString();
+    return this.http.get<{ items: any[]; total: number; page: number; pages: number; }>(
+      `${this.base}/shipments${qs ? ('?' + qs) : ''}`
+    );
+  }
+
+  createShipment(orderId: string, payload: { carrier: string; trackingNumber: string; estimatedDeliveryDate?: string }):
+    Observable<{ shipment: any }>
+  {
+    return this.http.post<{ shipment: any }>(`${this.base}/orders/${orderId}/shipments`, payload);
+  }
+
+  updateShipment(id: string, payload: { carrier?: string; trackingNumber?: string; status?: string; estimatedDeliveryDate?: string }):
+    Observable<{ shipment: any }>
+  {
+    return this.http.patch<{ shipment: any }>(`${this.base}/shipments/${id}`, payload);
+  }
+
+  deleteShipment(id: string): Observable<{ success: boolean }> {
+    return this.http.delete<{ success: boolean }>(`${this.base}/shipments/${id}`);
+  }
+
   // Returns console
   listReturns(params: { status?: 'requested'|'approved'|'rejected'|'refunded'; page?: number; limit?: number } = {})
     : Observable<{ items: any[]; total: number; page: number; pages: number; }>

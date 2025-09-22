@@ -1,0 +1,62 @@
+<h2 mat-dialog-title>{{ isEdit ? 'Edit shipment' : 'Create shipment' }}</h2>
+<form class="shipment-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <mat-dialog-content>
+    <div class="form-grid">
+      <mat-form-field appearance="outline" class="full-width" *ngIf="!isEdit">
+        <mat-label>Order</mat-label>
+        <input
+          matInput
+          placeholder="Search by order ID or email"
+          formControlName="orderId"
+          [matAutocomplete]="orderAutocomplete"
+        />
+        <mat-autocomplete
+          #orderAutocomplete="matAutocomplete"
+          (optionSelected)="onOrderSelected($event.option.value)"
+        >
+          <mat-option *ngFor="let order of filteredOrders" [value]="order.id">{{ order.label }}</mat-option>
+          <mat-option *ngIf="!filteredOrders.length && !loadingOrders" [disabled]="true">No orders found</mat-option>
+        </mat-autocomplete>
+        <mat-progress-bar *ngIf="loadingOrders" mode="indeterminate"></mat-progress-bar>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width" *ngIf="isEdit">
+        <mat-label>Order</mat-label>
+        <input matInput formControlName="orderId" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Carrier</mat-label>
+        <input matInput formControlName="carrier" required />
+        <mat-error *ngIf="form.get('carrier')?.hasError('required')">Carrier is required</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Tracking number</mat-label>
+        <input matInput formControlName="trackingNumber" required />
+        <mat-error *ngIf="form.get('trackingNumber')?.hasError('required')">Tracking number is required</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Estimated delivery</mat-label>
+        <input matInput [matDatepicker]="deliveryPicker" formControlName="estimatedDeliveryDate" />
+        <mat-datepicker-toggle matSuffix [for]="deliveryPicker"></mat-datepicker-toggle>
+        <mat-datepicker #deliveryPicker></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width" *ngIf="isEdit">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="status">
+          <mat-option *ngFor="let status of statuses" [value]="status">{{ status | titlecase }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="cancel()" [disabled]="loading">Cancel</button>
+    <button mat-flat-button color="primary" type="submit" [disabled]="loading">
+      <mat-icon>save</mat-icon>
+      {{ isEdit ? 'Update shipment' : 'Create shipment' }}
+    </button>
+  </mat-dialog-actions>
+</form>

@@ -26,7 +26,7 @@ import { AdminGuard } from './core/admin.guard';
 import { LayoutShellComponent } from './core/layout/layout-shell.component';
 import { AdminCouponsPlaceholderComponent } from './pages/admin/placeholders/admin-coupons-placeholder.component';
 import { AdminReviewsPlaceholderComponent } from './pages/admin/placeholders/admin-reviews-placeholder.component';
-import { AdminShipmentsPlaceholderComponent } from './pages/admin/placeholders/admin-shipments-placeholder.component';
+import { ShipmentsListComponent } from './pages/admin/shipments/shipments-list.component';
 import { AdminSettingsPlaceholderComponent } from './pages/admin/placeholders/admin-settings-placeholder.component';
 
 const routes: Routes = [
@@ -116,7 +116,7 @@ const routes: Routes = [
       },
       {
         path: 'admin/shipments',
-        component: AdminShipmentsPlaceholderComponent,
+        component: ShipmentsListComponent,
         canActivate: [AdminGuard],
         data: { roles: ['admin'] }
       },

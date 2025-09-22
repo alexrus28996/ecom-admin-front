@@ -1,0 +1,18 @@
+.shipment-form {
+  .form-grid {
+    display: grid;
+    gap: 16px;
+  }
+
+  .full-width {
+    width: 100%;
+  }
+}
+
+mat-dialog-content {
+  min-width: 320px;
+}
+
+mat-dialog-actions {
+  padding: 16px 24px;
+}
