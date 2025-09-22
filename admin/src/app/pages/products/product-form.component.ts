@@ -239,17 +239,21 @@ export class ProductFormComponent implements OnInit, OnDestroy {
           this.cdr.markForCheck();
         },
         error: (err) => {
-        const code = err?.error?.error?.code;
-        this.errorKey = code ? `errors.backend.${code}` : 'products.errors.loadOne';
-        this.lastError = err;
-        if (!environment.production) {
-          // eslint-disable-next-line no-console
-          console.error('Failed to load product details', err);
+          const fallbackKey = 'products.errors.loadOne';
+          const code = err?.error?.error?.code;
+          this.errorKey = code ? `errors.backend.${code}` : fallbackKey;
+          this.lastError = err;
+          const translated = this.translate.instant(this.errorKey);
+          const message = translated === this.errorKey ? this.translate.instant(fallbackKey) : translated;
+          this.toast.error(message);
+          if (!environment.production) {
+            // eslint-disable-next-line no-console
+            console.error('Failed to load product details', err);
+          }
+          this.loading = false;
+          this.cdr.markForCheck();
         }
-        this.loading = false;
-        this.cdr.markForCheck();
-      }
-    });
+      });
   }
 
   private setImages(images: ProductImage[]): void {
@@ -380,8 +384,12 @@ export class ProductFormComponent implements OnInit, OnDestroy {
           this.categories = res.items.map((category: any) => ({ id: category._id, name: category.name }));
           this.cdr.markForCheck();
         },
-        error: () => {
-          // ignore category load errors
+        error: (err) => {
+          this.toast.error(this.translate.instant('categories.errors.load'));
+          if (!environment.production) {
+            // eslint-disable-next-line no-console
+            console.error('Failed to load categories', err);
+          }
         }
       });
   }
