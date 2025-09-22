@@ -1,0 +1,32 @@
+.coupon-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.coupon-form__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.coupon-form__select mat-select {
+  max-height: 300px;
+}
+
+.form-field {
+  display: flex;
+  align-items: center;
+  padding: 12px 4px;
+}
+
+mat-progress-bar {
+  margin-bottom: 8px;
+}
+
+@media (max-width: 600px) {
+  .coupon-form__grid {
+    grid-template-columns: 1fr;
+  }
+}

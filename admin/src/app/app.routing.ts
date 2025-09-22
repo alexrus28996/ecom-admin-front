@@ -24,10 +24,10 @@ import { AddressManagementComponent } from './pages/addresses/address-management
 import { AuthGuard } from './core/auth.guard';
 import { AdminGuard } from './core/admin.guard';
 import { LayoutShellComponent } from './core/layout/layout-shell.component';
-import { AdminCouponsPlaceholderComponent } from './pages/admin/placeholders/admin-coupons-placeholder.component';
 import { AdminReviewsPlaceholderComponent } from './pages/admin/placeholders/admin-reviews-placeholder.component';
 import { ShipmentsListComponent } from './pages/admin/shipments/shipments-list.component';
 import { AdminSettingsPlaceholderComponent } from './pages/admin/placeholders/admin-settings-placeholder.component';
+import { CouponsListComponent } from './pages/admin/coupons/coupons-list.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -104,7 +104,7 @@ const routes: Routes = [
       },
       {
         path: 'admin/coupons',
-        component: AdminCouponsPlaceholderComponent,
+        component: CouponsListComponent,
         canActivate: [AdminGuard],
         data: { roles: ['admin'] }
       },

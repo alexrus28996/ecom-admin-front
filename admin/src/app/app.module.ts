@@ -37,11 +37,12 @@ import { LoadingComponent } from './shared/loading.component';
 import { AccessDeniedComponent } from './pages/denied/access-denied.component';
 import { ErrorBannerComponent } from './shared/error-banner.component';
 import { LayoutShellComponent } from './core/layout/layout-shell.component';
-import { AdminCouponsPlaceholderComponent } from './pages/admin/placeholders/admin-coupons-placeholder.component';
 import { AdminReviewsPlaceholderComponent } from './pages/admin/placeholders/admin-reviews-placeholder.component';
 import { AdminSettingsPlaceholderComponent } from './pages/admin/placeholders/admin-settings-placeholder.component';
 import { ShipmentsListComponent } from './pages/admin/shipments/shipments-list.component';
 import { ShipmentFormComponent } from './pages/admin/shipments/shipment-form.component';
+import { CouponsListComponent } from './pages/admin/coupons/coupons-list.component';
+import { CouponFormComponent } from './pages/admin/coupons/coupon-form.component';
 
 import { MaterialModule } from './shared/material.module';
 import { AuthInterceptor } from './core/auth.interceptor';
@@ -81,11 +82,12 @@ export function translateHttpLoaderFactory(http: HttpClient) {
     AddressManagementComponent,
     AddressFormDialogComponent,
     LayoutShellComponent,
-    AdminCouponsPlaceholderComponent,
     AdminReviewsPlaceholderComponent,
     ShipmentsListComponent,
     ShipmentFormComponent,
-    AdminSettingsPlaceholderComponent
+    AdminSettingsPlaceholderComponent,
+    CouponsListComponent,
+    CouponFormComponent
   ],
   imports: [
     BrowserModule,

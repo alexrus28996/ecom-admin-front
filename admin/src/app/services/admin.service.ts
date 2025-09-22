@@ -199,4 +199,29 @@ export class AdminService {
   reorderChildren(id: string, ids: string[]): Observable<{ items: any[]; total: number; page: number; pages: number; }> {
     return this.http.post<{ items: any[]; total: number; page: number; pages: number; }>(`${environment.apiBaseUrl}/categories/${id}/reorder`, { ids });
   }
+
+  listCoupons(params: { page?: number; limit?: number; status?: string; from?: string; to?: string } = {})
+    : Observable<{ items: any[]; total: number; page: number; pages: number; }>
+  {
+    const usp = new URLSearchParams();
+    if (params.page) usp.set('page', String(params.page));
+    if (params.limit) usp.set('limit', String(params.limit));
+    if (params.status) usp.set('status', params.status);
+    if (params.from) usp.set('from', params.from);
+    if (params.to) usp.set('to', params.to);
+    const qs = usp.toString();
+    return this.http.get<{ items: any[]; total: number; page: number; pages: number; }>(`${this.base}/coupons${qs ? ('?' + qs) : ''}`);
+  }
+
+  createCoupon(payload: any): Observable<{ coupon: any }> {
+    return this.http.post<{ coupon: any }>(`${this.base}/coupons`, payload);
+  }
+
+  updateCoupon(id: string, payload: any): Observable<{ coupon: any }> {
+    return this.http.patch<{ coupon: any }>(`${this.base}/coupons/${id}`, payload);
+  }
+
+  deleteCoupon(id: string): Observable<{ success: boolean }> {
+    return this.http.delete<{ success: boolean }>(`${this.base}/coupons/${id}`);
+  }
 }

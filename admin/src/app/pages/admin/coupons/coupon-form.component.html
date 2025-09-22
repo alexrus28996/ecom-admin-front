@@ -1,0 +1,88 @@
+<h2 mat-dialog-title>{{ isEdit ? 'Edit Coupon' : 'Create Coupon' }}</h2>
+<mat-dialog-content>
+  <form class="coupon-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
+    <div class="coupon-form__grid">
+      <mat-form-field appearance="outline">
+        <mat-label>Coupon Code</mat-label>
+        <input matInput formControlName="code" placeholder="SUMMER25" maxlength="32" />
+        <mat-error *ngIf="form.get('code')?.hasError('required')">Code is required</mat-error>
+        <mat-error *ngIf="form.get('code')?.hasError('minlength')">Code must be at least 3 characters</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Description</mat-label>
+        <textarea matInput formControlName="description" rows="3" placeholder="Short summary for admins"></textarea>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Discount Type</mat-label>
+        <mat-select formControlName="discountType">
+          <mat-option *ngFor="let type of discountTypes" [value]="type.value">{{ type.label }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Discount Value</mat-label>
+        <input matInput type="number" formControlName="discountValue" min="0" />
+        <mat-error *ngIf="form.get('discountValue')?.hasError('required')">Value is required</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Usage Limit per User</mat-label>
+        <input matInput type="number" formControlName="usageLimitPerUser" min="0" placeholder="Unlimited" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Global Usage Limit</mat-label>
+        <input matInput type="number" formControlName="usageLimitGlobal" min="0" placeholder="Unlimited" />
+      </mat-form-field>
+
+      <div class="form-field">
+        <mat-slide-toggle formControlName="isActive">Active</mat-slide-toggle>
+      </div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Start Date</mat-label>
+        <input matInput [matDatepicker]="startPicker" formControlName="startDate" />
+        <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+        <mat-datepicker #startPicker></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>End Date</mat-label>
+        <input matInput [matDatepicker]="endPicker" formControlName="endDate" />
+        <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+        <mat-datepicker #endPicker></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="coupon-form__select">
+        <mat-label>Applicable Categories</mat-label>
+        <mat-select formControlName="includeCategories" multiple [matTooltip]="loadingCategories ? 'Loading categories…' : ''">
+          <mat-option *ngIf="loadingCategories" disabled>Loading categories…</mat-option>
+          <mat-option *ngFor="let option of categoryOptions; trackBy: trackByValue" [value]="option.value">
+            {{ option.label }}
+          </mat-option>
+        </mat-select>
+        <mat-hint>Leave empty to apply to all categories</mat-hint>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="coupon-form__select">
+        <mat-label>Applicable Products</mat-label>
+        <mat-select formControlName="includeProducts" multiple [matTooltip]="loadingProducts ? 'Loading products…' : ''">
+          <mat-option *ngIf="loadingProducts" disabled>Loading products…</mat-option>
+          <mat-option *ngFor="let option of productOptions; trackBy: trackByValue" [value]="option.value">
+            {{ option.label }}
+          </mat-option>
+        </mat-select>
+        <mat-hint>Leave empty to apply to all products</mat-hint>
+      </mat-form-field>
+    </div>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()" [disabled]="loading">Cancel</button>
+  <button mat-flat-button color="primary" type="submit" [disabled]="loading || form.invalid">
+    {{ isEdit ? 'Save Changes' : 'Create Coupon' }}
+  </button>
+</mat-dialog-actions>
