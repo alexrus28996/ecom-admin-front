@@ -19,7 +19,7 @@ import { LayoutNavItem, BreadcrumbItem } from './layout.models';
 export class LayoutWrapperComponent implements OnInit {
   readonly navItems: LayoutNavItem[] = [
     { label: 'Dashboard', icon: 'grid_view', route: '/dashboard', exact: true },
-    { label: 'Products', icon: 'inventory_2', route: '/products', roles: ['admin'] },
+    { label: 'Products', icon: 'inventory_2', route: '/admin/products', roles: ['admin'] },
     { label: 'Orders', icon: 'receipt_long', route: '/admin/orders', roles: ['admin'] },
     { label: 'Users', icon: 'group', route: '/admin/users', roles: ['admin'] },
     { label: 'Inventory', icon: 'warehouse', route: '/admin/inventory', roles: ['admin'] },
@@ -112,7 +112,7 @@ export class LayoutWrapperComponent implements OnInit {
       return;
     }
 
-    this.router.navigate(['/products'], { queryParams: { q: search } });
+    this.router.navigate(['/admin/products'], { queryParams: { q: search } });
   }
 
   logout(): void {

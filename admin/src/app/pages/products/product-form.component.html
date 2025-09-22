@@ -29,6 +29,11 @@
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
+                  <mat-label>{{ 'products.form.fields.sku.label' | translate }}</mat-label>
+                  <input matInput formControlName="sku" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
                   <mat-label>{{ 'products.form.fields.price.label' | translate }}</mat-label>
                   <input matInput type="number" formControlName="price" min="0" step="0.01" />
                   <mat-error *ngIf="hasError('price', 'required')">
@@ -46,40 +51,46 @@
                   </mat-select>
                 </mat-form-field>
 
-                <div class="category-field">
-                  <mat-form-field appearance="outline">
-                    <mat-label>{{ 'products.form.fields.category.label' | translate }}</mat-label>
-                    <mat-select formControlName="category">
-                      <mat-option value="">{{ 'products.form.fields.category.none' | translate }}</mat-option>
-                      <mat-option *ngFor="let category of categories" [value]="category.id">{{ category.name }}</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-                  <button
-                    mat-stroked-button
-                    type="button"
-                    color="primary"
-                    class="category-manage-button"
-                    routerLink="/admin/categories"
-                  >
-                    <mat-icon>category</mat-icon>
-                    {{ 'products.form.fields.category.manage' | translate }}
-                  </button>
-                </div>
+                <mat-form-field appearance="outline">
+                  <mat-label>{{ 'products.form.fields.stock.label' | translate }}</mat-label>
+                  <input matInput type="number" formControlName="stock" min="0" />
+                  <mat-error *ngIf="hasError('stock', 'min')">
+                    {{ 'products.form.fields.stock.errors.min' | translate }}
+                  </mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>{{ 'products.form.fields.category.label' | translate }}</mat-label>
+                  <mat-select formControlName="category">
+                    <mat-option value="">{{ 'products.form.fields.category.none' | translate }}</mat-option>
+                    <mat-option *ngFor="let category of categories" [value]="category.id">{{ category.name }}</mat-option>
+                  </mat-select>
+                </mat-form-field>
 
                 <mat-slide-toggle formControlName="isActive">
                   {{ 'products.form.fields.isActive.label' | translate }}
                 </mat-slide-toggle>
-
-                <mat-form-field appearance="outline" class="product-form-description" floatLabel="always">
-                  <mat-label>{{ 'products.form.fields.description.label' | translate }}</mat-label>
-                  <textarea
-                    matInput
-                    rows="4"
-                    formControlName="description"
-                    [placeholder]="'products.form.fields.description.placeholder' | translate"
-                  ></textarea>
-                </mat-form-field>
               </div>
+
+              <mat-form-field appearance="outline" class="product-form-description" floatLabel="always">
+                <mat-label>{{ 'products.form.fields.description.label' | translate }}</mat-label>
+                <textarea
+                  matInput
+                  rows="4"
+                  formControlName="description"
+                  [placeholder]="'products.form.fields.description.placeholder' | translate"
+                ></textarea>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="product-form-description" floatLabel="always">
+                <mat-label>{{ 'products.form.fields.longDescription.label' | translate }}</mat-label>
+                <textarea
+                  matInput
+                  rows="6"
+                  formControlName="longDescription"
+                  [placeholder]="'products.form.fields.longDescription.placeholder' | translate"
+                ></textarea>
+              </mat-form-field>
 
               <section class="form-section">
                 <div class="section-header">
@@ -101,6 +112,40 @@
                   <button mat-icon-button color="warn" type="button" (click)="removeAttribute(i)" aria-label="{{ 'products.form.sections.attributesRemove' | translate }}">
                     <mat-icon>delete</mat-icon>
                   </button>
+                </div>
+              </section>
+            </div>
+          </mat-tab>
+
+          <mat-tab label="{{ 'products.form.tabs.images' | translate }}">
+            <div class="tab-content">
+              <section class="form-section">
+                <div class="section-header">
+                  <h3>{{ 'products.form.sections.images' | translate }}</h3>
+                  <button mat-stroked-button type="button" color="primary" (click)="addImage()">
+                    <mat-icon>add</mat-icon>
+                    {{ 'products.form.sections.imagesAdd' | translate }}
+                  </button>
+                </div>
+                <div class="section-body" cdkDropList (cdkDropListDropped)="imagesDrop($event)">
+                  <div class="media-row" *ngFor="let image of images.controls; let i = index" [formGroup]="image" cdkDrag>
+                    <mat-form-field appearance="outline" class="grow">
+                      <mat-label>{{ 'products.form.fields.image.url' | translate }}</mat-label>
+                      <input matInput formControlName="url" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="grow">
+                      <mat-label>{{ 'products.form.fields.image.alt' | translate }}</mat-label>
+                      <input matInput formControlName="alt" />
+                    </mat-form-field>
+                    <input type="file" accept="image/*" #fileInput style="display:none" (change)="onImageSelected($event, i)" />
+                    <button mat-stroked-button type="button" color="primary" (click)="fileInput.click()">
+                      <mat-icon>cloud_upload</mat-icon>
+                      {{ 'products.form.sections.imagesUpload' | translate }}
+                    </button>
+                    <button mat-icon-button color="warn" type="button" (click)="removeImage(i)" aria-label="{{ 'products.form.sections.imagesRemove' | translate }}">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
                 </div>
               </section>
             </div>
@@ -195,52 +240,18 @@
             </div>
           </mat-tab>
 
-          <mat-tab label="{{ 'products.form.tabs.stock' | translate }}">
+          <mat-tab label="{{ 'products.form.tabs.seo' | translate }}">
             <div class="tab-content">
               <section class="form-section">
-                <h3>{{ 'products.form.sections.stock' | translate }}</h3>
                 <div class="product-form-grid">
                   <mat-form-field appearance="outline">
-                    <mat-label>{{ 'products.form.fields.stock.label' | translate }}</mat-label>
-                    <input matInput type="number" formControlName="stock" min="0" />
-                    <mat-error *ngIf="hasError('stock', 'min')">
-                      {{ 'products.form.fields.stock.errors.min' | translate }}
-                    </mat-error>
+                    <mat-label>{{ 'products.form.fields.metaTitle.label' | translate }}</mat-label>
+                    <input matInput formControlName="metaTitle" />
                   </mat-form-field>
-                </div>
-              </section>
-            </div>
-          </mat-tab>
-
-          <mat-tab label="{{ 'products.form.tabs.media' | translate }}">
-            <div class="tab-content">
-              <section class="form-section">
-                <div class="section-header">
-                  <h3>{{ 'products.form.sections.images' | translate }}</h3>
-                  <button mat-stroked-button type="button" color="primary" (click)="addImage()">
-                    <mat-icon>add</mat-icon>
-                    {{ 'products.form.sections.imagesAdd' | translate }}
-                  </button>
-                </div>
-                <div class="section-body" cdkDropList (cdkDropListDropped)="imagesDrop($event)">
-                  <div class="media-row" *ngFor="let image of images.controls; let i = index" [formGroup]="image" cdkDrag>
-                    <mat-form-field appearance="outline" class="grow">
-                      <mat-label>{{ 'products.form.fields.image.url' | translate }}</mat-label>
-                      <input matInput formControlName="url" />
-                    </mat-form-field>
-                    <mat-form-field appearance="outline" class="grow">
-                      <mat-label>{{ 'products.form.fields.image.alt' | translate }}</mat-label>
-                      <input matInput formControlName="alt" />
-                    </mat-form-field>
-                    <input type="file" accept="image/*" #fileInput style="display:none" (change)="onImageSelected($event, i)" />
-                    <button mat-stroked-button type="button" color="primary" (click)="fileInput.click()">
-                      <mat-icon>cloud_upload</mat-icon>
-                      {{ 'products.form.sections.imagesUpload' | translate }}
-                    </button>
-                    <button mat-icon-button color="warn" type="button" (click)="removeImage(i)" aria-label="{{ 'products.form.sections.imagesRemove' | translate }}">
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </div>
+                  <mat-form-field appearance="outline" class="product-form-description" floatLabel="always">
+                    <mat-label>{{ 'products.form.fields.metaDescription.label' | translate }}</mat-label>
+                    <textarea matInput rows="4" formControlName="metaDescription"></textarea>
+                  </mat-form-field>
                 </div>
               </section>
             </div>
@@ -249,7 +260,7 @@
       </mat-card-content>
 
       <mat-card-actions align="end">
-        <button mat-stroked-button type="button" color="primary" routerLink="/products">
+        <button mat-stroked-button type="button" color="primary" routerLink="/admin/products">
           {{ 'products.form.actions.cancel' | translate }}
         </button>
         <button mat-raised-button color="primary" type="submit" [disabled]="loading || form.invalid">

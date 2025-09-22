@@ -29,12 +29,16 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
   readonly form: UntypedFormGroup = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
+    sku: [''],
     description: [''],
+    longDescription: [''],
     price: [0, [Validators.required, Validators.min(0)]],
     currency: ['USD', Validators.required],
     stock: [0, [Validators.min(0)]],
     isActive: [true],
     category: [''],
+    metaTitle: [''],
+    metaDescription: [''],
     images: this.fb.array([]),
     attributes: this.fb.array([]),
     variants: this.fb.array([])
@@ -218,18 +222,22 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.cdr.markForCheck();
     this.products
-      .get(id)
+      .getById(id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: ({ product }: { product: ProductDetail }) => {
           this.form.patchValue({
             name: product.name,
             description: product.description || '',
+            longDescription: product.longDescription || '',
             price: product.price,
             currency: product.currency || 'USD',
             stock: product.stock ?? 0,
             isActive: product.isActive ?? true,
-            category: typeof product.category === 'object' ? product.category?._id || '' : product.category || ''
+            category: typeof product.category === 'object' ? product.category?._id || '' : product.category || '',
+            sku: product.sku || '',
+            metaTitle: product.metaTitle || '',
+            metaDescription: product.metaDescription || ''
           });
           this.setImages(product.images || []);
           this.setAttributes(product.attributes || {});
@@ -297,7 +305,9 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     const raw = this.form.getRawValue();
     const payload: ProductInput = {
       name: (raw.name || '').trim(),
+      sku: (raw.sku || '').trim() || undefined,
       description: raw.description || '',
+      longDescription: raw.longDescription || undefined,
       price: raw.price ?? 0,
       currency: raw.currency || 'USD',
       stock: raw.stock ?? 0,
@@ -307,7 +317,9 @@ export class ProductFormComponent implements OnInit, OnDestroy {
         .filter((img) => img?.url)
         .map((img) => ({ url: img.url, alt: img.alt || undefined })),
       attributes: this.mapKeyValueArray(raw.attributes as Array<{ key?: string; value?: string }>),
-      variants: (raw.variants as Array<any>).map((variant) => this.buildVariantPayload(variant))
+      variants: (raw.variants as Array<any>).map((variant) => this.buildVariantPayload(variant)),
+      metaTitle: raw.metaTitle || undefined,
+      metaDescription: raw.metaDescription || undefined
     };
 
     const cleanedPayload = this.cleanProductPayload(payload);
@@ -322,15 +334,14 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          const messageKey = this.id ? 'products.messages.updateSuccess' : 'products.messages.saveSuccess';
-          this.toast.success(this.translate.instant(messageKey));
+          this.toast.success(this.translate.instant('products.saveSuccess'));
           this.loading = false;
           this.cdr.markForCheck();
-          this.router.navigate(['/products']);
+          this.router.navigate(['/admin/products']);
         },
         error: (err) => {
           const code = err?.error?.error?.code;
-          this.errorKey = code ? `errors.backend.${code}` : 'products.errors.save';
+          this.errorKey = code ? `errors.backend.${code}` : 'products.errorSave';
           const messageKey = this.mapSaveError(code);
           this.toast.error(this.translate.instant(messageKey));
           this.lastError = err;
@@ -354,9 +365,6 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       isActive: value?.isActive ?? true,
       attributes: attrs
     };
-    if (value?._id) {
-      variant._id = value._id;
-    }
     return variant;
   }
 
@@ -396,6 +404,10 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
   private cleanProductPayload(payload: ProductInput): ProductInput {
     const result: ProductInput = { ...payload };
+    delete (result as any)._id;
+    delete (result as any).createdAt;
+    delete (result as any).updatedAt;
+
     if (!result.images || !result.images.length) {
       delete result.images;
     }
@@ -408,6 +420,22 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
     if (!result.variants || !result.variants.length) {
       delete result.variants;
+    } else {
+      result.variants = result.variants
+        .map((variant) => {
+          const next: ProductVariant = { ...variant };
+          if (next.attributes && !Object.keys(next.attributes).length) {
+            delete next.attributes;
+          }
+          delete (next as any)._id;
+          delete (next as any).createdAt;
+          delete (next as any).updatedAt;
+          return next;
+        })
+        .filter((variant) => Object.keys(variant).length > 0);
+      if (!result.variants.length) {
+        delete result.variants;
+      }
     }
 
     if (!result.attributes || !Object.keys(result.attributes).length) {
@@ -418,20 +446,32 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       delete result.tags;
     }
 
+    if (!result.metaTitle) {
+      delete result.metaTitle;
+    }
+
+    if (!result.metaDescription) {
+      delete result.metaDescription;
+    }
+
+    if (!result.longDescription) {
+      delete result.longDescription;
+    }
+
     return result;
   }
 
   private mapSaveError(code: string | undefined): string {
     if (!code) {
-      return 'products.messages.saveError';
+      return 'products.errorSave';
     }
     switch (code) {
       case 'PRODUCT_SKU_EXISTS':
-        return 'products.messages.errors.duplicateSku';
+        return 'products.errors.duplicateSku';
       case 'PRODUCT_VALIDATION_FAILED':
-        return 'products.messages.errors.validationFailed';
+        return 'products.errors.validationFailed';
       default:
-        return 'products.messages.saveError';
+        return 'products.errorSave';
     }
   }
 }

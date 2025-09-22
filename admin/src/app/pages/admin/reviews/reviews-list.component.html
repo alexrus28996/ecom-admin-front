@@ -82,7 +82,7 @@
           <td mat-cell *matCellDef="let review">
             <a
               class="reviews-product"
-              [routerLink]="['/products', review.product?.id || review.product?._id || review.product?.slug]">
+              [routerLink]="(review.product?._id || review.product?.id) ? ['/admin/products', review.product?._id || review.product?.id, 'edit'] : null"
               <img
                 *ngIf="review.product?.thumbnailUrl"
                 [src]="review.product?.thumbnailUrl"

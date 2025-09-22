@@ -17,7 +17,17 @@
   "products": {
     "title": "Products",
     "subtitle": "Manage your entire catalog from one place.",
-    "addButton": "Add Product",
+    "add": "Add Product",
+    "edit": "Edit Product",
+    "name": "Product Name",
+    "sku": "SKU",
+    "price": "Price",
+    "brand": "Brand",
+    "categories": "Categories",
+    "createdAt": "Created At",
+    "columns": {
+      "actions": "Actions"
+    },
     "actions": {
       "refresh": "Refresh",
       "manageVariants": "Manage variants",
@@ -32,22 +42,27 @@
       "category": {
         "label": "Category",
         "any": "All categories"
+      },
+      "price": {
+        "min": "Min price",
+        "max": "Max price"
       }
-    },
-    "table": {
-      "name": "Name",
-      "sku": "SKU",
-      "price": "Price",
-      "brand": "Brand",
-      "categories": "Categories",
-      "createdAt": "Created",
-      "actions": "Actions"
     },
     "empty": "No products found. Try refining your filters.",
     "delete": {
       "title": "Delete product",
       "message": "Delete product \"{{ name }}\"? This action cannot be undone.",
       "confirm": "Delete"
+    },
+    "saveSuccess": "Product saved successfully",
+    "deleteSuccess": "Product deleted successfully",
+    "errorLoad": "Failed to load products",
+    "errorSave": "Failed to save the product.",
+    "errors": {
+      "loadOne": "Failed to load the product.",
+      "delete": "Failed to delete the product.",
+      "duplicateSku": "Another product already uses this SKU.",
+      "validationFailed": "Product validation failed. Check required fields."
     },
     "messages": {
       "saveSuccess": "Product saved successfully.",
@@ -60,12 +75,6 @@
         "validationFailed": "Product validation failed. Check required fields.",
         "imageUpload": "Image upload failed. Please try again."
       }
-    },
-    "errors": {
-      "load": "Failed to load products.",
-      "loadOne": "Failed to load the product.",
-      "save": "Failed to save the product.",
-      "delete": "Failed to delete the product."
     },
     "variants": {
       "title": "Manage variants for {{ name }}",
@@ -109,9 +118,9 @@
       },
       "tabs": {
         "details": "Details",
+        "images": "Images",
         "variants": "Variants",
-        "stock": "Stock",
-        "media": "Media"
+        "seo": "SEO"
       },
       "sections": {
         "stock": "Stock management",
@@ -138,9 +147,16 @@
             "minLength": "Name must be at least {{ min }} characters."
           }
         },
+        "sku": {
+          "label": "SKU"
+        },
         "description": {
           "label": "Short description",
           "placeholder": "Briefly describe the product"
+        },
+        "longDescription": {
+          "label": "Long description",
+          "placeholder": "Add detailed information, materials, or care instructions"
         },
         "price": {
           "label": "Price",
@@ -165,6 +181,12 @@
         },
         "isActive": {
           "label": "Active product"
+        },
+        "metaTitle": {
+          "label": "Meta title"
+        },
+        "metaDescription": {
+          "label": "Meta description"
         },
         "attribute": {
           "key": "Attribute name",

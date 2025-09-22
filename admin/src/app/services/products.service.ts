@@ -104,55 +104,58 @@ export interface ListProductsParams {
   q?: string;
   category?: string;
   brand?: string;
+  priceMin?: number;
+  priceMax?: number;
   page?: number;
   limit?: number;
   sort?: string;
 }
 
 @Injectable({ providedIn: 'root' })
-export class ProductService {
-  protected readonly base = `${environment.apiBaseUrl}/products`;
-  protected readonly adminBase = `${environment.apiBaseUrl}/admin/products`;
+export class ProductsService {
+  private readonly baseUrl = environment.apiBaseUrl;
+  private readonly adminUrl = `${environment.apiBaseUrl}/admin/products`;
 
-  constructor(protected readonly http: HttpClient) {}
+  constructor(private readonly http: HttpClient) {}
 
   list(params: ListProductsParams = {}): Observable<Paginated<ProductSummary>> {
     let httpParams = new HttpParams();
     if (params.q) httpParams = httpParams.set('q', params.q);
     if (params.category) httpParams = httpParams.set('category', params.category);
     if (params.brand) httpParams = httpParams.set('brand', params.brand);
+    if (typeof params.priceMin === 'number') {
+      httpParams = httpParams.set('priceMin', String(params.priceMin));
+    }
+    if (typeof params.priceMax === 'number') {
+      httpParams = httpParams.set('priceMax', String(params.priceMax));
+    }
     if (params.sort) httpParams = httpParams.set('sort', params.sort);
     if (params.page) httpParams = httpParams.set('page', String(params.page));
     if (params.limit) httpParams = httpParams.set('limit', String(params.limit));
-    return this.http.get<Paginated<ProductSummary>>(this.base, { params: httpParams });
+    return this.http.get<Paginated<ProductSummary>>(`${this.adminUrl}`, { params: httpParams });
   }
 
   get(id: string): Observable<{ product: ProductDetail }> {
-    return this.http.get<{ product: ProductDetail }>(`${this.adminBase}/${id}`);
+    return this.getById(id);
+  }
+
+  getById(id: string): Observable<{ product: ProductDetail }> {
+    return this.http.get<{ product: ProductDetail }>(`${this.baseUrl}/products/${id}`);
   }
 
   create(payload: ProductInput): Observable<{ product: ProductDetail }> {
-    return this.http.post<{ product: ProductDetail }>(this.adminBase, payload);
+    return this.http.post<{ product: ProductDetail }>(this.adminUrl, payload);
   }
 
   update(id: string, payload: Partial<ProductInput>): Observable<{ product: ProductDetail }> {
-    return this.http.patch<{ product: ProductDetail }>(`${this.adminBase}/${id}`, payload);
+    return this.http.patch<{ product: ProductDetail }>(`${this.adminUrl}/${id}`, payload);
   }
 
   delete(id: string): Observable<{ success: boolean }> {
-    return this.http.delete<{ success: boolean }>(`${this.adminBase}/${id}`);
-  }
-}
-
-@Injectable({ providedIn: 'root' })
-export class ProductsService extends ProductService {
-  protected override readonly adminBase = `${environment.apiBaseUrl}/admin/products`;
-
-  constructor(protected override readonly http: HttpClient) {
-    super(http);
+    return this.remove(id);
   }
 
-  override update(id: string, payload: Partial<ProductInput>): Observable<{ product: ProductDetail }> {
-    return this.http.put<{ product: ProductDetail }>(`${this.adminBase}/${id}`, payload);
+  remove(id: string): Observable<{ success: boolean }> {
+    return this.http.delete<{ success: boolean }>(`${this.adminUrl}/${id}`);
   }
 }

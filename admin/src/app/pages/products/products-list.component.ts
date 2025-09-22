@@ -25,7 +25,9 @@ interface CategoryOption {
 export class ProductsListComponent implements OnInit, OnDestroy {
   readonly filterForm = this.fb.group({
     q: [''],
-    category: ['']
+    category: [''],
+    priceMin: [''],
+    priceMax: ['']
   });
 
   displayedColumns: string[] = ['name', 'sku', 'price', 'brand', 'categories', 'createdAt', 'actions'];
@@ -34,6 +36,8 @@ export class ProductsListComponent implements OnInit, OnDestroy {
   pageIndex = 0;
   pageSize = 10;
   readonly pageSizeOptions = [10, 25, 50, 100];
+
+  readonly skeletonRows = Array.from({ length: 6 });
 
   categories: CategoryOption[] = [];
 
@@ -70,10 +74,12 @@ export class ProductsListComponent implements OnInit, OnDestroy {
     this.lastError = null;
     this.cdr.markForCheck();
 
-    const { q, category } = this.filterForm.value;
+    const { q, category, priceMin, priceMax } = this.filterForm.value;
     const params = {
       q: q?.trim() || undefined,
       category: category || undefined,
+      priceMin: this.parsePrice(priceMin),
+      priceMax: this.parsePrice(priceMax),
       page: this.pageIndex + 1,
       limit: this.pageSize
     };
@@ -92,8 +98,9 @@ export class ProductsListComponent implements OnInit, OnDestroy {
         error: (err) => {
           this.lastError = err;
           const code = err?.error?.error?.code;
-          this.errorKey = code ? `errors.backend.${code}` : 'products.errors.load';
+          this.errorKey = code ? `errors.backend.${code}` : 'products.errorLoad';
           this.loading = false;
+          this.toast.error(this.translate.instant('products.errorLoad'));
           this.cdr.markForCheck();
         }
       });
@@ -166,11 +173,11 @@ export class ProductsListComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
 
     this.products
-      .delete(product._id)
+      .remove(product._id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.toast.success(this.translate.instant('products.messages.deleteSuccess', { name: product.name }));
+          this.toast.success(this.translate.instant('products.deleteSuccess'));
           this.load();
         },
         error: (err) => {
@@ -187,6 +194,14 @@ export class ProductsListComponent implements OnInit, OnDestroy {
 
   trackById(_: number, item: ProductSummary): string | undefined {
     return item._id;
+  }
+
+  private parsePrice(value: string | number | null | undefined): number | undefined {
+    if (value === null || value === undefined || value === '') {
+      return undefined;
+    }
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? undefined : parsed;
   }
 
   brandName(product: ProductSummary): string {

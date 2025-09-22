@@ -12,12 +12,12 @@
       <button
         mat-raised-button
         color="primary"
-        routerLink="/products/new"
+        routerLink="/admin/products/new"
         *ngIf="auth.isAdmin"
         [disabled]="loading"
       >
         <mat-icon>add</mat-icon>
-        {{ 'products.addButton' | translate }}
+        {{ 'products.add' | translate }}
       </button>
     </div>
   </header>
@@ -41,14 +41,24 @@
         <mat-option *ngFor="let category of categories" [value]="category.id">{{ category.name }}</mat-option>
       </mat-select>
     </mat-form-field>
+    <div class="price-range">
+      <mat-form-field appearance="outline">
+        <mat-label>{{ 'products.filters.price.min' | translate }}</mat-label>
+        <input matInput type="number" min="0" formControlName="priceMin" />
+      </mat-form-field>
+      <span class="price-range__separator">—</span>
+      <mat-form-field appearance="outline">
+        <mat-label>{{ 'products.filters.price.max' | translate }}</mat-label>
+        <input matInput type="number" min="0" formControlName="priceMax" />
+      </mat-form-field>
+    </div>
   </form>
 
   <section class="products-panel__table">
-    <app-loading [show]="loading" labelKey="common.loading"></app-loading>
-    <div class="table-wrapper" *ngIf="dataSource.length; else emptyState">
+    <div class="table-wrapper" *ngIf="dataSource.length; else tableFallback">
       <table mat-table [dataSource]="dataSource" class="products-table">
         <ng-container matColumnDef="name">
-          <th mat-header-cell *matHeaderCellDef>{{ 'products.table.name' | translate }}</th>
+          <th mat-header-cell *matHeaderCellDef>{{ 'products.name' | translate }}</th>
           <td mat-cell *matCellDef="let product">
             <div class="name-cell">
               <span class="name-cell__primary">{{ product.name || ('common.empty' | translate) }}</span>
@@ -58,29 +68,29 @@
         </ng-container>
 
         <ng-container matColumnDef="sku">
-          <th mat-header-cell *matHeaderCellDef>{{ 'products.table.sku' | translate }}</th>
+          <th mat-header-cell *matHeaderCellDef>{{ 'products.sku' | translate }}</th>
           <td mat-cell *matCellDef="let product">{{ product.sku || ('common.empty' | translate) }}</td>
         </ng-container>
 
         <ng-container matColumnDef="price">
-          <th mat-header-cell *matHeaderCellDef>{{ 'products.table.price' | translate }}</th>
+          <th mat-header-cell *matHeaderCellDef>{{ 'products.price' | translate }}</th>
           <td mat-cell *matCellDef="let product">
             {{ product.price | currency:(product.currency || 'USD'):'symbol':'1.2-2' }}
           </td>
         </ng-container>
 
         <ng-container matColumnDef="brand">
-          <th mat-header-cell *matHeaderCellDef>{{ 'products.table.brand' | translate }}</th>
+          <th mat-header-cell *matHeaderCellDef>{{ 'products.brand' | translate }}</th>
           <td mat-cell *matCellDef="let product">{{ brandName(product) }}</td>
         </ng-container>
 
         <ng-container matColumnDef="categories">
-          <th mat-header-cell *matHeaderCellDef>{{ 'products.table.categories' | translate }}</th>
+          <th mat-header-cell *matHeaderCellDef>{{ 'products.categories' | translate }}</th>
           <td mat-cell *matCellDef="let product">{{ categoryNames(product) }}</td>
         </ng-container>
 
         <ng-container matColumnDef="createdAt">
-          <th mat-header-cell *matHeaderCellDef>{{ 'products.table.createdAt' | translate }}</th>
+          <th mat-header-cell *matHeaderCellDef>{{ 'products.createdAt' | translate }}</th>
           <td mat-cell *matCellDef="let product">
             <span *ngIf="product.createdAt; else noDate">
               {{ product.createdAt | date: 'medium' : undefined : translate.currentLang }}
@@ -89,7 +99,7 @@
         </ng-container>
 
         <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'products.table.actions' | translate }}</th>
+          <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'products.columns.actions' | translate }}</th>
           <td mat-cell *matCellDef="let product">
             <div class="row-actions">
               <button
@@ -106,10 +116,10 @@
               <button
                 mat-icon-button
                 color="primary"
-                [routerLink]="['/products', product._id]"
+                [routerLink]="['/admin/products', product._id, 'edit']"
                 *ngIf="auth.isAdmin"
                 [disabled]="loading"
-                matTooltip="{{ 'products.actions.edit' | translate }}"
+                matTooltip="{{ 'products.edit' | translate }}"
               >
                 <mat-icon>edit</mat-icon>
               </button>
@@ -133,8 +143,13 @@
     </div>
   </section>
 
-  <ng-template #emptyState>
-    <div class="empty-state">
+  <ng-template #tableFallback>
+    <div class="products-skeleton" *ngIf="loading">
+      <div class="products-skeleton__row" *ngFor="let _ of skeletonRows">
+        <span class="products-skeleton__bar"></span>
+      </div>
+    </div>
+    <div class="empty-state" *ngIf="!loading">
       <mat-icon>inventory_2</mat-icon>
       <p>{{ 'products.empty' | translate }}</p>
     </div>

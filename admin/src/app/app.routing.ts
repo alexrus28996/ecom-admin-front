@@ -50,18 +50,23 @@ const routes: Routes = [
       { path: 'orders/:id', component: OrderDetailComponent, data: { breadcrumb: 'Order Detail' } },
       {
         path: 'products',
+        redirectTo: 'admin/products',
+        pathMatch: 'full'
+      },
+      {
+        path: 'admin/products',
         component: ProductsListComponent,
         canActivate: [AdminGuard],
         data: { roles: ['admin'], breadcrumb: 'Products' }
       },
       {
-        path: 'products/new',
+        path: 'admin/products/new',
         component: ProductFormComponent,
         canActivate: [AdminGuard],
         data: { roles: ['admin'], breadcrumb: 'Create Product' }
       },
       {
-        path: 'products/:id',
+        path: 'admin/products/:id/edit',
         component: ProductFormComponent,
         canActivate: [AdminGuard],
         data: { roles: ['admin'], breadcrumb: 'Edit Product' }
