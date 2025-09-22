@@ -3,22 +3,12 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { UntypedFormArray, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { ProductsService, ProductDetail, ProductImage, ProductInput, ProductVariant } from '../../services/products.service';
 import { UploadService } from '../../services/upload.service';
-import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { ToastService } from '../../core/toast.service';
 import { TranslateService } from '@ngx-translate/core';
 import { AdminService } from '../../services/admin.service';
-<<<<<<< ours
-<<<<<<< ours
-<<<<<<< ours
 import { Subject, takeUntil } from 'rxjs';
-=======
 import { environment } from '../../../environments/environment';
->>>>>>> theirs
-=======
->>>>>>> theirs
-=======
-import { environment } from '../../../environments/environment';
->>>>>>> theirs
 
 interface CategoryOption {
   id: string;
@@ -139,9 +129,9 @@ export class ProductFormComponent implements OnInit, OnDestroy {
           this.cdr.markForCheck();
         },
         error: () => {
-        this.toast.error(this.translate.instant('products.messages.errors.imageUpload'));
-      }
-    });
+          this.toast.error(this.translate.instant('products.messages.errors.imageUpload'));
+        }
+      });
   }
 
   imagesDrop(ev: CdkDragDrop<any[]>): void {
@@ -323,7 +313,6 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     this.lastError = null;
     this.cdr.markForCheck();
 
-<<<<<<< ours
     const request$ = this.id ? this.products.update(this.id, cleanedPayload) : this.products.create(cleanedPayload);
     request$
       .pipe(takeUntil(this.destroy$))
@@ -342,32 +331,13 @@ export class ProductFormComponent implements OnInit, OnDestroy {
           this.toast.error(this.translate.instant(messageKey));
           this.lastError = err;
           this.loading = false;
+          if (!environment.production) {
+            // eslint-disable-next-line no-console
+            console.error('Failed to save product', err);
+          }
           this.cdr.markForCheck();
         }
       });
-=======
-    const request$ = this.id ? this.products.update(this.id, payload) : this.products.create(payload);
-    request$.subscribe({
-      next: () => {
-        const messageKey = this.id ? 'products.form.toasts.updated' : 'products.form.toasts.created';
-        this.toast.success(this.translate.instant(messageKey, { name: payload.name }));
-        this.loading = false;
-        this.cdr.markForCheck();
-        this.router.navigate(['/products']);
-      },
-      error: (err) => {
-        this.errorKey = err?.error?.error?.code ? `errors.backend.${err.error.error.code}` : 'products.form.errors.saveFailed';
-        this.toast.error(this.translate.instant('products.form.errors.saveFailed'));
-        this.lastError = err;
-        if (!environment.production) {
-          // eslint-disable-next-line no-console
-          console.error('Failed to save product', err);
-        }
-        this.loading = false;
-        this.cdr.markForCheck();
-      }
-    });
->>>>>>> theirs
   }
 
   private buildVariantPayload(value: any): ProductVariant {
@@ -406,14 +376,14 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       .listCategories({ limit: 1000 })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-      next: (res) => {
-        this.categories = res.items.map((category: any) => ({ id: category._id, name: category.name }));
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        // ignore category load errors
-      }
-    });
+        next: (res) => {
+          this.categories = res.items.map((category: any) => ({ id: category._id, name: category.name }));
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          // ignore category load errors
+        }
+      });
   }
 
   private cleanProductPayload(payload: ProductInput): ProductInput {

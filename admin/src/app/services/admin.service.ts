@@ -211,12 +211,9 @@ export class AdminService {
     if (params.limit) usp.set('limit', String(params.limit));
     if (params.parent !== undefined) usp.set('parent', params.parent === null ? '' : String(params.parent));
     const qs = usp.toString();
-    return this.http.get<{ items: any[]; total: number; page: number; pages: number; }>(`${this.base}/categories${qs ? ('?' + qs) : ''}`);
+    return this.http.get<{ items: any[]; total: number; page: number; pages: number; }>(`${this.categoriesAdminBase}${qs ? ('?' + qs) : ''}`);
   }
 
-<<<<<<< ours
-<<<<<<< ours
-<<<<<<< ours
   getCategory(id: string): Observable<{ category: any }> {
     return this.http.get<{ category: any }>(`${this.categoriesAdminBase}/${id}`);
   }
@@ -232,56 +229,17 @@ export class AdminService {
   deleteCategory(id: string): Observable<{ success: boolean }> {
     return this.http.delete<{ success: boolean }>(`${this.categoriesAdminBase}/${id}`);
   }
-=======
-  getCategory(id: string): Observable<{ category: any }> { return this.http.get<{ category: any }>(`${this.base}/categories/${id}`); }
-=======
-  getCategory(id: string): Observable<{ category: any }> { return this.http.get<{ category: any }>(`${environment.apiBaseUrl}/categories/${id}`); }
->>>>>>> theirs
-=======
-  getCategory(id: string): Observable<{ category: any }> { return this.http.get<{ category: any }>(`${this.base}/categories/${id}`); }
->>>>>>> theirs
-
-  createCategory(payload: { name: string; slug?: string; description?: string; parent?: string|null }): Observable<{ category: any }> {
-    return this.http.post<{ category: any }>(`${this.base}/categories`, payload);
-  }
-
-  updateCategory(id: string, payload: { name: string; slug?: string; description?: string; parent?: string|null }): Observable<{ category: any }> {
-    return this.http.put<{ category: any }>(`${this.base}/categories/${id}`, payload);
-  }
-
-<<<<<<< ours
-<<<<<<< ours
-  deleteCategory(id: string): Observable<{ success: boolean }> { return this.http.delete<{ success: boolean }>(`${this.base}/categories/${id}`); }
->>>>>>> theirs
-=======
-  deleteCategory(id: string): Observable<{ success: boolean }> { return this.http.delete<{ success: boolean }>(`${environment.apiBaseUrl}/categories/${id}`); }
->>>>>>> theirs
-=======
-  deleteCategory(id: string): Observable<{ success: boolean }> { return this.http.delete<{ success: boolean }>(`${this.base}/categories/${id}`); }
->>>>>>> theirs
 
   listChildren(id: string, params: { page?: number; limit?: number } = {}): Observable<{ items: any[]; total: number; page: number; pages: number; }> {
     const usp = new URLSearchParams();
     if (params.page) usp.set('page', String(params.page));
     if (params.limit) usp.set('limit', String(params.limit));
     const qs = usp.toString();
-    return this.http.get<{ items: any[]; total: number; page: number; pages: number; }>(`${this.base}/categories/${id}/children${qs ? ('?' + qs) : ''}`);
+    return this.http.get<{ items: any[]; total: number; page: number; pages: number; }>(`${this.categoriesAdminBase}/${id}/children${qs ? ('?' + qs) : ''}`);
   }
 
   reorderChildren(id: string, ids: string[]): Observable<{ items: any[]; total: number; page: number; pages: number; }> {
-<<<<<<< ours
-<<<<<<< ours
-<<<<<<< ours
     return this.http.post<{ items: any[]; total: number; page: number; pages: number; }>(`${this.categoriesAdminBase}/${id}/reorder`, { ids });
-=======
-    return this.http.post<{ items: any[]; total: number; page: number; pages: number; }>(`${this.base}/categories/${id}/reorder`, { ids });
->>>>>>> theirs
-=======
-    return this.http.post<{ items: any[]; total: number; page: number; pages: number; }>(`${environment.apiBaseUrl}/categories/${id}/reorder`, { ids });
->>>>>>> theirs
-=======
-    return this.http.post<{ items: any[]; total: number; page: number; pages: number; }>(`${this.base}/categories/${id}/reorder`, { ids });
->>>>>>> theirs
   }
 
   listCoupons(params: { page?: number; limit?: number; status?: string; from?: string; to?: string } = {})
