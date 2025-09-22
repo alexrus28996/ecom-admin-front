@@ -36,13 +36,16 @@ import { ConfirmDialogComponent } from './shared/confirm-dialog.component';
 import { LoadingComponent } from './shared/loading.component';
 import { AccessDeniedComponent } from './pages/denied/access-denied.component';
 import { ErrorBannerComponent } from './shared/error-banner.component';
-import { LayoutShellComponent } from './core/layout/layout-shell.component';
-import { AdminReviewsPlaceholderComponent } from './pages/admin/placeholders/admin-reviews-placeholder.component';
+import { LayoutWrapperComponent } from './layout/layout-wrapper.component';
+import { SidebarComponent } from './layout/sidebar.component';
+import { TopbarComponent } from './layout/topbar.component';
+import { BreadcrumbComponent } from './layout/breadcrumb.component';
 import { AdminSettingsPlaceholderComponent } from './pages/admin/placeholders/admin-settings-placeholder.component';
 import { ShipmentsListComponent } from './pages/admin/shipments/shipments-list.component';
 import { ShipmentFormComponent } from './pages/admin/shipments/shipment-form.component';
 import { CouponsListComponent } from './pages/admin/coupons/coupons-list.component';
 import { CouponFormComponent } from './pages/admin/coupons/coupon-form.component';
+import { ReviewsListComponent } from './pages/admin/reviews/reviews-list.component';
 
 import { MaterialModule } from './shared/material.module';
 import { AuthInterceptor } from './core/auth.interceptor';
@@ -81,8 +84,11 @@ export function translateHttpLoaderFactory(http: HttpClient) {
     AccessDeniedComponent,
     AddressManagementComponent,
     AddressFormDialogComponent,
-    LayoutShellComponent,
-    AdminReviewsPlaceholderComponent,
+    LayoutWrapperComponent,
+    SidebarComponent,
+    TopbarComponent,
+    BreadcrumbComponent,
+    ReviewsListComponent,
     ShipmentsListComponent,
     ShipmentFormComponent,
     AdminSettingsPlaceholderComponent,

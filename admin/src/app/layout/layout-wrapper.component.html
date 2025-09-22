@@ -1,0 +1,37 @@
+<div class="layout-wrapper" [class.layout-wrapper--collapsed]="navCollapsed">
+  <app-sidebar
+    [items]="visibleNav$ | async"
+    [collapsed]="navCollapsed"
+    [mobileOpen]="mobileNavOpen"
+    [handset]="(isHandset$ | async) ?? false"
+    (toggleCollapse)="toggleSidebar()"
+    (closeMobile)="closeMobileNav()"
+  ></app-sidebar>
+
+  <div class="layout-wrapper__main">
+    <app-topbar
+      [isDark]="isDark"
+      [isHandset]="(isHandset$ | async) ?? false"
+      [user]="auth.user$ | async"
+      [searchControl]="searchControl"
+      (menuClick)="openMobileNav()"
+      (toggleTheme)="toggleTheme()"
+      (logout)="logout()"
+      (search)="submitSearch($event)"
+    ></app-topbar>
+
+    <app-breadcrumb
+      *ngIf="breadcrumbs.length > 0"
+      class="layout-wrapper__breadcrumbs"
+      [items]="breadcrumbs"
+    ></app-breadcrumb>
+
+    <main class="layout-wrapper__content">
+      <div class="layout-wrapper__surface">
+        <router-outlet></router-outlet>
+      </div>
+    </main>
+  </div>
+
+  <div class="layout-wrapper__backdrop" *ngIf="mobileNavOpen" (click)="closeMobileNav()"></div>
+</div>

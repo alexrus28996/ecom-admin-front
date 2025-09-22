@@ -1,50 +1,48 @@
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { Router } from '@angular/router';
-import { map, shareReplay } from 'rxjs/operators';
+import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { Observable } from 'rxjs';
+import { filter, map, shareReplay } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { AuthService } from '../../core/auth.service';
-import { ThemeService } from '../../core/theme.service';
-
-interface LayoutNavItem {
-  readonly label: string;
-  readonly icon: string;
-  readonly route: string;
-  readonly roles?: readonly string[];
-}
+import { AuthService } from '../core/auth.service';
+import { ThemeService } from '../core/theme.service';
+import { LayoutNavItem, BreadcrumbItem } from './layout.models';
 
 @Component({
-  selector: 'app-layout-shell',
-  templateUrl: './layout-shell.component.html',
-  styleUrls: ['./layout-shell.component.scss'],
+  selector: 'app-layout-wrapper',
+  templateUrl: './layout-wrapper.component.html',
+  styleUrls: ['./layout-wrapper.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class LayoutShellComponent implements OnInit {
+export class LayoutWrapperComponent implements OnInit {
   readonly navItems: LayoutNavItem[] = [
-    { label: 'Dashboard', icon: 'space_dashboard', route: '/dashboard' },
+    { label: 'Dashboard', icon: 'grid_view', route: '/dashboard', exact: true },
     { label: 'Products', icon: 'inventory_2', route: '/products', roles: ['admin'] },
     { label: 'Orders', icon: 'receipt_long', route: '/admin/orders', roles: ['admin'] },
     { label: 'Users', icon: 'group', route: '/admin/users', roles: ['admin'] },
     { label: 'Inventory', icon: 'warehouse', route: '/admin/inventory', roles: ['admin'] },
     { label: 'Returns', icon: 'assignment_return', route: '/admin/returns', roles: ['admin'] },
+    { label: 'Reviews', icon: 'reviews', route: '/admin/reviews', roles: ['admin'] },
+    { label: 'Shipments', icon: 'local_shipping', route: '/admin/shipments', roles: ['admin'] },
     { label: 'Coupons', icon: 'confirmation_number', route: '/admin/coupons', roles: ['admin'] },
     { label: 'Settings', icon: 'settings', route: '/admin/settings', roles: ['admin'] }
   ];
 
+  readonly searchControl = new FormControl('');
   readonly isHandset$: Observable<boolean>;
   readonly visibleNav$: Observable<LayoutNavItem[]>;
-  readonly searchControl = new FormControl('');
 
+  isDark = false;
   navCollapsed = false;
   mobileNavOpen = false;
-  isDark = false;
+  breadcrumbs: BreadcrumbItem[] = [];
 
   constructor(
     public readonly auth: AuthService,
     private readonly router: Router,
+    private readonly activatedRoute: ActivatedRoute,
     private readonly theme: ThemeService,
     breakpointObserver: BreakpointObserver,
     private readonly destroyRef: DestroyRef
@@ -55,7 +53,7 @@ export class LayoutShellComponent implements OnInit {
     );
 
     this.visibleNav$ = this.auth.user$.pipe(
-      map(() => this.navItems.filter((item) => this.shouldDisplay(item))),
+      map(() => this.navItems.filter((item) => this.auth.hasAnyRole(item.roles))),
       shareReplay({ bufferSize: 1, refCount: true })
     );
   }
@@ -70,6 +68,19 @@ export class LayoutShellComponent implements OnInit {
         this.mobileNavOpen = false;
       }
     });
+
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(() => {
+        this.mobileNavOpen = false;
+        this.breadcrumbs = this.buildBreadcrumbs(this.activatedRoute.root);
+      });
+
+    // Seed initial breadcrumbs on load
+    this.breadcrumbs = this.buildBreadcrumbs(this.activatedRoute.root);
   }
 
   toggleTheme(): void {
@@ -93,22 +104,48 @@ export class LayoutShellComponent implements OnInit {
     this.mobileNavOpen = false;
   }
 
+  submitSearch(value?: string): void {
+    const raw = value ?? this.searchControl.value;
+    const search = (raw || '').toString().trim();
+
+    if (!search) {
+      return;
+    }
+
+    this.router.navigate(['/products'], { queryParams: { q: search } });
+  }
+
   logout(): void {
     this.auth.logout();
     this.router.navigate(['/login']);
   }
 
-  submitSearch(): void {
-    const value = (this.searchControl.value || '').toString().trim();
+  private buildBreadcrumbs(route: ActivatedRoute, url = '', breadcrumbs: BreadcrumbItem[] = []): BreadcrumbItem[] {
+    const children = route.children;
 
-    if (!value) {
-      return;
+    if (!children || children.length === 0) {
+      return breadcrumbs;
     }
 
-    this.router.navigate(['/products'], { queryParams: { q: value } });
-  }
+    for (const child of children) {
+      if (child.outlet !== 'primary') {
+        continue;
+      }
 
-  shouldDisplay(item: LayoutNavItem): boolean {
-    return this.auth.hasAnyRole(item.roles);
+      const routeURL = child.snapshot.url.map((segment) => segment.path).join('/');
+      const nextUrl = routeURL ? `${url}/${routeURL}` : url;
+      const data = child.snapshot.data;
+
+      if (data && data['breadcrumb']) {
+        breadcrumbs = [
+          ...breadcrumbs,
+          { label: data['breadcrumb'] as string, url: nextUrl || '/' }
+        ];
+      }
+
+      return this.buildBreadcrumbs(child, nextUrl, breadcrumbs);
+    }
+
+    return breadcrumbs;
   }
 }

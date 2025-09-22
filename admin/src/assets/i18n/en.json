@@ -180,6 +180,76 @@
       }
     }
   },
+  "reviews": {
+    "page": {
+      "eyebrow": "Voice of customer",
+      "title": "Reviews moderation",
+      "subtitle": "Monitor sentiment, respond to flags, and keep your product feedback healthy."
+    },
+    "actions": {
+      "refresh": "Refresh",
+      "apply": "Apply filters",
+      "reset": "Reset",
+      "approve": "Approve",
+      "reject": "Reject",
+      "delete": "Delete",
+      "expand": "Expand",
+      "collapse": "Collapse"
+    },
+    "filters": {
+      "status": "Status",
+      "anyStatus": "Any status",
+      "rating": "Rating",
+      "anyRating": "Any rating",
+      "up": "up",
+      "product": "Product",
+      "productPlaceholder": "Search by name, SKU, or ID",
+      "range": "Date range",
+      "from": "From",
+      "to": "To"
+    },
+    "table": {
+      "review": "Review",
+      "product": "Product",
+      "user": "User",
+      "rating": "Rating",
+      "comment": "Review text",
+      "status": "Status",
+      "created": "Created",
+      "media": "Media",
+      "actions": "Actions",
+      "noComment": "No comment provided",
+      "noMedia": "No media",
+      "unknownProduct": "Unknown product",
+      "guest": "Guest"
+    },
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "toasts": {
+      "approved": "Review approved.",
+      "rejected": "Review rejected.",
+      "deleted": "Review deleted."
+    },
+    "errors": {
+      "loadFailed": "Unable to load reviews. Please try again.",
+      "approveFailed": "Unable to approve review.",
+      "rejectFailed": "Unable to reject review.",
+      "deleteFailed": "Unable to delete review."
+    },
+    "confirm": {
+      "rejectTitle": "Reject review",
+      "reject": "Reject this review? The author will not see it on the storefront.",
+      "deleteTitle": "Delete review",
+      "delete": "Delete this review permanently?"
+    },
+    "flags": {
+      "reported": "Reported by customers"
+    },
+    "empty": "No reviews match your filters yet."
+  },
   "returns": {
     "list": {
       "title": "Admin / Returns",

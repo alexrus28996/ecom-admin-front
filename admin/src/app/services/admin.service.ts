@@ -57,6 +57,41 @@ export class AdminService {
     return this.http.get<{ items: any[]; total: number; page: number; pages: number; }>(`${this.base}/orders${qs ? ('?' + qs) : ''}`);
   }
 
+  listReviews(params: {
+    status?: string;
+    rating?: number;
+    from?: string;
+    to?: string;
+    product?: string;
+    page?: number;
+    limit?: number;
+  } = {}): Observable<{ items: any[]; total: number; page: number; pages: number; }> {
+    const usp = new URLSearchParams();
+    if (params.status) usp.set('status', params.status);
+    if (typeof params.rating === 'number' && !Number.isNaN(params.rating)) {
+      usp.set('rating', String(params.rating));
+    }
+    if (params.from) usp.set('from', params.from);
+    if (params.to) usp.set('to', params.to);
+    if (params.product) usp.set('product', params.product);
+    if (params.page) usp.set('page', String(params.page));
+    if (params.limit) usp.set('limit', String(params.limit));
+    const qs = usp.toString();
+    return this.http.get<{ items: any[]; total: number; page: number; pages: number; }>(`${this.base}/reviews${qs ? ('?' + qs) : ''}`);
+  }
+
+  approveReview(id: string): Observable<{ review: any }> {
+    return this.http.patch<{ review: any }>(`${this.base}/reviews/${id}/approve`, {});
+  }
+
+  rejectReview(id: string): Observable<{ review: any }> {
+    return this.http.patch<{ review: any }>(`${this.base}/reviews/${id}/reject`, {});
+  }
+
+  deleteReview(id: string): Observable<{ success: boolean }> {
+    return this.http.delete<{ success: boolean }>(`${this.base}/reviews/${id}`);
+  }
+
   getOrder(id: string): Observable<{ order: any }> { return this.http.get<{ order: any }>(`${this.base}/orders/${id}`); }
 
   updateOrder(id: string, payload: { status?: string; paymentStatus?: string }): Observable<{ order: any }> {

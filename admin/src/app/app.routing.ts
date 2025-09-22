@@ -23,8 +23,8 @@ import { EmailVerifyComponent } from './pages/email-verify/email-verify.componen
 import { AddressManagementComponent } from './pages/addresses/address-management.component';
 import { AuthGuard } from './core/auth.guard';
 import { AdminGuard } from './core/admin.guard';
-import { LayoutShellComponent } from './core/layout/layout-shell.component';
-import { AdminReviewsPlaceholderComponent } from './pages/admin/placeholders/admin-reviews-placeholder.component';
+import { LayoutWrapperComponent } from './layout/layout-wrapper.component';
+import { ReviewsListComponent } from './pages/admin/reviews/reviews-list.component';
 import { ShipmentsListComponent } from './pages/admin/shipments/shipments-list.component';
 import { AdminSettingsPlaceholderComponent } from './pages/admin/placeholders/admin-settings-placeholder.component';
 import { CouponsListComponent } from './pages/admin/coupons/coupons-list.component';
@@ -38,99 +38,99 @@ const routes: Routes = [
   { path: 'denied', component: AccessDeniedComponent },
   {
     path: '',
-    component: LayoutShellComponent,
+    component: LayoutWrapperComponent,
     canActivate: [AuthGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', component: DashboardComponent },
-      { path: 'profile', component: ProfileComponent },
-      { path: 'cart', component: CartComponent },
-      { path: 'addresses', component: AddressManagementComponent },
-      { path: 'orders', component: OrdersListComponent },
-      { path: 'orders/:id', component: OrderDetailComponent },
+      { path: 'dashboard', component: DashboardComponent, data: { breadcrumb: 'Dashboard' } },
+      { path: 'profile', component: ProfileComponent, data: { breadcrumb: 'Profile' } },
+      { path: 'cart', component: CartComponent, data: { breadcrumb: 'Cart' } },
+      { path: 'addresses', component: AddressManagementComponent, data: { breadcrumb: 'Addresses' } },
+      { path: 'orders', component: OrdersListComponent, data: { breadcrumb: 'Orders' } },
+      { path: 'orders/:id', component: OrderDetailComponent, data: { breadcrumb: 'Order Detail' } },
       {
         path: 'products',
         component: ProductsListComponent,
         canActivate: [AdminGuard],
-        data: { roles: ['admin'] }
+        data: { roles: ['admin'], breadcrumb: 'Products' }
       },
       {
         path: 'products/new',
         component: ProductFormComponent,
         canActivate: [AdminGuard],
-        data: { roles: ['admin'] }
+        data: { roles: ['admin'], breadcrumb: 'Create Product' }
       },
       {
         path: 'products/:id',
         component: ProductFormComponent,
         canActivate: [AdminGuard],
-        data: { roles: ['admin'] }
+        data: { roles: ['admin'], breadcrumb: 'Edit Product' }
       },
       {
         path: 'admin/users',
         component: AdminUsersListComponent,
         canActivate: [AdminGuard],
-        data: { roles: ['admin'] }
+        data: { roles: ['admin'], breadcrumb: 'Users' }
       },
       {
         path: 'admin/roles',
         component: AdminUsersComponent,
         canActivate: [AdminGuard],
-        data: { roles: ['admin'] }
+        data: { roles: ['admin'], breadcrumb: 'Roles' }
       },
       {
         path: 'admin/orders',
         component: AdminOrdersListComponent,
         canActivate: [AdminGuard],
-        data: { roles: ['admin'] }
+        data: { roles: ['admin'], breadcrumb: 'Orders' }
       },
       {
         path: 'admin/orders/:id',
         component: AdminOrderDetailComponent,
         canActivate: [AdminGuard],
-        data: { roles: ['admin'] }
+        data: { roles: ['admin'], breadcrumb: 'Order Detail' }
       },
       {
         path: 'admin/returns',
         component: AdminReturnsListComponent,
         canActivate: [AdminGuard],
-        data: { roles: ['admin'] }
+        data: { roles: ['admin'], breadcrumb: 'Returns' }
       },
       {
         path: 'admin/inventory',
         component: AdminInventoryComponent,
         canActivate: [AdminGuard],
-        data: { roles: ['admin'] }
+        data: { roles: ['admin'], breadcrumb: 'Inventory' }
       },
       {
         path: 'admin/coupons',
         component: CouponsListComponent,
         canActivate: [AdminGuard],
-        data: { roles: ['admin'] }
+        data: { roles: ['admin'], breadcrumb: 'Coupons' }
       },
       {
         path: 'admin/reviews',
-        component: AdminReviewsPlaceholderComponent,
+        component: ReviewsListComponent,
         canActivate: [AdminGuard],
-        data: { roles: ['admin'] }
+        data: { roles: ['admin'], breadcrumb: 'Reviews' }
       },
       {
         path: 'admin/shipments',
         component: ShipmentsListComponent,
         canActivate: [AdminGuard],
-        data: { roles: ['admin'] }
+        data: { roles: ['admin'], breadcrumb: 'Shipments' }
       },
       {
         path: 'admin/settings',
         component: AdminSettingsPlaceholderComponent,
         canActivate: [AdminGuard],
-        data: { roles: ['admin'] }
+        data: { roles: ['admin'], breadcrumb: 'Settings' }
       },
       {
         path: 'admin/categories',
         component: CategoriesComponent,
         canActivate: [AdminGuard],
-        data: { roles: ['admin'] }
+        data: { roles: ['admin'], breadcrumb: 'Categories' }
       }
     ]
   },

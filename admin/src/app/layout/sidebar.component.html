@@ -1,0 +1,60 @@
+<nav
+  class="sidebar"
+  [class.sidebar--collapsed]="collapsed"
+  [class.sidebar--mobile-open]="mobileOpen"
+  [class.sidebar--handset]="handset"
+>
+  <div class="sidebar__inner">
+    <div class="sidebar__brand">
+      <button mat-icon-button type="button" class="sidebar__close" *ngIf="handset" (click)="closeMobile.emit()">
+        <mat-icon>close</mat-icon>
+      </button>
+      <div class="sidebar__mark">
+        <span class="sidebar__logo">{{ logo }}</span>
+        <div class="sidebar__titles">
+          <span class="sidebar__product">{{ productName }}</span>
+          <span class="sidebar__suite">{{ suiteName }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar__menu" *ngIf="(items || []).length; else emptyNav">
+      <a
+        *ngFor="let item of items || []; trackBy: trackByRoute"
+        [routerLink]="item.route"
+        class="sidebar__link"
+        routerLinkActive="sidebar__link--active"
+        [routerLinkActiveOptions]="item.exact ? { exact: true } : { exact: false }"
+        (click)="onNavigate()"
+        [matTooltip]="collapsed ? item.label : ''"
+        matTooltipPosition="right"
+      >
+        <mat-icon class="sidebar__icon">{{ item.icon }}</mat-icon>
+        <span class="sidebar__label">{{ item.label }}</span>
+      </a>
+    </div>
+    <ng-template #emptyNav>
+      <div class="sidebar__empty">No navigation</div>
+    </ng-template>
+
+    <div class="sidebar__footer">
+      <div class="sidebar__status">
+        <mat-icon>shield</mat-icon>
+        <div>
+          <span>Enterprise ready</span>
+          <small>Secured access</small>
+        </div>
+      </div>
+      <button
+        mat-stroked-button
+        type="button"
+        class="sidebar__collapse"
+        (click)="toggleCollapse.emit()"
+        *ngIf="!handset"
+      >
+        <mat-icon>{{ collapsed ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+        <span>{{ collapsed ? 'Expand' : 'Collapse' }}</span>
+      </button>
+    </div>
+  </div>
+</nav>
