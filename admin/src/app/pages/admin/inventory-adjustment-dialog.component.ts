@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, OnDestroy, OnInit } from '@angular/core';
-<<<<<<< ours
 import { UntypedFormBuilder, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
@@ -8,21 +7,12 @@ import { AdminService } from '../../services/admin.service';
 import { ProductDetail, ProductsService, ProductSummary, ProductVariant } from '../../services/products.service';
 import { ToastService } from '../../core/toast.service';
 import { TranslateService } from '@ngx-translate/core';
-=======
-import { FormBuilder, FormControl, Validators } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
-import { Subject, of, switchMap, takeUntil, tap, catchError, finalize, debounceTime } from 'rxjs';
-
-import { ProductDetail, ProductService, ProductSummary, ProductVariant } from '../../services/products.service';
->>>>>>> theirs
 
 export interface InventoryAdjustmentDialogData {
   productId?: string;
   productName?: string;
   productSku?: string;
   variantId?: string;
-<<<<<<< ours
 }
 
 interface AdjustmentFormValue {
@@ -33,22 +23,6 @@ interface AdjustmentFormValue {
   quantity: number;
   reason: string;
   note: string;
-=======
-  defaultDirection?: 'increase' | 'decrease';
-  defaultReason?: string;
-  defaultQuantity?: number;
-  defaultNote?: string;
-  defaultLocation?: string;
-}
-
-export interface InventoryAdjustmentDialogResult {
-  refresh?: boolean;
-}
-
-interface ProductOption {
-  product: ProductSummary;
-  subtitle?: string;
->>>>>>> theirs
 }
 
 @Component({
@@ -58,7 +32,6 @@ interface ProductOption {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class InventoryAdjustmentDialogComponent implements OnInit, OnDestroy {
-<<<<<<< ours
   form = this.fb.group({
     productSearch: [''],
     productId: ['', Validators.required],
@@ -113,82 +86,12 @@ export class InventoryAdjustmentDialogComponent implements OnInit, OnDestroy {
         variantId: this.data.variantId || ''
       }, { emitEvent: false });
       this.loadProductById(this.data.productId, this.data.variantId);
-=======
-  readonly productControl = new FormControl<ProductOption | string | null>(null, { validators: Validators.required });
-
-  readonly form = this.fb.group({
-    product: this.productControl,
-    variantId: [''],
-    direction: [this.data?.defaultDirection ?? 'increase', Validators.required],
-    quantity: [this.data?.defaultQuantity ?? 1, [Validators.required, Validators.min(1)]],
-    reason: [this.data?.defaultReason ?? '', Validators.maxLength(120)],
-    note: [this.data?.defaultNote ?? '', Validators.maxLength(240)],
-    location: [this.data?.defaultLocation ?? '', Validators.maxLength(120)]
-  });
-
-  productOptions: ProductOption[] = [];
-  variantOptions: ProductVariant[] = [];
-  selectedProduct: ProductSummary | null = null;
-
-  loadingProducts = false;
-  private readonly destroy$ = new Subject<void>();
-  private readonly search$ = new Subject<string>();
-
-  constructor(
-    private readonly dialogRef: MatDialogRef<InventoryAdjustmentDialogComponent, InventoryAdjustmentDialogResult | null>,
-    private readonly fb: FormBuilder,
-    private readonly productService: ProductService,
-    private readonly cdr: ChangeDetectorRef,
-    @Inject(MAT_DIALOG_DATA) public readonly data: InventoryAdjustmentDialogData
-  ) {}
-
-  ngOnInit(): void {
-    this.productControl.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value) => {
-      if (!value) {
-        this.selectedProduct = null;
-        this.variantOptions = [];
-        this.form.get('variantId')?.reset('');
-        this.cdr.markForCheck();
-        return;
-      }
-
-      if (typeof value === 'string') {
-        this.search$.next(value);
-        return;
-      }
-
-      if (value && value.product) {
-        this.applySelectedProduct(value.product, false);
-      }
-    });
-
-    this.search$
-      .pipe(
-        debounceTime(250),
-        takeUntil(this.destroy$),
-        switchMap((value) => this.fetchProductOptions(value))
-      )
-      .subscribe((options) => {
-        this.productOptions = options;
-        this.cdr.markForCheck();
-      });
-
-    if (this.data?.productId) {
-      this.loadInitialProduct(this.data.productId, this.data.variantId || null);
-    } else if (this.data?.productName) {
-      this.productControl.setValue(this.data.productName, { emitEvent: false });
-    }
-
-    if (this.data?.variantId) {
-      this.form.patchValue({ variantId: this.data.variantId });
->>>>>>> theirs
     }
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-<<<<<<< ours
   }
 
   displayProduct(product?: ProductSummary | string | null): string {
@@ -263,134 +166,10 @@ export class InventoryAdjustmentDialogComponent implements OnInit, OnDestroy {
           } as ProductSummary;
           this.cdr.markForCheck();
         }
-=======
-    this.search$.complete();
-  }
-
-  displayProductOption = (option: ProductOption | string | null): string => {
-    if (!option) {
-      return '';
-    }
-
-    if (typeof option === 'string') {
-      return option;
-    }
-
-    return option.label;
-  }
-
-  onProductSelected(event: MatAutocompleteSelectedEvent): void {
-    const option = event.option.value as ProductOption | null;
-    if (!option) {
-      return;
-    }
-
-    this.applySelectedProduct(option.product, true, null);
-  }
-
-  clearProductSelection(): void {
-    this.productControl.setValue(null);
-    this.form.patchValue({
-      productId: '',
-      variantId: ''
-    });
-    this.selectedProduct = null;
-    this.variantOptions = [];
-    this.cdr.markForCheck();
-  }
-
-  submit(): void {
-    if (!this.selectedProduct) {
-      this.productControl.markAsTouched();
-    }
-
-    if (this.form.invalid || !this.selectedProduct) {
-      this.form.markAllAsTouched();
-      this.cdr.markForCheck();
-      return;
-    }
-
-    const raw = this.form.getRawValue();
-    const quantity = Math.abs(raw.quantity ?? 0);
-
-    if (!quantity) {
-      this.form.controls.quantity.setErrors({ min: true });
-      this.cdr.markForCheck();
-      return;
-    }
-
-    const qtyChange = raw.direction === 'decrease' ? -quantity : quantity;
-    const productId = raw.productId ?? '';
-
-    const payload: {
-      productId: string;
-      variantId?: string;
-      qtyChange: number;
-      reason?: string;
-      note?: string;
-      location?: string;
-    } = {
-      productId,
-      qtyChange,
-      variantId: raw.variantId ? raw.variantId : undefined,
-      reason: raw.reason || undefined,
-      note: raw.note?.trim() ? raw.note.trim() : undefined,
-      location: raw.location?.trim() ? raw.location.trim() : undefined
-    };
-
-    this.saving = true;
-    this.cdr.markForCheck();
-
-    this.admin
-      .createInventoryAdjustment(payload)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.saving = false;
-          this.toast.success(this.translate.instant('inventory.adjustments.toasts.created'));
-          this.dialogRef.close({ refresh: true });
-        },
-        error: () => {
-          this.saving = false;
-          this.toast.error(this.translate.instant('inventory.errors.adjustmentCreateFailed'));
-          this.cdr.markForCheck();
-        }
-      });
-  }
-
-  private mapInitialDirection(direction?: InventoryAdjustmentDialogData['defaultDirection']): AdjustmentDirection {
-    if (direction === 'add' || direction === 'increase' || direction === undefined) {
-      return 'increase';
-    }
-
-    if (direction === 'remove' || direction === 'decrease') {
-      return 'decrease';
-    }
-
-    return 'increase';
-  }
-
-  private fetchProductOptions(value: ProductOption | string | null): Observable<ProductOption[]> {
-    if (value && typeof value !== 'string') {
-      return of(this.productOptions);
-    }
-
-    const query = (value ?? '').toString().trim();
-    this.loadingProducts = true;
-    this.cdr.markForCheck();
-
-    return this.products.list({ q: query, limit: 10 }).pipe(
-      map((response) => (response.items ?? []).map((product) => this.toProductOption(product))),
-      catchError(() => of([] as ProductOption[])),
-      finalize(() => {
-        this.loadingProducts = false;
-        this.cdr.markForCheck();
->>>>>>> theirs
       })
     );
   }
 
-<<<<<<< ours
   private loadProductById(id: string, preselectVariant?: string): void {
     this.loadingVariants = true;
     this.cdr.markForCheck();
@@ -421,79 +200,5 @@ export class InventoryAdjustmentDialogComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       }
     });
-=======
-  private loadInitialProduct(productId: string): void {
-    this.loadingProducts = true;
-    this.cdr.markForCheck();
-    this.productService
-      .get(productId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response: { product: ProductDetail }) => {
-          const product = response?.product;
-          if (!product) {
-            return;
-          }
-
-          this.productOptions = [this.toProductOption(product)];
-          this.applySelectedProduct(product, true, variantId);
-        },
-        error: () => {
-          this.toast.error(this.translate.instant('inventory.errors.productLoadFailed'));
-          if (this.data?.productName) {
-            const fallback: ProductSummary = {
-              _id: productId,
-              name: this.data.productName,
-              sku: this.data.productSku || undefined,
-              price: 0,
-              currency: ''
-            } as ProductSummary;
-            this.productOptions = [this.toProductOption(fallback)];
-            this.applySelectedProduct(fallback, true, variantId);
-          }
-          this.loadingVariants = false;
-          this.cdr.markForCheck();
-        },
-        complete: () => {
-          this.loadingVariants = false;
-          this.cdr.markForCheck();
-        }
-      });
-  }
-
-  private resolveProductId(product: ProductSummary): string {
-    const candidate = (product as ProductSummary & { id?: string }).id;
-    return product._id || candidate || '';
-  }
-
-  private toProductOption(product: ProductSummary): ProductOption {
-    const sku = (product as ProductSummary & { sku?: string }).sku ?? (product as ProductSummary & { defaultSku?: string }).defaultSku;
-    return {
-      product,
-      label: product.name || sku || this.resolveProductId(product),
-      secondaryLabel: sku || null
-    };
-  }
-
-  private resolveVariantId(variant: ProductVariant | null | undefined): string {
-    if (!variant) {
-      return '';
-    }
-    return variant._id || (variant as ProductVariant & { id?: string }).id || '';
-  }
-
-  private extractProductSku(product: ProductSummary): string | undefined {
-    const summaryWithSku = product as ProductSummary & { sku?: string | null };
-    if (summaryWithSku.sku) {
-      return String(summaryWithSku.sku);
-    }
-    if (Array.isArray(product.variants)) {
-      const variantWithSku = product.variants.find((variant) => !!variant?.sku);
-      if (variantWithSku?.sku) {
-        return String(variantWithSku.sku);
-      }
-    }
-    return undefined;
->>>>>>> theirs
   }
 }
