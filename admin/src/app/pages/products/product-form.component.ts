@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UntypedFormArray, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { ProductsService, ProductDetail, ProductImage, ProductInput, ProductVariant } from '../../services/products.service';
@@ -7,6 +7,14 @@ import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ToastService } from '../../core/toast.service';
 import { TranslateService } from '@ngx-translate/core';
 import { AdminService } from '../../services/admin.service';
+<<<<<<< ours
+<<<<<<< ours
+import { Subject, takeUntil } from 'rxjs';
+=======
+import { environment } from '../../../environments/environment';
+>>>>>>> theirs
+=======
+>>>>>>> theirs
 
 interface CategoryOption {
   id: string;
@@ -19,7 +27,7 @@ interface CategoryOption {
   styleUrls: ['./product-form.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ProductFormComponent implements OnInit {
+export class ProductFormComponent implements OnInit, OnDestroy {
   id: string | null = null;
   loading = false;
   errorKey: string | null = null;
@@ -41,6 +49,8 @@ export class ProductFormComponent implements OnInit {
   readonly currencyOptions = ['USD', 'EUR', 'GBP', 'INR'];
   categories: CategoryOption[] = [];
 
+  private readonly destroy$ = new Subject<void>();
+
   constructor(
     private readonly fb: UntypedFormBuilder,
     private readonly route: ActivatedRoute,
@@ -61,6 +71,11 @@ export class ProductFormComponent implements OnInit {
     } else {
       this.addImage();
     }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   get images(): UntypedFormArray {
@@ -110,14 +125,17 @@ export class ProductFormComponent implements OnInit {
     const input = evt.target as HTMLInputElement;
     if (!input.files || !input.files.length) return;
     const file = input.files[0];
-    this.uploads.upload(file).subscribe({
-      next: (res) => {
-        const group = this.images.at(index) as UntypedFormGroup;
-        group.patchValue({ url: res?.url || '' });
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        this.toast.error(this.translate.instant('products.form.sections.imagesUploadFailed'));
+    this.uploads
+      .upload(file)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          const group = this.images.at(index) as UntypedFormGroup;
+          group.patchValue({ url: res?.url || '' });
+          this.cdr.markForCheck();
+        },
+        error: () => {
+        this.toast.error(this.translate.instant('products.messages.errors.imageUpload'));
       }
     });
   }
@@ -149,6 +167,7 @@ export class ProductFormComponent implements OnInit {
   }
 
   addVariant(variant?: ProductVariant): void {
+    // TODO: Support variant matrix builder when backend exposes option metadata.
     this.variants.push(this.createVariantGroup(variant));
     this.cdr.markForCheck();
   }
@@ -204,26 +223,30 @@ export class ProductFormComponent implements OnInit {
   private fetchProduct(id: string): void {
     this.loading = true;
     this.cdr.markForCheck();
-    this.products.get(id).subscribe({
-      next: ({ product }: { product: ProductDetail }) => {
-        this.form.patchValue({
-          name: product.name,
-          description: product.description || '',
-          price: product.price,
-          currency: product.currency || 'USD',
-          stock: product.stock ?? 0,
-          isActive: product.isActive ?? true,
-          category: typeof product.category === 'object' ? product.category?._id || '' : product.category || ''
-        });
-        this.setImages(product.images || []);
-        this.setAttributes(product.attributes || {});
-        this.setVariants(product.variants || []);
-        this.loading = false;
-        this.lastError = null;
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        this.errorKey = err?.error?.error?.code ? `errors.backend.${err.error.error.code}` : 'products.form.errors.loadFailed';
+    this.products
+      .get(id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: ({ product }: { product: ProductDetail }) => {
+          this.form.patchValue({
+            name: product.name,
+            description: product.description || '',
+            price: product.price,
+            currency: product.currency || 'USD',
+            stock: product.stock ?? 0,
+            isActive: product.isActive ?? true,
+            category: typeof product.category === 'object' ? product.category?._id || '' : product.category || ''
+          });
+          this.setImages(product.images || []);
+          this.setAttributes(product.attributes || {});
+          this.setVariants(product.variants || []);
+          this.loading = false;
+          this.lastError = null;
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+        const code = err?.error?.error?.code;
+        this.errorKey = code ? `errors.backend.${code}` : 'products.errors.loadOne';
         this.lastError = err;
         this.loading = false;
         this.cdr.markForCheck();
@@ -285,11 +308,36 @@ export class ProductFormComponent implements OnInit {
       variants: (raw.variants as Array<any>).map((variant) => this.buildVariantPayload(variant))
     };
 
+    const cleanedPayload = this.cleanProductPayload(payload);
+
     this.loading = true;
     this.errorKey = null;
     this.lastError = null;
     this.cdr.markForCheck();
 
+<<<<<<< ours
+    const request$ = this.id ? this.products.update(this.id, cleanedPayload) : this.products.create(cleanedPayload);
+    request$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          const messageKey = this.id ? 'products.messages.updateSuccess' : 'products.messages.saveSuccess';
+          this.toast.success(this.translate.instant(messageKey));
+          this.loading = false;
+          this.cdr.markForCheck();
+          this.router.navigate(['/products']);
+        },
+        error: (err) => {
+          const code = err?.error?.error?.code;
+          this.errorKey = code ? `errors.backend.${code}` : 'products.errors.save';
+          const messageKey = this.mapSaveError(code);
+          this.toast.error(this.translate.instant(messageKey));
+          this.lastError = err;
+          this.loading = false;
+          this.cdr.markForCheck();
+        }
+      });
+=======
     const request$ = this.id ? this.products.update(this.id, payload) : this.products.create(payload);
     request$.subscribe({
       next: () => {
@@ -307,12 +355,12 @@ export class ProductFormComponent implements OnInit {
         this.cdr.markForCheck();
       }
     });
+>>>>>>> theirs
   }
 
   private buildVariantPayload(value: any): ProductVariant {
     const attrs = this.mapKeyValueArray(value?.attributes);
-    return {
-      _id: value?._id || undefined,
+    const variant: ProductVariant = {
       sku: value?.sku || undefined,
       price: value?.price !== null && value?.price !== undefined ? Number(value.price) : undefined,
       priceDelta: value?.priceDelta !== null && value?.priceDelta !== undefined ? Number(value.priceDelta) : undefined,
@@ -320,6 +368,10 @@ export class ProductFormComponent implements OnInit {
       isActive: value?.isActive ?? true,
       attributes: attrs
     };
+    if (value?._id) {
+      variant._id = value._id;
+    }
+    return variant;
   }
 
   private mapKeyValueArray(entries?: Array<{ key?: string; value?: string }>): Record<string, string> | undefined {
@@ -338,7 +390,10 @@ export class ProductFormComponent implements OnInit {
   }
 
   private loadCategories(): void {
-    this.adminService.listCategories({ limit: 1000 }).subscribe({
+    this.adminService
+      .listCategories({ limit: 1000 })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
       next: (res) => {
         this.categories = res.items.map((category: any) => ({ id: category._id, name: category.name }));
         this.cdr.markForCheck();
@@ -347,6 +402,47 @@ export class ProductFormComponent implements OnInit {
         // ignore category load errors
       }
     });
+  }
+
+  private cleanProductPayload(payload: ProductInput): ProductInput {
+    const result: ProductInput = { ...payload };
+    if (!result.images || !result.images.length) {
+      delete result.images;
+    }
+    if (result.images) {
+      result.images = result.images.filter((image) => !!image.url);
+      if (!result.images.length) {
+        delete result.images;
+      }
+    }
+
+    if (!result.variants || !result.variants.length) {
+      delete result.variants;
+    }
+
+    if (!result.attributes || !Object.keys(result.attributes).length) {
+      delete result.attributes;
+    }
+
+    if (!result.tags || !result.tags?.length) {
+      delete result.tags;
+    }
+
+    return result;
+  }
+
+  private mapSaveError(code: string | undefined): string {
+    if (!code) {
+      return 'products.messages.saveError';
+    }
+    switch (code) {
+      case 'PRODUCT_SKU_EXISTS':
+        return 'products.messages.errors.duplicateSku';
+      case 'PRODUCT_VALIDATION_FAILED':
+        return 'products.messages.errors.validationFailed';
+      default:
+        return 'products.messages.saveError';
+    }
   }
 }
 

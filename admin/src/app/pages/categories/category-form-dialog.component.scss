@@ -1,0 +1,10 @@
+.category-form {
+  display: grid;
+  gap: 16px;
+  min-width: 360px;
+}
+
+.category-form__hint {
+  margin: 0 0 8px;
+  color: var(--app-text-muted);
+}

@@ -1,0 +1,31 @@
+<h2 mat-dialog-title>
+  {{ 'categories.reorder.title' | translate:{ name: data.name } }}
+</h2>
+
+<mat-dialog-content class="reorder-dialog">
+  <p class="reorder-dialog__hint">{{ 'categories.reorder.hint' | translate }}</p>
+
+  <div class="reorder-dialog__list" cdkDropList (cdkDropListDropped)="drop($event)">
+    <div class="reorder-dialog__item" *ngFor="let child of children; trackBy: trackById" cdkDrag>
+      <mat-icon cdkDragHandle>drag_indicator</mat-icon>
+      <div class="reorder-dialog__item-content">
+        <span>{{ child.name }}</span>
+        <small>{{ child.slug || ('common.empty' | translate) }}</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="reorder-dialog__empty" *ngIf="!children.length && !loading">
+    <mat-icon>list</mat-icon>
+    <p>{{ 'categories.reorder.empty' | translate }}</p>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-stroked-button type="button" (click)="cancel()" [disabled]="saving">
+    {{ 'common.actions.cancel' | translate }}
+  </button>
+  <button mat-raised-button color="primary" type="button" (click)="save()" [disabled]="saving || !children.length">
+    {{ 'categories.reorder.saveButton' | translate }}
+  </button>
+</mat-dialog-actions>

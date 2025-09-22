@@ -23,6 +23,8 @@ import { AdminReturnsListComponent } from './pages/admin/returns-admin-list.comp
 import { AdminInventoryComponent } from './pages/admin/inventory-admin.component';
 import { InventoryAdjustmentDialogComponent } from './pages/admin/inventory-adjustment-dialog.component';
 import { CategoriesComponent } from './pages/categories/categories.component';
+import { CategoryFormDialogComponent } from './pages/categories/category-form-dialog.component';
+import { CategoryReorderDialogComponent } from './pages/categories/category-reorder-dialog.component';
 import { AddressManagementComponent, AddressFormDialogComponent } from './pages/addresses/address-management.component';
 import { RegisterComponent } from './pages/register/register.component';
 import { CartComponent } from './pages/cart/cart.component';
@@ -76,6 +78,8 @@ export function translateHttpLoaderFactory(http: HttpClient) {
     AdminOrdersListComponent,
     AdminOrderDetailComponent,
     CategoriesComponent,
+    CategoryFormDialogComponent,
+    CategoryReorderDialogComponent,
     AdminUsersComponent,
     ConfirmDialogComponent,
     AdminReturnsListComponent,

@@ -70,12 +70,15 @@ export interface ProductSummary {
   currency: string;
   images?: ProductImage[];
   category?: { _id: string; name: string; slug?: string } | null;
+  categories?: { _id: string; name: string; slug?: string }[] | null;
   brand?: { _id: string; name: string; slug?: string } | null;
   rating?: { average: number; count: number } | null;
   variants?: ProductVariant[] | null;
   attributes?: Record<string, string> | null;
   stock?: number | null;
   isActive?: boolean | null;
+  sku?: string | null;
+  createdAt?: string | null;
 }
 
 export interface ProductDetail extends ProductSummary {
@@ -109,6 +112,7 @@ export interface ListProductsParams {
 @Injectable({ providedIn: 'root' })
 export class ProductService {
   protected readonly base = `${environment.apiBaseUrl}/products`;
+  protected readonly adminBase = `${environment.apiBaseUrl}/admin/products`;
 
   constructor(protected readonly http: HttpClient) {}
 
@@ -124,19 +128,19 @@ export class ProductService {
   }
 
   get(id: string): Observable<{ product: ProductDetail }> {
-    return this.http.get<{ product: ProductDetail }>(`${this.base}/${id}`);
+    return this.http.get<{ product: ProductDetail }>(`${this.adminBase}/${id}`);
   }
 
   create(payload: ProductInput): Observable<{ product: ProductDetail }> {
-    return this.http.post<{ product: ProductDetail }>(this.base, payload);
+    return this.http.post<{ product: ProductDetail }>(this.adminBase, payload);
   }
 
   update(id: string, payload: Partial<ProductInput>): Observable<{ product: ProductDetail }> {
-    return this.http.put<{ product: ProductDetail }>(`${this.base}/${id}`, payload);
+    return this.http.patch<{ product: ProductDetail }>(`${this.adminBase}/${id}`, payload);
   }
 
   delete(id: string): Observable<{ success: boolean }> {
-    return this.http.delete<{ success: boolean }>(`${this.base}/${id}`);
+    return this.http.delete<{ success: boolean }>(`${this.adminBase}/${id}`);
   }
 }
 

@@ -39,6 +39,7 @@ export interface BrandInput {
 @Injectable({ providedIn: 'root' })
 export class CategoryService {
   private readonly base = `${environment.apiBaseUrl}/categories`;
+  private readonly adminBase = `${environment.apiBaseUrl}/admin/categories`;
   private readonly adminBrandBase = `${environment.apiBaseUrl}/admin/brands`;
   private readonly adminTagBase = `${environment.apiBaseUrl}/admin/tags`;
 
@@ -67,19 +68,19 @@ export class CategoryService {
   }
 
   create(payload: CategoryInput): Observable<{ category: Category }> {
-    return this.http.post<{ category: Category }>(this.base, payload);
+    return this.http.post<{ category: Category }>(this.adminBase, payload);
   }
 
   update(id: string, payload: CategoryInput): Observable<{ category: Category }> {
-    return this.http.put<{ category: Category }>(`${this.base}/${id}`, payload);
+    return this.http.patch<{ category: Category }>(`${this.adminBase}/${id}`, payload);
   }
 
   delete(id: string): Observable<{ success: boolean }> {
-    return this.http.delete<{ success: boolean }>(`${this.base}/${id}`);
+    return this.http.delete<{ success: boolean }>(`${this.adminBase}/${id}`);
   }
 
   reorderChildren(id: string, ids: string[]): Observable<{ items: Category[] }> {
-    return this.http.post<{ items: Category[] }>(`${this.base}/${id}/reorder`, { ids });
+    return this.http.post<{ items: Category[] }>(`${this.adminBase}/${id}/reorder`, { ids });
   }
 
   listBrands(params: { q?: string; page?: number; limit?: number } = {}): Observable<Paginated<Brand>> {

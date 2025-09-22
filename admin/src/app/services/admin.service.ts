@@ -202,6 +202,8 @@ export class AdminService {
     return this.http.get<{ items: any[]; total: number; page: number; pages: number }>(`${this.base}/inventory/low${qs ? ('?' + qs) : ''}`);
   }
 
+  private readonly categoriesAdminBase = `${environment.apiBaseUrl}/admin/categories`;
+
   listCategories(params: { q?: string; page?: number; limit?: number; parent?: string|null } = {}): Observable<{ items: any[]; total: number; page: number; pages: number; }> {
     const usp = new URLSearchParams();
     if (params.q) usp.set('q', params.q);
@@ -212,7 +214,28 @@ export class AdminService {
     return this.http.get<{ items: any[]; total: number; page: number; pages: number; }>(`${environment.apiBaseUrl}/categories${qs ? ('?' + qs) : ''}`);
   }
 
+<<<<<<< ours
+<<<<<<< ours
+  getCategory(id: string): Observable<{ category: any }> {
+    return this.http.get<{ category: any }>(`${this.categoriesAdminBase}/${id}`);
+  }
+
+  createCategory(payload: { name: string; slug?: string; description?: string; parent?: string|null }): Observable<{ category: any }> {
+    return this.http.post<{ category: any }>(this.categoriesAdminBase, payload);
+  }
+
+  updateCategory(id: string, payload: { name: string; slug?: string; description?: string; parent?: string|null }): Observable<{ category: any }> {
+    return this.http.patch<{ category: any }>(`${this.categoriesAdminBase}/${id}`, payload);
+  }
+
+  deleteCategory(id: string): Observable<{ success: boolean }> {
+    return this.http.delete<{ success: boolean }>(`${this.categoriesAdminBase}/${id}`);
+  }
+=======
+  getCategory(id: string): Observable<{ category: any }> { return this.http.get<{ category: any }>(`${this.base}/categories/${id}`); }
+=======
   getCategory(id: string): Observable<{ category: any }> { return this.http.get<{ category: any }>(`${environment.apiBaseUrl}/categories/${id}`); }
+>>>>>>> theirs
 
   createCategory(payload: { name: string; slug?: string; description?: string; parent?: string|null }): Observable<{ category: any }> {
     return this.http.post<{ category: any }>(`${environment.apiBaseUrl}/categories`, payload);
@@ -222,7 +245,12 @@ export class AdminService {
     return this.http.put<{ category: any }>(`${environment.apiBaseUrl}/categories/${id}`, payload);
   }
 
+<<<<<<< ours
+  deleteCategory(id: string): Observable<{ success: boolean }> { return this.http.delete<{ success: boolean }>(`${this.base}/categories/${id}`); }
+>>>>>>> theirs
+=======
   deleteCategory(id: string): Observable<{ success: boolean }> { return this.http.delete<{ success: boolean }>(`${environment.apiBaseUrl}/categories/${id}`); }
+>>>>>>> theirs
 
   listChildren(id: string, params: { page?: number; limit?: number } = {}): Observable<{ items: any[]; total: number; page: number; pages: number; }> {
     const usp = new URLSearchParams();
@@ -233,7 +261,15 @@ export class AdminService {
   }
 
   reorderChildren(id: string, ids: string[]): Observable<{ items: any[]; total: number; page: number; pages: number; }> {
+<<<<<<< ours
+<<<<<<< ours
+    return this.http.post<{ items: any[]; total: number; page: number; pages: number; }>(`${this.categoriesAdminBase}/${id}/reorder`, { ids });
+=======
+    return this.http.post<{ items: any[]; total: number; page: number; pages: number; }>(`${this.base}/categories/${id}/reorder`, { ids });
+>>>>>>> theirs
+=======
     return this.http.post<{ items: any[]; total: number; page: number; pages: number; }>(`${environment.apiBaseUrl}/categories/${id}/reorder`, { ids });
+>>>>>>> theirs
   }
 
   listCoupons(params: { page?: number; limit?: number; status?: string; from?: string; to?: string } = {})

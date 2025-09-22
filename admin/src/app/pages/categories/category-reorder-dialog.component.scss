@@ -1,0 +1,46 @@
+.reorder-dialog {
+  display: grid;
+  gap: 16px;
+  min-width: 360px;
+}
+
+.reorder-dialog__hint {
+  margin: 0;
+  color: var(--app-text-muted);
+}
+
+.reorder-dialog__list {
+  display: grid;
+  gap: 8px;
+}
+
+.reorder-dialog__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.reorder-dialog__item mat-icon {
+  color: var(--app-text-muted);
+}
+
+.reorder-dialog__item-content {
+  display: grid;
+  gap: 4px;
+}
+
+.reorder-dialog__item-content small {
+  color: var(--app-text-muted);
+}
+
+.reorder-dialog__empty {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  padding: 16px;
+  color: var(--app-text-muted);
+}

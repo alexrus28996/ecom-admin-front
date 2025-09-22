@@ -1,0 +1,56 @@
+<h2 mat-dialog-title>
+  {{ (data?.category ? 'categories.dialog.editTitle' : 'categories.dialog.createTitle') | translate }}
+</h2>
+
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <mat-dialog-content class="category-form">
+    <p class="category-form__hint">{{ 'categories.dialog.hint' | translate }}</p>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'categories.form.nameLabel' | translate }}</mat-label>
+      <input matInput formControlName="name" />
+      <mat-error *ngIf="form.controls.name.hasError('required')">
+        {{ 'categories.form.nameRequired' | translate }}
+      </mat-error>
+      <mat-error *ngIf="form.controls.name.hasError('minlength')">
+        {{ 'categories.form.nameMinLength' | translate:{ min: 2 } }}
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'categories.form.slugLabel' | translate }}</mat-label>
+      <input matInput formControlName="slug" />
+      <mat-hint>{{ 'categories.form.slugHint' | translate }}</mat-hint>
+      <mat-error *ngIf="form.controls.slug.hasError('required')">
+        {{ 'categories.form.slugRequired' | translate }}
+      </mat-error>
+      <mat-error *ngIf="form.controls.slug.hasError('pattern')">
+        {{ 'categories.form.slugPattern' | translate }}
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'categories.form.parentLabel' | translate }}</mat-label>
+      <mat-select formControlName="parent">
+        <mat-option value="">{{ 'categories.form.parentNone' | translate }}</mat-option>
+        <mat-option *ngFor="let option of parentOptions; trackBy: trackById" [value]="option.id">
+          {{ option.label }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'categories.form.descriptionLabel' | translate }}</mat-label>
+      <textarea matInput formControlName="description" rows="3"></textarea>
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-stroked-button type="button" (click)="cancel()" [disabled]="saving">
+      {{ 'common.actions.cancel' | translate }}
+    </button>
+    <button mat-raised-button color="primary" type="submit" [disabled]="saving">
+      {{ 'common.actions.save' | translate }}
+    </button>
+  </mat-dialog-actions>
+</form>

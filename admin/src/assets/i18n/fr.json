@@ -16,6 +16,58 @@
     "empty": "—"
   },
   "products": {
+    "title": "Products",
+    "subtitle": "Manage your entire catalog from one place.",
+    "addButton": "Add Product",
+    "actions": {
+      "refresh": "Refresh",
+      "manageVariants": "Manage variants",
+      "edit": "Edit product",
+      "delete": "Delete product"
+    },
+    "filters": {
+      "search": {
+        "label": "Search products",
+        "placeholder": "Filter by name, SKU, or description"
+      },
+      "category": {
+        "label": "Category",
+        "any": "All categories"
+      }
+    },
+    "table": {
+      "name": "Name",
+      "sku": "SKU",
+      "price": "Price",
+      "brand": "Brand",
+      "categories": "Categories",
+      "createdAt": "Created",
+      "actions": "Actions"
+    },
+    "empty": "No products found. Try refining your filters.",
+    "delete": {
+      "title": "Delete product",
+      "message": "Delete product \"{{ name }}\"? This action cannot be undone.",
+      "confirm": "Delete"
+    },
+    "messages": {
+      "saveSuccess": "Product saved successfully.",
+      "updateSuccess": "Product updated successfully.",
+      "deleteSuccess": "Deleted {{ name }}.",
+      "deleteError": "Failed to delete the product.",
+      "saveError": "Failed to save the product.",
+      "errors": {
+        "duplicateSku": "Another product already uses this SKU.",
+        "validationFailed": "Product validation failed. Check required fields.",
+        "imageUpload": "Image upload failed. Please try again."
+      }
+    },
+    "errors": {
+      "load": "Failed to load products.",
+      "loadOne": "Failed to load the product.",
+      "save": "Failed to save the product.",
+      "delete": "Failed to delete the product."
+    },
     "variants": {
       "title": "Manage variants for {{ name }}",
       "itemTitle": "Variant {{ index }}",
@@ -47,58 +99,15 @@
         "saveFailed": "Unable to save variants."
       }
     },
-    "list": {
-      "title": "Product catalog",
-      "subtitle": "Search, review, and manage every product in your store.",
-      "filters": {
-        "search": {
-          "label": "Search products",
-          "placeholder": "Filter by name or description"
-        },
-        "category": {
-          "label": "Category",
-          "any": "All categories"
-        }
-      },
-      "actions": {
-        "create": "New product",
-        "refresh": "Refresh",
-        "edit": "Edit product",
-        "addToCart": "Add to cart",
-        "delete": "Delete product",
-        "manageVariants": "Manage variants"
-      },
-      "table": {
-        "name": "Product",
-        "price": "Price",
-        "stock": "Stock",
-        "status": "Status",
-        "actions": "Actions",
-        "variants": "Variants",
-        "variantsSummary": "Variants: {{ total }} ({{ active }} active)",
-        "stockTotal": "Total stock: {{ stock }}"
-      },
-      "status": {
-        "active": "Active",
-        "inactive": "Inactive"
-      },
-      "empty": "No products found. Try refining your filters.",
-      "delete": {
-        "title": "Delete product",
-        "message": "Delete product \"{{ name }}\"? This action cannot be undone.",
-        "confirm": "Delete"
-      },
-      "toasts": {
-        "addedToCart": "Added {{ name }} to the cart.",
-        "deleted": "Deleted {{ name }}."
-      },
-      "errors": {
-        "loadFailed": "Unable to load products. Please try again.",
-        "addToCart": "Could not add product to the cart.",
-        "deleteFailed": "Could not delete the product."
-      }
-    },
     "form": {
+      "title": {
+        "create": "Create product",
+        "edit": "Edit product"
+      },
+      "subtitle": {
+        "create": "Add a new item to your catalog.",
+        "edit": "Update product details and inventory."
+      },
       "tabs": {
         "details": "Details",
         "variants": "Variants",
@@ -107,7 +116,81 @@
       },
       "sections": {
         "stock": "Stock management",
-        "variantsEmpty": "No variants yet. Create your first variant to define size or color options."
+        "variantsEmpty": "No variants yet. Create your first variant to define size or color options.",
+        "images": "Images",
+        "imagesAdd": "Add image",
+        "imagesUpload": "Upload image",
+        "imagesRemove": "Remove image",
+        "attributes": "Attributes",
+        "attributesAdd": "Add attribute",
+        "attributesRemove": "Remove attribute",
+        "variants": "Variants",
+        "variantsAdd": "Add variant",
+        "variantsRemove": "Remove variant",
+        "variantTitle": "Variant {{ index }}",
+        "variantAttributeAdd": "Add attribute"
+      },
+      "fields": {
+        "name": {
+          "label": "Product name",
+          "placeholder": "Summer linen shirt",
+          "errors": {
+            "required": "Name is required.",
+            "minLength": "Name must be at least {{ min }} characters."
+          }
+        },
+        "description": {
+          "label": "Short description",
+          "placeholder": "Briefly describe the product"
+        },
+        "price": {
+          "label": "Price",
+          "errors": {
+            "required": "Price is required.",
+            "min": "Price must be greater than or equal to 0."
+          }
+        },
+        "currency": {
+          "label": "Currency"
+        },
+        "category": {
+          "label": "Category",
+          "none": "No category"
+        },
+        "stock": {
+          "label": "On hand stock",
+          "errors": {
+            "min": "Stock cannot be negative."
+          }
+        },
+        "isActive": {
+          "label": "Active product"
+        },
+        "attribute": {
+          "key": "Attribute name",
+          "value": "Attribute value"
+        },
+        "variant": {
+          "sku": "SKU",
+          "price": "Price",
+          "priceDelta": "Price delta",
+          "stock": "Stock",
+          "isActive": "Active",
+          "attributes": "Variant attributes"
+        },
+        "image": {
+          "url": "Image URL",
+          "alt": "Alt text"
+        }
+      },
+      "actions": {
+        "cancel": "Cancel",
+        "save": "Save product"
+      },
+      "summary": {
+        "totalVariants": "Variants",
+        "activeVariants": "Active variants",
+        "totalStock": "Total stock"
       }
     }
   },
@@ -884,122 +967,80 @@
   "categories": {
     "title": "Categories",
     "subtitle": "Organize products with a structured hierarchy.",
+    "addButton": "Add Category",
     "filters": {
       "search": {
-        "label": "Search",
-        "placeholder": "Search categories"
+        "label": "Search categories",
+        "placeholder": "Search by name or slug"
       },
       "parent": {
         "label": "Parent",
-        "root": "Top level"
-      }
-    },
-    "list": {
-      "title": "Category list"
+        "any": "Any parent"
+      },
+      "apply": "Apply filters"
     },
     "table": {
       "name": "Name",
       "slug": "Slug",
-      "parent": "Parent"
-    },
-    "parent": {
-      "none": "None"
+      "parent": "Parent",
+      "actions": "Actions",
+      "root": "Top level"
     },
     "actions": {
       "edit": "Edit",
-      "delete": "Delete",
-      "clear": "Clear",
-      "save": "Save"
+      "reorder": "Reorder children",
+      "delete": "Delete"
     },
-    "create": {
-      "title": "Create category"
-    },
-    "edit": {
-      "title": "Edit category"
-    },
-    "form": {
-      "name": {
-        "label": "Name",
-        "placeholder": "Category name"
-      },
-      "slug": {
-        "label": "Slug"
-      },
-      "description": {
-        "label": "Description"
-      },
-      "parent": {
-        "label": "Parent category",
-        "root": "No parent"
+    "empty": "No categories found. Try adjusting your filters.",
+    "messages": {
+      "saveSuccess": "Category saved successfully.",
+      "updateSuccess": "Category updated successfully.",
+      "deleteSuccess": "Category deleted successfully.",
+      "deleteError": "Failed to delete category.",
+      "saveError": "Failed to save category.",
+      "reorderSuccess": "Category order saved.",
+      "reorderError": "Failed to save category order.",
+      "errors": {
+        "duplicateSlug": "Another category already uses this slug.",
+        "validationFailed": "Category validation failed. Check required fields.",
+        "inUse": "This category is assigned to products and cannot be deleted."
       }
     },
-    "children": {
-      "title": "Child categories",
-      "hint": "Drag and drop to reorder child categories.",
-      "save": "Save order"
+    "errors": {
+      "load": "Failed to load categories.",
+      "save": "Failed to save category.",
+      "delete": "Failed to delete category.",
+      "reorder": "Failed to load category order.",
+      "children": "Failed to load category children."
     },
-    "tabs": {
-      "categories": "Categories",
-      "brands": "Brands"
+    "delete": {
+      "title": "Delete category",
+      "message": "Delete category \"{{ name }}\"? This action cannot be undone.",
+      "confirm": "Delete"
     },
-    "brands": {
-      "title": "Brands",
-      "subtitle": "Manage brand catalog for quick tagging.",
-      "filters": {
-        "search": {
-          "label": "Search brands",
-          "placeholder": "Search brands"
-        }
-      },
-      "list": {
-        "title": "Brand list"
-      },
-      "table": {
-        "name": "Name",
-        "slug": "Slug",
-        "actions": "Actions"
-      },
-      "actions": {
-        "edit": "Edit",
-        "delete": "Delete",
-        "clear": "Clear",
-        "save": "Save brand"
-      },
-      "create": {
-        "title": "Create brand"
-      },
-      "edit": {
-        "title": "Edit brand"
-      },
-      "form": {
-        "name": {
-          "label": "Brand name",
-          "required": "Name is required.",
-          "minLength": "Name must be at least {{ min }} characters."
-        },
-        "slug": {
-          "label": "Slug"
-        }
-      },
-      "delete": {
-        "title": "Delete brand",
-        "message": "Delete \"{{ name }}\"? This action cannot be undone.",
-        "confirm": "Delete"
-      },
-      "toasts": {
-        "created": "Brand created.",
-        "updated": "Brand updated.",
-        "deleted": "Brand deleted."
-      },
-      "errors": {
-        "loadFailed": "Unable to load brands.",
-        "createFailed": "Unable to create brand.",
-        "saveFailed": "Unable to update brand.",
-        "deleteFailed": "Unable to delete brand."
-      },
-      "empty": "No brands found."
+    "dialog": {
+      "createTitle": "Create category",
+      "editTitle": "Edit category",
+      "hint": "Slug must be lowercase and use hyphens between words."
     },
-    "empty": "No categories found."
+    "form": {
+      "nameLabel": "Category name",
+      "nameRequired": "Name is required.",
+      "nameMinLength": "Name must be at least {{ min }} characters.",
+      "slugLabel": "Slug",
+      "slugHint": "Lowercase letters, numbers, and hyphens only.",
+      "slugRequired": "Slug is required.",
+      "slugPattern": "Use lowercase letters, numbers, and hyphens only.",
+      "parentLabel": "Parent category",
+      "parentNone": "No parent",
+      "descriptionLabel": "Description"
+    },
+    "reorder": {
+      "title": "Reorder children for {{ name }}",
+      "hint": "Drag and drop to change the display order.",
+      "empty": "No child categories to reorder.",
+      "saveButton": "Save order"
+    }
   },
   "login": {
     "title": "Welcome back",

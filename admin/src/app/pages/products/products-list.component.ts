@@ -1,10 +1,10 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { PageEvent } from '@angular/material/paginator';
+import { Subject, takeUntil } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
-import { ProductsService, ProductSummary, ProductVariant } from '../../services/products.service';
-import { CartService } from '../../services/cart.service';
+import { ProductsService, ProductSummary } from '../../services/products.service';
 import { AuthService } from '../../core/auth.service';
 import { ToastService } from '../../core/toast.service';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
@@ -22,13 +22,13 @@ interface CategoryOption {
   styleUrls: ['./products-list.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ProductsListComponent implements OnInit {
+export class ProductsListComponent implements OnInit, OnDestroy {
   readonly filterForm = this.fb.group({
     q: [''],
     category: ['']
   });
 
-  displayedColumns: string[] = ['name', 'price', 'stock', 'status', 'actions'];
+  displayedColumns: string[] = ['name', 'sku', 'price', 'brand', 'categories', 'createdAt', 'actions'];
   dataSource: ProductSummary[] = [];
   total = 0;
   pageIndex = 0;
@@ -41,14 +41,15 @@ export class ProductsListComponent implements OnInit {
   errorKey: string | null = null;
   lastError: any = null;
 
+  private readonly destroy$ = new Subject<void>();
+
   constructor(
     private readonly products: ProductsService,
-    private readonly cart: CartService,
     public readonly auth: AuthService,
     private readonly fb: FormBuilder,
     private readonly dialog: MatDialog,
     private readonly toast: ToastService,
-    private readonly translate: TranslateService,
+    public readonly translate: TranslateService,
     private readonly adminService: AdminService,
     private readonly cdr: ChangeDetectorRef
   ) {}
@@ -56,6 +57,11 @@ export class ProductsListComponent implements OnInit {
   ngOnInit(): void {
     this.loadCategories();
     this.load();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   load(): void {
@@ -72,22 +78,25 @@ export class ProductsListComponent implements OnInit {
       limit: this.pageSize
     };
 
-    this.products.list(params).subscribe({
-      next: (res) => {
-        this.dataSource = res.items;
-        this.total = res.total;
-        this.pageIndex = res.page - 1;
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        this.lastError = err;
-        const code = err?.error?.error?.code;
-        this.errorKey = code ? `errors.backend.${code}` : 'products.list.errors.loadFailed';
-        this.loading = false;
-        this.cdr.markForCheck();
-      }
-    });
+    this.products
+      .list(params)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          this.dataSource = res.items;
+          this.total = res.total;
+          this.pageIndex = res.page - 1;
+          this.loading = false;
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          this.lastError = err;
+          const code = err?.error?.error?.code;
+          this.errorKey = code ? `errors.backend.${code}` : 'products.errors.load';
+          this.loading = false;
+          this.cdr.markForCheck();
+        }
+      });
   }
 
   onSubmit(): void {
@@ -105,20 +114,6 @@ export class ProductsListComponent implements OnInit {
     this.load();
   }
 
-  addToCart(product: ProductSummary): void {
-    if (!product?._id) {
-      return;
-    }
-    this.cart.addItem(product._id, 1).subscribe({
-      next: () => {
-        this.toast.success(this.translate.instant('products.list.toasts.addedToCart', { name: product.name }));
-      },
-      error: () => {
-        this.toast.error(this.translate.instant('products.list.errors.addToCart'));
-      }
-    });
-  }
-
   confirmDelete(product: ProductSummary): void {
     if (!product?._id) {
       return;
@@ -127,10 +122,10 @@ export class ProductsListComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '380px',
       data: {
-        titleKey: 'products.list.delete.title',
-        messageKey: 'products.list.delete.message',
+        titleKey: 'products.delete.title',
+        messageKey: 'products.delete.message',
         messageParams: { name: product.name },
-        confirmKey: 'products.list.delete.confirm'
+        confirmKey: 'products.delete.confirm'
       }
     });
 
@@ -170,64 +165,90 @@ export class ProductsListComponent implements OnInit {
     this.lastError = null;
     this.cdr.markForCheck();
 
-    this.products.delete(product._id).subscribe({
-      next: () => {
-        this.toast.success(this.translate.instant('products.list.toasts.deleted', { name: product.name }));
-        this.load();
-      },
-      error: (err) => {
-        const code = err?.error?.error?.code;
-        this.errorKey = code ? `errors.backend.${code}` : 'products.list.errors.deleteFailed';
-        this.lastError = err;
-        this.loading = false;
-        this.toast.error(this.translate.instant('products.list.errors.deleteFailed'));
-        this.cdr.markForCheck();
-      }
-    });
+    this.products
+      .delete(product._id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.toast.success(this.translate.instant('products.messages.deleteSuccess', { name: product.name }));
+          this.load();
+        },
+        error: (err) => {
+          const code = err?.error?.error?.code;
+          this.errorKey = code ? `errors.backend.${code}` : 'products.errors.delete';
+          this.lastError = err;
+          this.loading = false;
+          const messageKey = this.mapProductError(code, 'products.messages.deleteError');
+          this.toast.error(this.translate.instant(messageKey));
+          this.cdr.markForCheck();
+        }
+      });
   }
 
   trackById(_: number, item: ProductSummary): string | undefined {
     return item._id;
   }
 
-  private loadCategories(): void {
-    this.adminService.listCategories({ limit: 1000 }).subscribe({
-      next: (res) => {
-        this.categories = res.items.map((category: any) => ({ id: category._id, name: category.name }));
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        // ignore category load errors for now
-      }
-    });
+  brandName(product: ProductSummary): string {
+    return product?.brand?.name || this.translate.instant('common.empty');
   }
 
-  categoryName(category: string | { _id?: string } | null | undefined): string | null {
+  categoryNames(product: ProductSummary): string {
+    const ids = new Set<string>();
+    const labels: string[] = [];
+    const fromSummary = Array.isArray(product.categories) ? product.categories : [];
+    fromSummary.forEach((category) => {
+      if (category?._id && !ids.has(category._id)) {
+        ids.add(category._id);
+        labels.push(category.name);
+      }
+    });
+
+    const fallback = this.mapCategoryIdToName(product.category);
+    if (fallback) {
+      labels.push(fallback);
+    }
+
+    return labels.length ? labels.join(', ') : this.translate.instant('common.empty');
+  }
+
+  private mapCategoryIdToName(category: string | { _id?: string; name?: string } | null | undefined): string | null {
     if (!category) return null;
+    if (typeof category === 'object' && category.name) {
+      return category.name;
+    }
     const id = typeof category === 'object' ? category._id : category;
     if (!id) return null;
     const match = this.categories.find((c) => c.id === id);
     return match ? match.name : null;
   }
 
-  variantSummary(product: ProductSummary) {
-    const variants: ProductVariant[] = product.variants || [];
-    let variantStock = 0;
-    let active = 0;
-    variants.forEach((variant: ProductVariant) => {
-      const stock = Number(variant?.stock);
-      if (!Number.isNaN(stock)) {
-        variantStock += stock;
-      }
-      if (variant?.isActive) {
-        active += 1;
-      }
-    });
-    const baseStock = Number(product.stock);
-    return {
-      totalVariants: variants.length,
-      activeVariants: active,
-      totalStock: (Number.isNaN(baseStock) ? 0 : baseStock) + variantStock
-    };
+  private mapProductError(code: string | null | undefined, fallback: string): string {
+    if (!code) {
+      return fallback;
+    }
+    switch (code) {
+      case 'PRODUCT_SKU_EXISTS':
+        return 'products.messages.errors.duplicateSku';
+      case 'PRODUCT_VALIDATION_FAILED':
+        return 'products.messages.errors.validationFailed';
+      default:
+        return fallback;
+    }
+  }
+
+  private loadCategories(): void {
+    this.adminService
+      .listCategories({ limit: 1000 })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          this.categories = res.items.map((category: any) => ({ id: category._id, name: category.name }));
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          // TODO: Surface category load issues once bulk import flows are in place.
+        }
+      });
   }
 }
