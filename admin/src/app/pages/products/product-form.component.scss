@@ -22,6 +22,15 @@
   gap: 16px;
 }
 
+.category-field {
+  display: grid;
+  gap: 8px;
+}
+
+.category-manage-button {
+  justify-self: flex-start;
+}
+
 .product-form-description {
   grid-column: 1 / -1;
 }

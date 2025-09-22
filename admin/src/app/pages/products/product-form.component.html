@@ -46,13 +46,25 @@
                   </mat-select>
                 </mat-form-field>
 
-                <mat-form-field appearance="outline">
-                  <mat-label>{{ 'products.form.fields.category.label' | translate }}</mat-label>
-                  <mat-select formControlName="category">
-                    <mat-option value="">{{ 'products.form.fields.category.none' | translate }}</mat-option>
-                    <mat-option *ngFor="let category of categories" [value]="category.id">{{ category.name }}</mat-option>
-                  </mat-select>
-                </mat-form-field>
+                <div class="category-field">
+                  <mat-form-field appearance="outline">
+                    <mat-label>{{ 'products.form.fields.category.label' | translate }}</mat-label>
+                    <mat-select formControlName="category">
+                      <mat-option value="">{{ 'products.form.fields.category.none' | translate }}</mat-option>
+                      <mat-option *ngFor="let category of categories" [value]="category.id">{{ category.name }}</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <button
+                    mat-stroked-button
+                    type="button"
+                    color="primary"
+                    class="category-manage-button"
+                    routerLink="/admin/categories"
+                  >
+                    <mat-icon>category</mat-icon>
+                    {{ 'products.form.fields.category.manage' | translate }}
+                  </button>
+                </div>
 
                 <mat-slide-toggle formControlName="isActive">
                   {{ 'products.form.fields.isActive.label' | translate }}

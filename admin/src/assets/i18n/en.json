@@ -154,7 +154,8 @@
         },
         "category": {
           "label": "Category",
-          "none": "No category"
+          "none": "No category",
+          "manage": "Manage categories"
         },
         "stock": {
           "label": "On hand stock",
