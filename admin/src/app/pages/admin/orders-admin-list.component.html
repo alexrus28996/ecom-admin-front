@@ -1,104 +1,154 @@
-<div class="page page--panel">
+<div class="page page--panel orders-admin">
   <section class="page__header">
     <div class="page__headline">
       <div>
-        <span class="page__eyebrow">Operations</span>
-        <h1>{{ 'adminOrders.list.title' | translate }}</h1>
-        <p>{{ 'adminOrders.list.subtitle' | translate }}</p>
+        <span class="page__eyebrow">{{ 'orders.title' | translate }}</span>
+        <h1>{{ 'orders.adminList' | translate }}</h1>
+        <p class="muted">{{ 'orders.description' | translate }}</p>
       </div>
       <div class="page__actions">
-        <button mat-stroked-button color="primary" type="button" (click)="load()" [disabled]="loading">
+        <button mat-stroked-button color="primary" type="button" (click)="refresh()" [disabled]="loading">
           <mat-icon>refresh</mat-icon>
-          {{ 'adminOrders.list.actions.refresh' | translate }}
+          {{ 'orders.actions.refresh' | translate }}
         </button>
       </div>
     </div>
-    <form class="page__filters" [formGroup]="filterForm" (ngSubmit)="applyFilters()" novalidate>
+
+    <form class="orders-admin__filters" [formGroup]="filterForm" (ngSubmit)="applyFilters()" novalidate>
       <mat-form-field appearance="outline">
-        <mat-label>{{ 'adminOrders.list.filters.status' | translate }}</mat-label>
+        <mat-label>{{ 'orders.filters.status' | translate }}</mat-label>
         <mat-select formControlName="status">
-          <mat-option value="">{{ 'adminOrders.list.filters.any' | translate }}</mat-option>
+          <mat-option value="">{{ 'orders.filters.any' | translate }}</mat-option>
           <mat-option *ngFor="let option of statusOptions" [value]="option.value">
             {{ option.labelKey | translate }}
           </mat-option>
         </mat-select>
       </mat-form-field>
+
       <mat-form-field appearance="outline">
-        <mat-label>{{ 'adminOrders.list.filters.paymentStatus' | translate }}</mat-label>
+        <mat-label>{{ 'orders.filters.paymentStatus' | translate }}</mat-label>
         <mat-select formControlName="paymentStatus">
-          <mat-option value="">{{ 'adminOrders.list.filters.any' | translate }}</mat-option>
+          <mat-option value="">{{ 'orders.filters.any' | translate }}</mat-option>
           <mat-option *ngFor="let option of paymentOptions" [value]="option.value">
             {{ option.labelKey | translate }}
           </mat-option>
         </mat-select>
       </mat-form-field>
-      <button mat-raised-button color="primary" type="submit" [disabled]="loading">
-        <mat-icon>filter_alt</mat-icon>
-        {{ 'adminOrders.list.filters.apply' | translate }}
-      </button>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ 'orders.filters.customerEmail' | translate }}</mat-label>
+        <input matInput formControlName="email" [placeholder]="'orders.filters.customerEmailPlaceholder' | translate" />
+      </mat-form-field>
+
+      <div class="orders-admin__filters-range" formGroupName="range">
+        <mat-form-field appearance="outline">
+          <mat-label>{{ 'orders.filters.dateRange' | translate }}</mat-label>
+          <mat-date-range-input [rangePicker]="createdPicker">
+            <input matStartDate formControlName="start" [placeholder]="'orders.filters.dateStart' | translate" />
+            <input matEndDate formControlName="end" [placeholder]="'orders.filters.dateEnd' | translate" />
+          </mat-date-range-input>
+          <mat-datepicker-toggle matSuffix [for]="createdPicker"></mat-datepicker-toggle>
+          <mat-date-range-picker #createdPicker></mat-date-range-picker>
+        </mat-form-field>
+      </div>
+
+      <div class="orders-admin__filters-actions">
+        <button mat-stroked-button type="button" (click)="resetFilters()" [disabled]="loading">
+          {{ 'common.actions.reset' | translate }}
+        </button>
+        <button mat-flat-button color="primary" type="submit" [disabled]="loading">
+          <mat-icon>filter_alt</mat-icon>
+          {{ 'common.actions.apply' | translate }}
+        </button>
+      </div>
     </form>
   </section>
 
   <section class="page__body">
-    <app-loading [show]="loading" labelKey="common.loading"></app-loading>
-    <div class="data-table" *ngIf="rows.length; else emptyState">
-      <table mat-table [dataSource]="rows" class="data-table__table">
-        <ng-container matColumnDef="id">
-          <th mat-header-cell *matHeaderCellDef>{{ 'adminOrders.list.table.id' | translate }}</th>
-          <td mat-cell *matCellDef="let o">
-            <div class="order-id">
-              <span>{{ o._id || o.id }}</span>
-              <small class="muted">{{ o.customer?.email }}</small>
-            </div>
-          </td>
-        </ng-container>
-        <ng-container matColumnDef="total">
-          <th mat-header-cell *matHeaderCellDef>{{ 'adminOrders.list.table.total' | translate }}</th>
-          <td mat-cell *matCellDef="let o">{{ o.total | number:'1.2-2' }} {{ o.currency }}</td>
-        </ng-container>
-        <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef>{{ 'adminOrders.list.table.status' | translate }}</th>
-          <td mat-cell *matCellDef="let o">
-            <span class="status-badge">{{ statusKeyFor(o.status) | translate }}</span>
-          </td>
-        </ng-container>
-        <ng-container matColumnDef="payment">
-          <th mat-header-cell *matHeaderCellDef>{{ 'adminOrders.list.table.payment' | translate }}</th>
-          <td mat-cell *matCellDef="let o">
-            <span class="status-badge status-badge--muted">{{ paymentStatusKeyFor(o.paymentStatus) | translate }}</span>
-          </td>
-        </ng-container>
-        <ng-container matColumnDef="createdAt">
-          <th mat-header-cell *matHeaderCellDef>{{ 'adminOrders.list.table.createdAt' | translate }}</th>
-          <td mat-cell *matCellDef="let o">{{ (o.createdAt || o['createdAt']) | date:'short' }}</td>
-        </ng-container>
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef>{{ 'adminOrders.list.table.actions' | translate }}</th>
-          <td mat-cell *matCellDef="let o">
-            <div class="table-actions">
-              <a
-                mat-icon-button
-                color="primary"
-                [routerLink]="['/admin/orders', o._id || o.id]"
-                matTooltip="{{ 'adminOrders.list.actions.view' | translate }}"
-                aria-label="{{ 'adminOrders.list.actions.view' | translate }}"
-              >
-                <mat-icon>open_in_new</mat-icon>
-              </a>
-            </div>
-          </td>
-        </ng-container>
+    <div class="orders-admin__table">
+      <ng-container *ngIf="loading && !orders.length; else tableContent">
+        <div class="orders-admin__skeleton" *ngFor="let _ of skeletonRows"></div>
+      </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="displayed; sticky: true"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayed"></tr>
-      </table>
+      <ng-template #tableContent>
+        <div class="data-table" *ngIf="orders.length; else emptyState">
+          <table mat-table [dataSource]="orders" [trackBy]="trackById" class="data-table__table">
+            <ng-container matColumnDef="id">
+              <th mat-header-cell *matHeaderCellDef>{{ 'orders.id' | translate }}</th>
+              <td mat-cell *matCellDef="let order">
+                <div class="orders-admin__order-id">
+                  <span>{{ orderId(order) }}</span>
+                  <small class="muted" *ngIf="customerEmail(order) as email">{{ email }}</small>
+                </div>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="customer">
+              <th mat-header-cell *matHeaderCellDef>{{ 'orders.customer' | translate }}</th>
+              <td mat-cell *matCellDef="let order">
+                {{ customerName(order) || ('common.empty' | translate) }}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>{{ 'orders.statusLabel' | translate }}</th>
+              <td mat-cell *matCellDef="let order">
+                <span [ngClass]="statusBadgeClass(order.status)">{{ statusKeyFor(order.status) | translate }}</span>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="payment">
+              <th mat-header-cell *matHeaderCellDef>{{ 'orders.paymentStatus' | translate }}</th>
+              <td mat-cell *matCellDef="let order">
+                <span [ngClass]="paymentBadgeClass(order.paymentStatus)">{{ paymentStatusKeyFor(order.paymentStatus) | translate }}</span>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="total">
+              <th mat-header-cell *matHeaderCellDef>{{ 'orders.total' | translate }}</th>
+              <td mat-cell *matCellDef="let order">
+                <ng-container *ngIf="totalFor(order) as total">
+                  {{ total.amount | number:'1.2-2' }} {{ total.currency }}
+                </ng-container>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="createdAt">
+              <th mat-header-cell *matHeaderCellDef>{{ 'orders.createdAt' | translate }}</th>
+              <td mat-cell *matCellDef="let order">{{ order.createdAt | date:'medium' }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef class="orders-admin__actions-header">{{ 'orders.actionColumn' | translate }}</th>
+              <td mat-cell *matCellDef="let order">
+                <div class="table-actions">
+                  <a
+                    mat-icon-button
+                    color="primary"
+                    [routerLink]="['/admin/orders', orderId(order)]"
+                    matTooltip="{{ 'orders.view' | translate }}"
+                    aria-label="{{ 'orders.view' | translate }}"
+                  >
+                    <mat-icon>open_in_new</mat-icon>
+                  </a>
+                </div>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          </table>
+        </div>
+
+        <ng-template #emptyState>
+          <div class="empty-state">
+            <mat-icon>assignment</mat-icon>
+            <p>{{ 'orders.empty' | translate }}</p>
+          </div>
+        </ng-template>
+      </ng-template>
     </div>
-    <ng-template #emptyState>
-      <div class="empty-state">
-        <mat-icon>assignment</mat-icon>
-        <p>{{ 'adminOrders.list.empty' | translate }}</p>
-      </div>
-    </ng-template>
+
     <app-error-banner [key]="errorKey"></app-error-banner>
   </section>
 

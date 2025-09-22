@@ -1,103 +1,224 @@
-<div class="panel" style="position:relative;">
-  <h2>{{ 'adminOrders.detail.title' | translate }}</h2>
-
-  <app-loading [show]="loading" labelKey="common.loading"></app-loading>
-  <app-error-banner [key]="errorKey" [error]="lastError"></app-error-banner>
-
-  <div *ngIf="order">
-    <div class="row" style="display:flex;gap:8px;align-items:center;">
-      <strong>{{ 'adminOrders.detail.fields.id' | translate }}:</strong>
-      <span>{{ order._id || order.id }}</span>
+<div class="page page--panel order-admin-detail">
+  <section class="page__header">
+    <div class="page__headline">
+      <div>
+        <span class="page__eyebrow">{{ 'orders.title' | translate }}</span>
+        <h1>{{ 'orders.detailAdmin' | translate:{ id: order?.number || (order ? orderId(order) : '') } }}</h1>
+        <p class="muted" *ngIf="order?.createdAt">{{ order.createdAt | date:'medium' }}</p>
+      </div>
+      <div class="page__actions order-admin-detail__actions">
+        <button mat-stroked-button color="primary" type="button" (click)="createShipment()" [disabled]="!order">
+          <mat-icon>local_shipping</mat-icon>
+          {{ 'orders.createShipment' | translate }}
+        </button>
+        <button mat-stroked-button type="button" (click)="openInvoice()" [disabled]="!order">
+          <mat-icon>picture_as_pdf</mat-icon>
+          {{ 'orders.invoice' | translate }}
+        </button>
+        <button
+          mat-flat-button
+          color="warn"
+          type="button"
+          (click)="cancelOrder()"
+          [disabled]="!order || cancelling || order.status === 'cancelled'"
+        >
+          <mat-icon>cancel</mat-icon>
+          {{ 'orders.cancel' | translate }}
+        </button>
+      </div>
     </div>
+  </section>
 
-    <div class="row" style="margin-top:12px; display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
-      <mat-form-field appearance="fill">
-        <mat-label>{{ 'adminOrders.detail.fields.status' | translate }}</mat-label>
-        <mat-select [(ngModel)]="order.status">
-          <mat-option *ngFor="let option of statusOptions" [value]="option.value">
-            {{ option.labelKey | translate }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
+  <section class="page__body">
+    <app-loading [show]="loading" labelKey="common.loading"></app-loading>
+    <app-error-banner [key]="errorKey" [error]="lastError"></app-error-banner>
 
-      <mat-form-field appearance="fill">
-        <mat-label>{{ 'adminOrders.detail.fields.payment' | translate }}</mat-label>
-        <mat-select [(ngModel)]="order.paymentStatus">
-          <mat-option *ngFor="let option of paymentOptions" [value]="option.value">
-            {{ option.labelKey | translate }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
+    <ng-container *ngIf="order as current">
+      <div class="order-admin-detail__grid">
+        <mat-card class="order-admin-detail__card order-admin-detail__overview">
+          <mat-card-header>
+            <mat-card-title>{{ current.number || orderId(current) }}</mat-card-title>
+            <mat-card-subtitle>{{ customerEmail(current) }}</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="order-admin-detail__badges">
+              <span [ngClass]="badgeClass(current.status, 'status')">{{ statusKeyFor(current.status) | translate }}</span>
+              <span [ngClass]="badgeClass(current.paymentStatus, 'payment')">{{ paymentStatusKeyFor(current.paymentStatus) | translate }}</span>
+            </div>
 
-      <button mat-raised-button color="primary" (click)="save()" [disabled]="saving">
-        <mat-icon>save</mat-icon>
-        {{ 'adminOrders.detail.actions.save' | translate }}
-      </button>
-    </div>
+            <div class="order-admin-detail__customer">
+              <div>
+                <span class="label">{{ 'orders.customer' | translate }}</span>
+                <strong>{{ customerName(current) || ('common.empty' | translate) }}</strong>
+                <p class="muted" *ngIf="customerEmail(current)">{{ customerEmail(current) }}</p>
+              </div>
+              <div>
+                <span class="label">{{ 'orders.createdAt' | translate }}</span>
+                <strong>{{ current.createdAt | date:'medium' }}</strong>
+              </div>
+            </div>
 
-    <div style="margin-top:12px; display:flex; gap:8px;">
-      <button mat-stroked-button color="primary" (click)="openInvoice()">
-        <mat-icon>picture_as_pdf</mat-icon>
-        {{ 'adminOrders.detail.actions.invoice' | translate }}
-      </button>
-      <button mat-stroked-button (click)="loadTimeline()">
-        <mat-icon>timeline</mat-icon>
-        {{ 'adminOrders.detail.actions.timeline' | translate }}
-      </button>
-    </div>
+            <form class="order-admin-detail__status-form" [formGroup]="statusForm" (ngSubmit)="updateStatus()" novalidate>
+              <mat-form-field appearance="outline">
+                <mat-label>{{ 'orders.updateStatus' | translate }}</mat-label>
+                <mat-select formControlName="status">
+                  <mat-option *ngFor="let option of statusOptions" [value]="option.value">
+                    {{ option.labelKey | translate }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
 
-    <section class="table-wrapper" style="margin-top:12px;">
-      <table mat-table [dataSource]="order.items || []">
-        <ng-container matColumnDef="product">
-          <th mat-header-cell *matHeaderCellDef>{{ 'adminOrders.detail.table.product' | translate }}</th>
-          <td mat-cell *matCellDef="let it">{{ it.name }}</td>
-        </ng-container>
-        <ng-container matColumnDef="price">
-          <th mat-header-cell *matHeaderCellDef>{{ 'adminOrders.detail.table.price' | translate }}</th>
-          <td mat-cell *matCellDef="let it">{{ it.price | number:'1.2-2' }} {{ it.currency }}</td>
-        </ng-container>
-        <ng-container matColumnDef="qty">
-          <th mat-header-cell *matHeaderCellDef>{{ 'adminOrders.detail.table.qty' | translate }}</th>
-          <td mat-cell *matCellDef="let it">{{ it.quantity }}</td>
-        </ng-container>
-        <ng-container matColumnDef="line">
-          <th mat-header-cell *matHeaderCellDef>{{ 'adminOrders.detail.table.line' | translate }}</th>
-          <td mat-cell *matCellDef="let it">{{ (it.price * it.quantity) | number:'1.2-2' }} {{ it.currency }}</td>
-        </ng-container>
+              <mat-form-field appearance="outline">
+                <mat-label>{{ 'orders.paymentStatus' | translate }}</mat-label>
+                <mat-select formControlName="paymentStatus">
+                  <mat-option *ngFor="let option of paymentOptions" [value]="option.value">
+                    {{ option.labelKey | translate }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
 
-        <tr mat-header-row *matHeaderRowDef="['product','price','qty','line']"></tr>
-        <tr mat-row *matRowDef="let row; columns: ['product','price','qty','line']"></tr>
-      </table>
-    </section>
+              <button mat-flat-button color="primary" type="submit" [disabled]="saving || statusForm.invalid">
+                <mat-icon>save</mat-icon>
+                {{ 'orders.updateStatus' | translate }}
+              </button>
+            </form>
+          </mat-card-content>
+        </mat-card>
 
-    <div style="margin-top:12px; display:grid; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap:8px;">
-      <div>{{ 'adminOrders.detail.summary.subtotal' | translate }}: {{ order.subtotal | number:'1.2-2' }} {{ order.currency }}</div>
-      <div>{{ 'adminOrders.detail.summary.shipping' | translate }}: {{ order.shipping | number:'1.2-2' }} {{ order.currency }}</div>
-      <div>{{ 'adminOrders.detail.summary.tax' | translate }}: {{ order.tax | number:'1.2-2' }} {{ order.currency }}</div>
-      <div><strong>{{ 'adminOrders.detail.summary.total' | translate }}: {{ order.total | number:'1.2-2' }} {{ order.currency }}</strong></div>
-    </div>
+        <mat-card class="order-admin-detail__card order-admin-detail__addresses">
+          <mat-card-header>
+            <mat-card-title>{{ 'orders.addresses' | translate }}</mat-card-title>
+          </mat-card-header>
+          <mat-card-content class="order-admin-detail__addresses-grid">
+            <div>
+              <h3>{{ 'orders.shippingAddress' | translate }}</h3>
+              <p *ngIf="addressLines(current.shippingAddress) as lines; else noShipping">
+                <ng-container *ngFor="let line of lines; let last = last">
+                  {{ line }}<br *ngIf="!last" />
+                </ng-container>
+              </p>
+              <ng-template #noShipping>
+                <p class="muted">{{ 'orders.empty' | translate }}</p>
+              </ng-template>
+            </div>
+            <div>
+              <h3>{{ 'orders.billingAddress' | translate }}</h3>
+              <p *ngIf="addressLines(current.billingAddress) as lines; else noBilling">
+                <ng-container *ngFor="let line of lines; let last = last">
+                  {{ line }}<br *ngIf="!last" />
+                </ng-container>
+              </p>
+              <ng-template #noBilling>
+                <p class="muted">{{ 'orders.empty' | translate }}</p>
+              </ng-template>
+            </div>
+          </mat-card-content>
+        </mat-card>
 
-    <section *ngIf="timeline?.length" style="margin-top:16px;">
-      <h3 style="margin:0 0 8px 0;">{{ 'adminOrders.detail.timeline.title' | translate }}</h3>
-      <table mat-table [dataSource]="timeline">
-        <ng-container matColumnDef="time">
-          <th mat-header-cell *matHeaderCellDef>{{ 'adminOrders.detail.timeline.time' | translate }}</th>
-          <td mat-cell *matCellDef="let t">{{ t.time | date:'short' }}</td>
-        </ng-container>
-        <ng-container matColumnDef="type">
-          <th mat-header-cell *matHeaderCellDef>{{ 'adminOrders.detail.timeline.type' | translate }}</th>
-          <td mat-cell *matCellDef="let t">{{ t.type }}</td>
-        </ng-container>
-        <ng-container matColumnDef="message">
-          <th mat-header-cell *matHeaderCellDef>{{ 'adminOrders.detail.timeline.message' | translate }}</th>
-          <td mat-cell *matCellDef="let t">{{ t.message }}</td>
-        </ng-container>
-        <tr mat-header-row *matHeaderRowDef="['time','type','message']"></tr>
-        <tr mat-row *matRowDef="let row; columns: ['time','type','message']"></tr>
-      </table>
-      <app-error-banner [key]="tlErrorKey" [error]="tlLastError"></app-error-banner>
-      <app-loading [show]="tlLoading" labelKey="common.loading"></app-loading>
-    </section>
-  </div>
+        <mat-card class="order-admin-detail__card order-admin-detail__totals">
+          <mat-card-header>
+            <mat-card-title>{{ 'orders.total' | translate }}</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="order-admin-detail__totals-grid">
+              <div>
+                <span class="label">{{ 'orders.subtotal' | translate }}</span>
+                <strong *ngIf="money(current.subtotal, current.currency) as subtotal">{{ subtotal.amount | number:'1.2-2' }} {{ subtotal.currency }}</strong>
+              </div>
+              <div>
+                <span class="label">{{ 'orders.shipping' | translate }}</span>
+                <span *ngIf="money(current.shipping, current.currency) as shipping">{{ shipping.amount | number:'1.2-2' }} {{ shipping.currency }}</span>
+              </div>
+              <div>
+                <span class="label">{{ 'orders.tax' | translate }}</span>
+                <span *ngIf="money(current.tax, current.currency) as tax">{{ tax.amount | number:'1.2-2' }} {{ tax.currency }}</span>
+              </div>
+              <div>
+                <span class="label">{{ 'orders.total' | translate }}</span>
+                <strong *ngIf="money(current.total, current.currency) as total">{{ total.amount | number:'1.2-2' }} {{ total.currency }}</strong>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="order-admin-detail__card order-admin-detail__items">
+          <mat-card-header>
+            <mat-card-title>{{ 'orders.lineItems' | translate }}</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <table mat-table [dataSource]="current.items" *ngIf="current.items?.length; else noItems" class="order-admin-detail__items-table">
+              <ng-container matColumnDef="product">
+                <th mat-header-cell *matHeaderCellDef>{{ 'orders.product' | translate }}</th>
+                <td mat-cell *matCellDef="let item">
+                  <div class="order-admin-detail__item">
+                    <img *ngIf="item.image" [src]="item.image" [alt]="item.name" />
+                    <div>
+                      <div class="name">{{ item.name }}</div>
+                      <div class="muted" *ngIf="item.variant">{{ item.variant }}</div>
+                    </div>
+                  </div>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="price">
+                <th mat-header-cell *matHeaderCellDef>{{ 'orders.price' | translate }}</th>
+                <td mat-cell *matCellDef="let item">
+                  <ng-container *ngIf="itemPrice(item, current.currency) as price">
+                    {{ price.amount | number:'1.2-2' }} {{ price.currency }}
+                  </ng-container>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="qty">
+                <th mat-header-cell *matHeaderCellDef>{{ 'orders.quantity' | translate }}</th>
+                <td mat-cell *matCellDef="let item">{{ item.quantity }}</td>
+              </ng-container>
+              <ng-container matColumnDef="total">
+                <th mat-header-cell *matHeaderCellDef>{{ 'orders.total' | translate }}</th>
+                <td mat-cell *matCellDef="let item">
+                  <ng-container *ngIf="itemLineTotal(item, current.currency) as line">
+                    {{ line.amount | number:'1.2-2' }} {{ line.currency }}
+                  </ng-container>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="['product', 'price', 'qty', 'total']"></tr>
+              <tr mat-row *matRowDef="let row; columns: ['product', 'price', 'qty', 'total']"></tr>
+            </table>
+            <ng-template #noItems>
+              <div class="empty-state">
+                <mat-icon>inventory_2</mat-icon>
+                <p>{{ 'orders.empty' | translate }}</p>
+              </div>
+            </ng-template>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="order-admin-detail__card order-admin-detail__timeline-card">
+          <mat-card-header>
+            <mat-card-title>{{ 'orders.timeline' | translate }}</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <app-loading [show]="tlLoading" labelKey="common.loading"></app-loading>
+            <app-error-banner [key]="tlErrorKey" [error]="tlLastError"></app-error-banner>
+
+            <ng-container *ngIf="timeline.length; else emptyTimeline">
+              <mat-vertical-stepper class="order-admin-detail__timeline" [linear]="false">
+                <mat-step *ngFor="let entry of timeline; let idx = index" [completed]="true">
+                  <ng-template matStepLabel>
+                    <div class="order-admin-detail__timeline-label">
+                      <span class="order-admin-detail__timeline-title">{{ timelineLabel(entry) | translate }}</span>
+                      <span class="order-admin-detail__timeline-date">{{ (entry.time || entry.createdAt) | date:'medium' }}</span>
+                    </div>
+                  </ng-template>
+                  <p>{{ timelineDescription(entry) }}</p>
+                </mat-step>
+              </mat-vertical-stepper>
+            </ng-container>
+            <ng-template #emptyTimeline>
+              <p class="muted">{{ 'orders.timelineEmpty' | translate }}</p>
+            </ng-template>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </ng-container>
+  </section>
 </div>
-

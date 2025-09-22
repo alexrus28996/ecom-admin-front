@@ -1,7 +1,9 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { OrdersService, Order, OrderTimelineEntry, OrderItem } from '../../services/orders.service';
+import { OrdersService, Order, OrderTimelineEntry, OrderItem, OrderAddress } from '../../services/orders.service';
 import { MoneyAmount } from '../../services/api.types';
+import { ToastService } from '../../core/toast.service';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-order-detail',
@@ -16,8 +18,30 @@ export class OrderDetailComponent implements OnInit {
   errorKey: string | null = null;
   timeline: OrderTimelineEntry[] = [];
   tlLoading = false; tlErrorKey: string | null = null;
+  lastError: any = null;
+  requestingReturn = false;
 
-  constructor(private route: ActivatedRoute, private orders: OrdersService, private cdr: ChangeDetectorRef) {}
+  private readonly statusTone: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'neutral'> = {
+    pending: 'warning',
+    processing: 'warning',
+    confirmed: 'info',
+    paid: 'success',
+    fulfilled: 'success',
+    completed: 'success',
+    shipped: 'info',
+    delivered: 'success',
+    refunded: 'info',
+    cancelled: 'danger',
+    failed: 'danger'
+  };
+
+  constructor(
+    private readonly route: ActivatedRoute,
+    private readonly orders: OrdersService,
+    private readonly toast: ToastService,
+    private readonly translate: TranslateService,
+    private readonly cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit() {
     this.id = this.route.snapshot.paramMap.get('id') || '';
@@ -25,10 +49,21 @@ export class OrderDetailComponent implements OnInit {
   }
 
   load() {
-    this.loading = true; this.errorKey = null; this.cdr.markForCheck();
+    this.loading = true; this.errorKey = null; this.lastError = null; this.cdr.markForCheck();
     this.orders.get(this.id).subscribe({
-      next: ({ order }) => { this.order = order; this.loading = false; this.cdr.markForCheck(); },
-      error: (err) => { const code = err?.error?.error?.code; this.errorKey = code ? `errors.backend.${code}` : 'orders.detail.errors.loadFailed'; this.loading = false; this.cdr.markForCheck(); }
+      next: ({ order }) => {
+        this.order = order;
+        this.loading = false;
+        this.cdr.markForCheck();
+        this.loadTimeline();
+      },
+      error: (err) => {
+        const code = err?.error?.error?.code;
+        this.errorKey = code ? `errors.backend.${code}` : 'orders.errorLoad';
+        this.lastError = err;
+        this.loading = false;
+        this.cdr.markForCheck();
+      }
     });
   }
 
@@ -38,28 +73,8 @@ export class OrderDetailComponent implements OnInit {
     this.tlLoading = true; this.tlErrorKey = null; this.cdr.markForCheck();
     this.orders.timeline(this.id, { page: 1, limit: 50 }).subscribe({
       next: (res) => { this.timeline = res.items || []; this.tlLoading = false; this.cdr.markForCheck(); },
-      error: (e) => { const code = e?.error?.error?.code; this.tlErrorKey = code ? `errors.backend.${code}` : 'orders.detail.errors.timelineFailed'; this.tlLoading = false; this.cdr.markForCheck(); }
+      error: (e) => { const code = e?.error?.error?.code; this.tlErrorKey = code ? `errors.backend.${code}` : 'orders.errorTimeline'; this.tlLoading = false; this.cdr.markForCheck(); }
     });
-  }
-
-  statusKey(status?: string | null, context: 'order' | 'payment' = 'order'): string {
-    if (!status) {
-      return context === 'payment' ? 'orders.detail.status.unknownPayment' : 'orders.detail.status.unknown';
-    }
-
-    const normalized = status.toLowerCase().replace(/\s+/g, '_');
-    return `orders.detail.status.${context}.${normalized}`;
-  }
-
-  statusColor(status?: string | null): 'primary' | 'warn' | 'accent' {
-    const normalized = (status || '').toLowerCase();
-    if (['completed', 'paid', 'delivered', 'fulfilled', 'confirmed'].includes(normalized)) {
-      return 'primary';
-    }
-    if (['pending', 'processing', 'shipped', 'refunded'].includes(normalized)) {
-      return 'accent';
-    }
-    return 'warn';
   }
 
   money(value: number | MoneyAmount | null | undefined, fallbackCurrency: string): { amount: number; currency: string } {
@@ -72,6 +87,11 @@ export class OrderDetailComponent implements OnInit {
     }
 
     return { amount: 0, currency: fallbackCurrency };
+  }
+
+  badgeClass(value: string | null | undefined): string {
+    const tone = this.statusTone[(value || '').toLowerCase()] || 'neutral';
+    return `badge badge--${tone}`;
   }
 
   itemPrice(item: OrderItem, fallbackCurrency: string): { amount: number; currency: string } {
@@ -97,7 +117,13 @@ export class OrderDetailComponent implements OnInit {
   }
 
   customerEmail(order: Order | null): string | null {
-    if (!order?.user || typeof order.user === 'string') {
+    if (!order) {
+      return null;
+    }
+    if (order.customer?.email) {
+      return order.customer.email;
+    }
+    if (!order.user || typeof order.user === 'string') {
       return null;
     }
 
@@ -106,7 +132,66 @@ export class OrderDetailComponent implements OnInit {
 
   timelineTypeKey(entry: OrderTimelineEntry): string {
     const type = (entry?.type || 'unknown').replace(/\s+/g, '_').toLowerCase();
-    return `orders.detail.timeline.types.${type}`;
+    return `orders.timelineTypes.${type}`;
+  }
+
+  addressLines(address: OrderAddress | null | undefined): string[] {
+    if (!address) {
+      return [];
+    }
+    const lines: string[] = [];
+    if (address.name) lines.push(address.name);
+    if (address.company) lines.push(address.company);
+    const street = [address.line1, address.line2].filter(Boolean).join(', ');
+    if (street) lines.push(street);
+    const cityLine = [address.city, address.region, address.postalCode].filter(Boolean).join(', ');
+    if (cityLine) lines.push(cityLine);
+    if (address.country) lines.push(address.country);
+    if (address.phone) lines.push(address.phone);
+    return lines;
+  }
+
+  requestReturn(): void {
+    if (!this.id || this.requestingReturn) {
+      return;
+    }
+
+    this.requestingReturn = true;
+    this.cdr.markForCheck();
+
+    this.orders.requestReturn(this.id).subscribe({
+      next: () => {
+        this.requestingReturn = false;
+        this.toast.success(this.translate.instant('orders.returnRequested'));
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.requestingReturn = false;
+        this.lastError = err;
+        const code = err?.error?.error?.code;
+        this.errorKey = code ? `errors.backend.${code}` : 'orders.errorLoad';
+        this.toast.error(this.translate.instant('orders.errorLoad'));
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  statusKey(status?: string | null): string {
+    return status ? `orders.status.${status.toLowerCase()}` : 'orders.status.unknown';
+  }
+
+  paymentKey(status?: string | null): string {
+    return status ? `orders.payment.${status.toLowerCase()}` : 'orders.payment.unknown';
+  }
+
+  timelineDescription(entry: OrderTimelineEntry): string {
+    if (entry?.message) {
+      return entry.message;
+    }
+    if (entry?.actor?.name) {
+      return entry.actor.name;
+    }
+    return this.translate.instant('orders.timelineNoDetails');
   }
 
   private isMoneyAmount(value: unknown): value is MoneyAmount {

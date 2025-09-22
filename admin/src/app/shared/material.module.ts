@@ -27,6 +27,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatStepperModule } from '@angular/material/stepper';
 
 const MATERIAL = [
   MatToolbarModule,
@@ -57,7 +58,8 @@ const MATERIAL = [
   MatAutocompleteModule,
   MatDatepickerModule,
   MatNativeDateModule,
-  MatButtonToggleModule
+  MatButtonToggleModule,
+  MatStepperModule
 ];
 
 @NgModule({

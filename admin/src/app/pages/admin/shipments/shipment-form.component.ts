@@ -8,6 +8,7 @@ import { Shipment } from './shipments-list.component';
 export interface ShipmentFormData {
   mode: 'create' | 'edit';
   shipment?: Shipment;
+  orderId?: string;
 }
 
 interface OrderOption {
@@ -67,6 +68,10 @@ export class ShipmentFormComponent implements OnInit, OnDestroy {
 
     if (!this.isEdit) {
       this.form.get('status')?.disable({ emitEvent: false });
+    }
+
+    if (!this.isEdit && this.data.orderId) {
+      this.form.patchValue({ orderId: this.data.orderId });
     }
 
     this.loadOrders();
@@ -170,6 +175,12 @@ export class ShipmentFormComponent implements OnInit, OnDestroy {
           this.filteredOrders = this.orderOptions;
           this.loadingOrders = false;
           orderControl?.enable({ emitEvent: false });
+          if (!this.isEdit && this.data.orderId) {
+            const match = this.orderOptions.find((option) => option.id === this.data.orderId);
+            if (match) {
+              this.form.patchValue({ orderId: match.id }, { emitEvent: false });
+            }
+          }
           this.cdr.markForCheck();
         },
         error: () => {

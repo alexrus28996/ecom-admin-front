@@ -1,10 +1,8 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
 import { PageEvent } from '@angular/material/paginator';
-import { TranslateService } from '@ngx-translate/core';
 
 import { OrdersService, Order } from '../../services/orders.service';
-import { ToastService } from '../../core/toast.service';
+import { MoneyAmount } from '../../services/api.types';
 
 @Component({
   selector: 'app-orders-list',
@@ -13,31 +11,27 @@ import { ToastService } from '../../core/toast.service';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OrdersListComponent implements OnInit {
-  readonly createForm = this.fb.group({
-    shipping: [0, [Validators.min(0)]],
-    taxRate: [0, [Validators.min(0), Validators.max(1)]]
-  });
+  readonly displayedColumns = ['id', 'date', 'status', 'total', 'actions'];
+  readonly pageSizeOptions = [10, 25, 50];
+  readonly skeletonRows = Array.from({ length: 6 });
 
-  displayedColumns: string[] = ['id', 'total', 'status', 'placed', 'actions'];
-  dataSource: Order[] = [];
+  rows: Order[] = [];
   total = 0;
   pageIndex = 0;
   pageSize = 10;
-  readonly pageSizeOptions = [5, 10, 25, 50];
 
   loading = false;
-  creating = false;
   errorKey: string | null = null;
   lastError: any = null;
 
-  private readonly statusTone: Record<string, 'success' | 'warning' | 'danger' | 'neutral'> = {
+  private readonly statusTone: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'neutral'> = {
     pending: 'warning',
     processing: 'warning',
-    confirmed: 'warning',
+    confirmed: 'info',
     paid: 'success',
     fulfilled: 'success',
     completed: 'success',
-    shipped: 'success',
+    shipped: 'info',
     delivered: 'success',
     refunded: 'danger',
     cancelled: 'danger',
@@ -47,9 +41,6 @@ export class OrdersListComponent implements OnInit {
 
   constructor(
     private readonly orders: OrdersService,
-    private readonly fb: FormBuilder,
-    private readonly toast: ToastService,
-    private readonly translate: TranslateService,
     private readonly cdr: ChangeDetectorRef
   ) {}
 
@@ -65,7 +56,7 @@ export class OrdersListComponent implements OnInit {
 
     this.orders.list({ page: this.pageIndex + 1, limit: this.pageSize }).subscribe({
       next: (res) => {
-        this.dataSource = res.items;
+        this.rows = res.items || [];
         this.total = res.total;
         this.pageIndex = Math.max(res.page - 1, 0);
         this.loading = false;
@@ -74,7 +65,7 @@ export class OrdersListComponent implements OnInit {
       error: (err) => {
         this.lastError = err;
         const code = err?.error?.error?.code;
-        this.errorKey = code ? `errors.backend.${code}` : 'orders.list.errors.loadFailed';
+        this.errorKey = code ? `errors.backend.${code}` : 'orders.errorLoad';
         this.loading = false;
         this.cdr.markForCheck();
       }
@@ -89,51 +80,41 @@ export class OrdersListComponent implements OnInit {
     this.load();
   }
 
-  createOrder(): void {
-    if (this.creating || this.createForm.invalid) {
-      this.createForm.markAllAsTouched();
-      return;
-    }
-
-    const shipping = Number(this.createForm.value.shipping ?? 0) || 0;
-    const taxRate = Number(this.createForm.value.taxRate ?? 0) || 0;
-
-    this.creating = true;
-    this.cdr.markForCheck();
-
-    this.orders.create({ shipping, taxRate }).subscribe({
-      next: () => {
-        this.toast.success(this.translate.instant('orders.list.toasts.created'));
-        this.creating = false;
-        this.load();
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        this.lastError = err;
-        const code = err?.error?.error?.code;
-        this.errorKey = code ? `errors.backend.${code}` : 'orders.list.errors.createFailed';
-        this.creating = false;
-        this.toast.error(this.translate.instant('orders.list.errors.createFailed'));
-        this.cdr.markForCheck();
-      }
-    });
-  }
-
   statusChipClass(value: string | undefined | null): string {
     if (!value) {
-      return 'neutral';
+      return 'badge badge--neutral';
     }
     const tone = this.statusTone[value.toLowerCase()] ?? 'neutral';
-    return tone;
+    return `badge badge--${tone}`;
   }
 
-  statusKey(value: string | undefined | null, scope: 'status' | 'paymentStatus'): string {
-    const normalized = value?.toLowerCase() || 'unknown';
-    return `orders.list.${scope}.${normalized}`;
+  statusKey(value: string | undefined | null): string {
+    return value ? `orders.status.${value.toLowerCase()}` : 'orders.status.unknown';
   }
 
   trackById(_: number, order: Order): string {
     return order._id;
+  }
+
+  totalFor(order: Order): { amount: number; currency: string } {
+    return this.money(order.total, order.currency);
+  }
+
+  private money(value: number | MoneyAmount | null | undefined, fallbackCurrency: string): { amount: number; currency: string } {
+    if (this.isMoneyAmount(value)) {
+      return {
+        amount: Number(value.amount || 0),
+        currency: value.currency || fallbackCurrency
+      };
+    }
+    if (typeof value === 'number' && !Number.isNaN(value)) {
+      return { amount: value, currency: fallbackCurrency };
+    }
+    return { amount: 0, currency: fallbackCurrency };
+  }
+
+  private isMoneyAmount(value: unknown): value is MoneyAmount {
+    return typeof value === 'object' && value !== null && 'amount' in value && 'currency' in value;
   }
 }
 

@@ -582,158 +582,97 @@
     }
   },
   "orders": {
-    "list": {
-      "title": "My orders",
-      "subtitle": "Review order history, create new orders from your cart, and keep tabs on fulfillment.",
-      "actions": {
-        "refresh": "Refresh"
-      },
-      "create": {
-        "title": "Create order from cart",
-        "subtitle": "Apply shipping and tax to your active cart to generate a new order.",
-        "fields": {
-          "shipping": "Shipping amount",
-          "shippingHint": "Flat shipping charge applied to the order.",
-          "taxRate": "Tax rate",
-          "taxRateHint": "Enter as a decimal (e.g. 0.07 for 7%)."
-        },
-        "errors": {
-          "shippingMin": "Shipping cannot be negative.",
-          "taxRateRange": "Tax rate must be between 0 and 1."
-        },
-        "submit": "Create order"
-      },
-      "table": {
-        "title": "Recent orders",
-        "count": "{{ count }} total orders",
-        "id": "Order",
-        "total": "Total",
-        "status": "Status",
-        "placed": "Placed",
-        "actions": "Actions",
-        "view": "View order"
-      },
-      "status": {
-        "pending": "Pending",
-        "processing": "Processing",
-        "confirmed": "Confirmed",
-        "fulfilled": "Fulfilled",
-        "completed": "Completed",
-        "shipped": "Shipped",
-        "delivered": "Delivered",
-        "cancelled": "Cancelled",
-        "refunded": "Refunded",
-        "failed": "Failed",
-        "unknown": "Unknown"
-      },
-      "paymentStatus": {
-        "paid": "Paid",
-        "unpaid": "Unpaid",
-        "pending": "Pending payment",
-        "refunded": "Refunded",
-        "failed": "Payment failed",
-        "unknown": "Unknown"
-      },
-      "empty": "No orders yet. Create one from your cart to get started.",
-      "errors": {
-        "loadFailed": "Unable to load orders. Please try again.",
-        "createFailed": "We couldn't create the order from your cart."
-      },
-      "toasts": {
-        "created": "Order created from your cart."
-      }
+    "title": "Orders",
+    "description": "Review and manage every customer purchase.",
+    "descriptionUser": "Track your purchases and follow fulfillment updates.",
+    "adminList": "All Orders",
+    "userList": "My Orders",
+    "userDetail": "Order {{ id }}",
+    "detailAdmin": "Order {{ id }}",
+    "id": "Order ID",
+    "customer": "Customer",
+    "statusLabel": "Status",
+    "paymentStatus": "Payment Status",
+    "paymentSummary": "Payment Summary",
+    "total": "Total Amount",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "tax": "Tax",
+    "createdAt": "Created At",
+    "actions": {
+      "refresh": "Refresh"
     },
-    "detail": {
-      "title": "Order Detail",
-      "subtitle": "Detailed timeline and fulfillment for order {{ id }}.",
-      "fields": {
-        "id": "ID",
-        "status": "Status",
-        "paymentStatus": "Payment status",
-        "couponCode": "Coupon",
-        "createdAt": "Created",
-        "updatedAt": "Updated",
-        "customer": "Customer"
-      },
-      "actions": {
-        "invoice": "Invoice (PDF)",
-        "timeline": "Show timeline",
-        "refresh": "Refresh order"
-      },
-      "table": {
-        "product": "Product",
-        "price": "Price",
-        "qty": "Qty",
-        "line": "Line",
-        "productId": "Product ID: {{ id }}",
-        "productImageAlt": "Product image for {{ name }}"
-      },
-      "summary": {
-        "metaTitle": "Order overview",
-        "subtotal": "Subtotal",
-        "discount": "Discount",
-        "shipping": "Shipping",
-        "tax": "Tax",
-        "total": "Total"
-      },
-      "sections": {
-        "items": "Items",
-        "itemsHint": "Line items included in this order.",
-        "totals": "Financial summary",
-        "addresses": "Addresses",
-        "timeline": "Timeline"
-      },
-      "status": {
-        "unknown": "Unknown status",
-        "unknownPayment": "Unknown payment status",
-        "order": {
-          "pending": "Pending",
-          "processing": "Processing",
-          "confirmed": "Confirmed",
-          "completed": "Completed",
-          "cancelled": "Cancelled",
-          "fulfilled": "Fulfilled",
-          "delivered": "Delivered",
-          "shipped": "Shipped",
-          "refunded": "Refunded"
-        },
-        "payment": {
-          "pending": "Payment pending",
-          "paid": "Paid",
-          "unpaid": "Unpaid",
-          "refunded": "Refunded",
-          "failed": "Payment failed"
-        }
-      },
-      "items": {
-        "empty": "No items are associated with this order yet."
-      },
-      "addresses": {
-        "shipping": "Shipping address",
-        "billing": "Billing address"
-      },
-      "timeline": {
-        "title": "Order timeline",
-        "subtitle": "Chronological record of status updates and notifications.",
-        "time": "Time",
-        "type": "Type",
-        "actor": "Actor",
-        "message": "Message",
-        "empty": "Timeline events will appear here once loaded.",
-        "system": "System",
-        "noMessage": "No additional details",
-        "types": {
-          "unknown": "Order event",
-          "order_created": "Order created",
-          "status_updated": "Status updated",
-          "payment_updated": "Payment updated",
-          "shipment_created": "Shipment created"
-        }
-      },
-      "errors": {
-        "loadFailed": "Unable to load order.",
-        "timelineFailed": "Unable to load timeline."
-      }
+    "actionColumn": "Actions",
+    "view": "View",
+    "invoice": "Download Invoice",
+    "timeline": "Order Timeline",
+    "timelineEmpty": "Timeline events will appear here once available.",
+    "timelineNoDetails": "No additional details provided.",
+    "return": "Request Return",
+    "returnRequested": "Return request submitted.",
+    "createShipment": "Create Shipment",
+    "updateStatus": "Update Status",
+    "cancel": "Cancel Order",
+    "cancelConfirm": "Are you sure you want to cancel this order?",
+    "cancelSuccess": "Order cancelled successfully",
+    "saveSuccess": "Order updated successfully",
+    "errorLoad": "Failed to load orders",
+    "errorTimeline": "Failed to load timeline",
+    "customerEmail": "Customer Email",
+    "coupon": "Coupon",
+    "addresses": "Addresses",
+    "shippingAddress": "Shipping address",
+    "billingAddress": "Billing address",
+    "lineItems": "Line items",
+    "payment": {
+      "pending": "Pending payment",
+      "paid": "Paid",
+      "unpaid": "Unpaid",
+      "refunded": "Refunded",
+      "failed": "Payment failed",
+      "unknown": "Unknown"
+    },
+    "status": {
+      "pending": "Pending",
+      "processing": "Processing",
+      "confirmed": "Confirmed",
+      "fulfilled": "Fulfilled",
+      "completed": "Completed",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled",
+      "refunded": "Refunded",
+      "failed": "Failed",
+      "paid": "Paid",
+      "unknown": "Unknown"
+    },
+    "filters": {
+      "status": "Status",
+      "paymentStatus": "Payment Status",
+      "customerEmail": "Customer email",
+      "customerEmailPlaceholder": "name@example.com",
+      "dateRange": "Date range",
+      "dateStart": "Start date",
+      "dateEnd": "End date",
+      "any": "Any"
+    },
+    "product": "Product",
+    "productId": "Product ID: {{ id }}",
+    "price": "Price",
+    "quantity": "Quantity",
+    "paymentStatusLabel": "Payment Status",
+    "productImageAlt": "Product image for {{ name }}",
+    "empty": "No orders found",
+    "timelineTypes": {
+      "unknown": "Order event",
+      "event": "Order event",
+      "order_created": "Order created",
+      "status_updated": "Status updated",
+      "payment_updated": "Payment updated",
+      "shipment_created": "Shipment created",
+      "fulfilled": "Order fulfilled",
+      "delivered": "Order delivered",
+      "cancelled": "Order cancelled"
     }
   },
   "shell": {

@@ -30,6 +30,7 @@ export interface Order {
   _id: string;
   number?: string;
   user?: string | { _id: string; name: string; email?: string } | null;
+  customer?: { name?: string | null; email?: string | null } | null;
   items: OrderItem[];
   subtotal: number | MoneyAmount;
   discount?: number | MoneyAmount | null;
@@ -66,6 +67,7 @@ export interface ListAdminOrdersParams extends ListOrdersParams {
   status?: string;
   paymentStatus?: string;
   user?: string;
+  email?: string;
   from?: string;
   to?: string;
 }
@@ -108,6 +110,7 @@ export class OrderService {
     if (params.status) httpParams = httpParams.set('status', params.status);
     if (params.paymentStatus) httpParams = httpParams.set('paymentStatus', params.paymentStatus);
     if (params.user) httpParams = httpParams.set('user', params.user);
+    if (params.email) httpParams = httpParams.set('email', params.email);
     if (params.from) httpParams = httpParams.set('from', params.from);
     if (params.to) httpParams = httpParams.set('to', params.to);
     if (params.page) httpParams = httpParams.set('page', String(params.page));
@@ -121,6 +124,14 @@ export class OrderService {
 
   adminUpdate(id: string, payload: { status?: string; paymentStatus?: string }): Observable<{ order: Order }> {
     return this.http.patch<{ order: Order }>(`${this.adminBase}/${id}`, payload);
+  }
+
+  adminCancel(id: string): Observable<{ order: Order }> {
+    return this.http.patch<{ order: Order }>(`${this.adminBase}/${id}`, { status: 'cancelled' });
+  }
+
+  requestReturn(id: string): Observable<{ success?: boolean }> {
+    return this.http.post<{ success?: boolean }>(`${this.base}/${id}/returns`, {});
   }
 }
 

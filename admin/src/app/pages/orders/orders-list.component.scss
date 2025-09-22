@@ -1,129 +1,107 @@
-.orders-shell {
-  display: flex;
-  flex-direction: column;
+.orders-page {
+  display: grid;
   gap: 24px;
 }
 
-.orders-header {
+.orders-page__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
   flex-wrap: wrap;
-}
-
-.orders-header-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.orders-header-text h1 {
-  margin: 0;
-}
-
-.section-heading {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 16px;
-}
-
-.section-heading h2 {
-  margin: 0;
-}
-
-.muted {
-  margin: 0;
-  color: var(--app-text-muted);
-}
-
-.create-form {
-  display: flex;
-  flex-direction: column;
   gap: 16px;
 }
 
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
+.orders-page__header h1 {
+  margin: 0;
 }
 
-.actions {
-  display: flex;
-  justify-content: flex-end;
+.orders-page__eyebrow {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--app-text-muted, #64748b);
 }
 
-.actions button {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+.orders-page__table-inner {
+  background: var(--app-surface, #fff);
+  border-radius: 16px;
+  border: 1px solid var(--app-border, #e2e8f0);
+  padding: 16px;
 }
 
-.actions mat-progress-spinner {
-  width: 18px;
-  height: 18px;
-}
-
-.table-container {
-  position: relative;
-  overflow-x: auto;
-}
-
-.table-container table {
+.orders-page__mat-table {
   width: 100%;
 }
 
-.order-id {
-  font-family: 'Fira Code', 'Roboto Mono', monospace;
-  font-size: 13px;
+.orders-page__link {
+  color: inherit;
+  text-decoration: none;
+  font-weight: 600;
 }
 
-.status-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+.orders-page__skeleton {
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.2), rgba(148, 163, 184, 0.35), rgba(148, 163, 184, 0.2));
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease infinite;
+  margin-bottom: 12px;
 }
 
-.status-chip {
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.badge {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   padding: 4px 12px;
   border-radius: 999px;
   font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  background: rgba(15, 23, 42, 0.06);
-  color: var(--app-text);
-  text-transform: capitalize;
-}
-
-.status-chip.success {
-  background: rgba(34, 197, 94, 0.15);
-  color: var(--app-success);
-}
-
-.status-chip.warning {
-  background: rgba(217, 119, 6, 0.15);
-  color: var(--app-warning);
-}
-
-.status-chip.danger {
-  background: rgba(239, 68, 68, 0.15);
-  color: var(--app-danger);
-}
-
-.status-chip.neutral {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   background: rgba(148, 163, 184, 0.18);
-  color: var(--app-text-muted);
+  color: #334155;
+
+  &--success {
+    background: rgba(34, 197, 94, 0.16);
+    color: #15803d;
+  }
+
+  &--warning {
+    background: rgba(251, 191, 36, 0.24);
+    color: #92400e;
+  }
+
+  &--danger {
+    background: rgba(248, 113, 113, 0.22);
+    color: #b91c1c;
+  }
+
+  &--info {
+    background: rgba(59, 130, 246, 0.18);
+    color: #1d4ed8;
+  }
+
+  &--neutral {
+    background: rgba(148, 163, 184, 0.18);
+    color: #475569;
+  }
 }
 
-.status-chip.outline {
-  border: 1px solid rgba(148, 163, 184, 0.4);
-  background: transparent;
-  color: var(--app-text-muted);
+.orders-page__actions-header {
+  text-align: right;
+}
+
+.orders-page__table mat-paginator {
+  margin-top: 8px;
 }
 
 .empty-state {
@@ -131,7 +109,7 @@
   display: grid;
   gap: 8px;
   justify-items: center;
-  color: var(--app-text-muted);
+  color: var(--app-text-muted, #64748b);
 }
 
 .empty-state mat-icon {
@@ -140,21 +118,8 @@
   height: 40px;
 }
 
-.mat-mdc-paginator {
-  border-top: 1px solid var(--app-border);
-  margin-top: 16px;
-}
-
-@media (max-width: 767px) {
-  .orders-header {
+@media (max-width: 768px) {
+  .orders-page__header {
     align-items: flex-start;
-  }
-
-  .actions {
-    justify-content: stretch;
-  }
-
-  .actions button {
-    width: 100%;
   }
 }
