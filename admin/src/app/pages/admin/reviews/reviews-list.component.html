@@ -83,6 +83,7 @@
             <a
               class="reviews-product"
               [routerLink]="(review.product?._id || review.product?.id) ? ['/admin/products', review.product?._id || review.product?.id, 'edit'] : null"
+            >
               <img
                 *ngIf="review.product?.thumbnailUrl"
                 [src]="review.product?.thumbnailUrl"

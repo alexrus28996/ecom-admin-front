@@ -423,7 +423,11 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     } else {
       result.variants = result.variants
         .map((variant) => {
-          const next: ProductVariant = { ...variant };
+          const cleanedIsActive = variant.isActive === null ? undefined : variant.isActive;
+          const next: ProductVariant = { ...variant, isActive: cleanedIsActive };
+          if (next.isActive === undefined) {
+            delete next.isActive;
+          }
           if (next.attributes && !Object.keys(next.attributes).length) {
             delete next.attributes;
           }

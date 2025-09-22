@@ -114,7 +114,7 @@ export interface ListProductsParams {
 @Injectable({ providedIn: 'root' })
 export class ProductsService {
   private readonly baseUrl = environment.apiBaseUrl;
-  private readonly adminUrl = `${environment.apiBaseUrl}/admin/products`;
+  private readonly adminUrl = `${environment.apiBaseUrl}/products`;
 
   constructor(private readonly http: HttpClient) {}
 
