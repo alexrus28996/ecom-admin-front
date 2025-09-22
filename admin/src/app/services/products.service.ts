@@ -145,4 +145,22 @@ export class ProductService {
 }
 
 @Injectable({ providedIn: 'root' })
-export class ProductsService extends ProductService {}
+export class ProductsService extends ProductService {
+  private readonly adminBase = `${environment.apiBaseUrl}/admin/products`;
+
+  constructor(protected override readonly http: HttpClient) {
+    super(http);
+  }
+
+  override create(payload: ProductInput): Observable<{ product: ProductDetail }> {
+    return this.http.post<{ product: ProductDetail }>(this.adminBase, payload);
+  }
+
+  override update(id: string, payload: Partial<ProductInput>): Observable<{ product: ProductDetail }> {
+    return this.http.put<{ product: ProductDetail }>(`${this.adminBase}/${id}`, payload);
+  }
+
+  override delete(id: string): Observable<{ success: boolean }> {
+    return this.http.delete<{ success: boolean }>(`${this.adminBase}/${id}`);
+  }
+}

@@ -9,11 +9,15 @@ import { TranslateService } from '@ngx-translate/core';
 import { AdminService } from '../../services/admin.service';
 <<<<<<< ours
 <<<<<<< ours
+<<<<<<< ours
 import { Subject, takeUntil } from 'rxjs';
 =======
 import { environment } from '../../../environments/environment';
 >>>>>>> theirs
 =======
+>>>>>>> theirs
+=======
+import { environment } from '../../../environments/environment';
 >>>>>>> theirs
 
 interface CategoryOption {
@@ -248,6 +252,10 @@ export class ProductFormComponent implements OnInit, OnDestroy {
         const code = err?.error?.error?.code;
         this.errorKey = code ? `errors.backend.${code}` : 'products.errors.loadOne';
         this.lastError = err;
+        if (!environment.production) {
+          // eslint-disable-next-line no-console
+          console.error('Failed to load product details', err);
+        }
         this.loading = false;
         this.cdr.markForCheck();
       }
@@ -351,6 +359,10 @@ export class ProductFormComponent implements OnInit, OnDestroy {
         this.errorKey = err?.error?.error?.code ? `errors.backend.${err.error.error.code}` : 'products.form.errors.saveFailed';
         this.toast.error(this.translate.instant('products.form.errors.saveFailed'));
         this.lastError = err;
+        if (!environment.production) {
+          // eslint-disable-next-line no-console
+          console.error('Failed to save product', err);
+        }
         this.loading = false;
         this.cdr.markForCheck();
       }

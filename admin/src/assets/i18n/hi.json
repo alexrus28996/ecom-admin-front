@@ -1219,6 +1219,7 @@
       "UNAUTHORIZED": "You need to sign in to continue.",
       "FORBIDDEN": "You do not have permission to perform this action.",
       "NOT_FOUND": "The requested resource could not be found.",
+      "ROUTE_NOT_FOUND": "अनुरोधित बैकएंड रूट उपलब्ध नहीं है।",
       "VALIDATION_ERROR": "Some fields have validation errors.",
       "CONFLICT": "The resource is in a conflicting state.",
       "RATE_LIMITED": "Too many requests. Please try again later.",
