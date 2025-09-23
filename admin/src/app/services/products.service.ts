@@ -115,6 +115,7 @@ export interface ListProductsParams {
 export class ProductsService {
   private readonly baseUrl = environment.apiBaseUrl;
   private readonly adminUrl = `${environment.apiBaseUrl}/products`;
+  private readonly productsUrl = `${environment.apiBaseUrl}/products`;
 
   constructor(private readonly http: HttpClient) {}
 
@@ -132,7 +133,7 @@ export class ProductsService {
     if (params.sort) httpParams = httpParams.set('sort', params.sort);
     if (params.page) httpParams = httpParams.set('page', String(params.page));
     if (params.limit) httpParams = httpParams.set('limit', String(params.limit));
-    return this.http.get<Paginated<ProductSummary>>(`${this.adminUrl}`, { params: httpParams });
+    return this.http.get<Paginated<ProductSummary>>(this.productsUrl, { params: httpParams });
   }
 
   get(id: string): Observable<{ product: ProductDetail }> {
@@ -140,15 +141,15 @@ export class ProductsService {
   }
 
   getById(id: string): Observable<{ product: ProductDetail }> {
-    return this.http.get<{ product: ProductDetail }>(`${this.baseUrl}/products/${id}`);
+    return this.http.get<{ product: ProductDetail }>(`${this.productsUrl}/${id}`);
   }
 
   create(payload: ProductInput): Observable<{ product: ProductDetail }> {
-    return this.http.post<{ product: ProductDetail }>(this.adminUrl, payload);
+    return this.http.post<{ product: ProductDetail }>(this.productsUrl, payload);
   }
 
   update(id: string, payload: Partial<ProductInput>): Observable<{ product: ProductDetail }> {
-    return this.http.patch<{ product: ProductDetail }>(`${this.adminUrl}/${id}`, payload);
+    return this.http.patch<{ product: ProductDetail }>(`${this.productsUrl}/${id}`, payload);
   }
 
   delete(id: string): Observable<{ success: boolean }> {
@@ -156,6 +157,6 @@ export class ProductsService {
   }
 
   remove(id: string): Observable<{ success: boolean }> {
-    return this.http.delete<{ success: boolean }>(`${this.adminUrl}/${id}`);
+    return this.http.delete<{ success: boolean }>(`${this.productsUrl}/${id}`);
   }
 }

@@ -431,6 +431,12 @@ export class ProductFormComponent implements OnInit, OnDestroy {
           if (next.attributes && !Object.keys(next.attributes).length) {
             delete next.attributes;
           }
+          if (next.isActive === undefined) {
+            delete next.isActive;
+          }
+          if (next.priceDelta === undefined) {
+            delete next.priceDelta;
+          }
           delete (next as any)._id;
           delete (next as any).createdAt;
           delete (next as any).updatedAt;
