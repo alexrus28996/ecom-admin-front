@@ -1,3 +1,4 @@
+<ng-container *ngIf="orderPermissions$ | async as perms">
 <div class="page page--panel order-admin-detail">
   <section class="page__header">
     <div class="page__headline">
@@ -7,7 +8,13 @@
         <p class="muted" *ngIf="order?.createdAt">{{ order.createdAt | date:'medium' }}</p>
       </div>
       <div class="page__actions order-admin-detail__actions">
-        <button mat-stroked-button color="primary" type="button" (click)="createShipment()" [disabled]="!order">
+        <button
+          mat-stroked-button
+          color="primary"
+          type="button"
+          (click)="createShipment()"
+          [disabled]="!order || !perms.shipment"
+        >
           <mat-icon>local_shipping</mat-icon>
           {{ 'orders.createShipment' | translate }}
         </button>
@@ -20,7 +27,7 @@
           color="warn"
           type="button"
           (click)="cancelOrder()"
-          [disabled]="!order || cancelling || order.status === 'cancelled'"
+          [disabled]="!order || cancelling || order.status === 'cancelled' || !perms.update"
         >
           <mat-icon>cancel</mat-icon>
           {{ 'orders.cancel' | translate }}
@@ -77,7 +84,7 @@
                 </mat-select>
               </mat-form-field>
 
-              <button mat-flat-button color="primary" type="submit" [disabled]="saving || statusForm.invalid">
+              <button mat-flat-button color="primary" type="submit" [disabled]="saving || statusForm.invalid || !perms.update">
                 <mat-icon>save</mat-icon>
                 {{ 'orders.updateStatus' | translate }}
               </button>
@@ -222,3 +229,4 @@
     </ng-container>
   </section>
 </div>
+</ng-container>

@@ -1,10 +1,13 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { UntypedFormArray, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { TranslateService } from '@ngx-translate/core';
+import { Subject } from 'rxjs';
+import { distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
 import { ProductsService, ProductDetail, ProductVariant } from '../../services/products.service';
 import { ToastService } from '../../core/toast.service';
+import { PermissionsService } from '../../core/permissions.service';
 
 type BackendError = unknown;
 
@@ -18,7 +21,7 @@ interface ProductVariantsDialogData {
   styleUrls: ['./product-variants-dialog.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ProductVariantsDialogComponent implements OnInit {
+export class ProductVariantsDialogComponent implements OnInit, OnDestroy {
   readonly form: UntypedFormGroup = this.fb.group({
     variants: this.fb.array([])
   });
@@ -28,6 +31,10 @@ export class ProductVariantsDialogComponent implements OnInit {
   errorKey: string | null = null;
   lastError: BackendError = null;
   productName = '';
+  canEditVariants = true;
+
+  readonly canManageVariants$ = this.permissions.can$('products.manageVariants');
+  private readonly destroy$ = new Subject<void>();
 
   constructor(
     private readonly fb: UntypedFormBuilder,
@@ -36,11 +43,32 @@ export class ProductVariantsDialogComponent implements OnInit {
     private readonly toast: ToastService,
     private readonly translate: TranslateService,
     private readonly cdr: ChangeDetectorRef,
-    @Inject(MAT_DIALOG_DATA) private readonly data: ProductVariantsDialogData
+    @Inject(MAT_DIALOG_DATA) private readonly data: ProductVariantsDialogData,
+    private readonly permissions: PermissionsService
   ) {}
 
   ngOnInit(): void {
+    this.observePermissions();
     this.load();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private observePermissions(): void {
+    this.canManageVariants$
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe((canManage) => {
+        this.canEditVariants = !!canManage;
+        if (this.canEditVariants) {
+          this.form.enable({ emitEvent: false });
+        } else {
+          this.form.disable({ emitEvent: false });
+        }
+        this.cdr.markForCheck();
+      });
   }
 
   get variants(): UntypedFormArray {
@@ -67,12 +95,18 @@ export class ProductVariantsDialogComponent implements OnInit {
     };
   }
 
-  addVariant(variant?: ProductVariant): void {
+  addVariant(variant?: ProductVariant, bypass = false): void {
+    if (!bypass && !this.canEditVariants) {
+      return;
+    }
     this.variants.push(this.createVariantGroup(variant));
     this.cdr.markForCheck();
   }
 
   removeVariant(index: number): void {
+    if (!this.canEditVariants) {
+      return;
+    }
     this.variants.removeAt(index);
     this.cdr.markForCheck();
   }
@@ -81,18 +115,24 @@ export class ProductVariantsDialogComponent implements OnInit {
     return this.variants.at(index).get('attributes') as UntypedFormArray;
   }
 
-  addVariantAttribute(index: number, attr?: { key?: string; value?: string }): void {
+  addVariantAttribute(index: number, attr?: { key?: string; value?: string }, bypass = false): void {
+    if (!bypass && !this.canEditVariants) {
+      return;
+    }
     this.variantAttributes(index).push(this.createAttributeGroup(attr?.key || '', attr?.value || ''));
     this.cdr.markForCheck();
   }
 
   removeVariantAttribute(variantIndex: number, attributeIndex: number): void {
+    if (!this.canEditVariants) {
+      return;
+    }
     this.variantAttributes(variantIndex).removeAt(attributeIndex);
     this.cdr.markForCheck();
   }
 
   save(): void {
-    if (this.saving) {
+    if (this.saving || !this.canEditVariants) {
       return;
     }
 
@@ -172,10 +212,10 @@ export class ProductVariantsDialogComponent implements OnInit {
   private setVariants(variants: ProductVariant[]): void {
     this.variants.clear();
     if (!variants.length) {
-      this.addVariant();
+      this.addVariant(undefined, true);
       return;
     }
-    variants.forEach((variant) => this.addVariant(variant));
+    variants.forEach((variant) => this.addVariant(variant, true));
   }
 
   private createVariantGroup(variant?: ProductVariant): UntypedFormGroup {

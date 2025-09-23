@@ -1,3 +1,4 @@
+<ng-container *ngIf="productFormPermissions$ | async as perms">
 <div class="page page--panel product-form-shell">
   <mat-card class="product-form-card">
     <mat-card-header>
@@ -95,7 +96,13 @@
               <section class="form-section">
                 <div class="section-header">
                   <h3>{{ 'products.form.sections.attributes' | translate }}</h3>
-                  <button mat-stroked-button type="button" color="primary" (click)="addAttribute()">
+                  <button
+                    mat-stroked-button
+                    type="button"
+                    color="primary"
+                    (click)="addAttribute()"
+                    [disabled]="!canModify(perms)"
+                  >
                     <mat-icon>add</mat-icon>
                     {{ 'products.form.sections.attributesAdd' | translate }}
                   </button>
@@ -109,7 +116,14 @@
                     <mat-label>{{ 'products.form.fields.attribute.value' | translate }}</mat-label>
                     <input matInput formControlName="value" />
                   </mat-form-field>
-                  <button mat-icon-button color="warn" type="button" (click)="removeAttribute(i)" aria-label="{{ 'products.form.sections.attributesRemove' | translate }}">
+                  <button
+                    mat-icon-button
+                    color="warn"
+                    type="button"
+                    (click)="removeAttribute(i)"
+                    [disabled]="!canModify(perms)"
+                    aria-label="{{ 'products.form.sections.attributesRemove' | translate }}"
+                  >
                     <mat-icon>delete</mat-icon>
                   </button>
                 </div>
@@ -122,7 +136,13 @@
               <section class="form-section">
                 <div class="section-header">
                   <h3>{{ 'products.form.sections.images' | translate }}</h3>
-                  <button mat-stroked-button type="button" color="primary" (click)="addImage()">
+                  <button
+                    mat-stroked-button
+                    type="button"
+                    color="primary"
+                    (click)="addImage()"
+                    [disabled]="!canModify(perms)"
+                  >
                     <mat-icon>add</mat-icon>
                     {{ 'products.form.sections.imagesAdd' | translate }}
                   </button>
@@ -137,12 +157,32 @@
                       <mat-label>{{ 'products.form.fields.image.alt' | translate }}</mat-label>
                       <input matInput formControlName="alt" />
                     </mat-form-field>
-                    <input type="file" accept="image/*" #fileInput style="display:none" (change)="onImageSelected($event, i)" />
-                    <button mat-stroked-button type="button" color="primary" (click)="fileInput.click()">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      #fileInput
+                      style="display:none"
+                      (change)="onImageSelected($event, i)"
+                      [disabled]="!canModify(perms)"
+                    />
+                    <button
+                      mat-stroked-button
+                      type="button"
+                      color="primary"
+                      (click)="fileInput.click()"
+                      [disabled]="!canModify(perms)"
+                    >
                       <mat-icon>cloud_upload</mat-icon>
                       {{ 'products.form.sections.imagesUpload' | translate }}
                     </button>
-                    <button mat-icon-button color="warn" type="button" (click)="removeImage(i)" aria-label="{{ 'products.form.sections.imagesRemove' | translate }}">
+                    <button
+                      mat-icon-button
+                      color="warn"
+                      type="button"
+                      (click)="removeImage(i)"
+                      [disabled]="!canModify(perms)"
+                      aria-label="{{ 'products.form.sections.imagesRemove' | translate }}"
+                    >
                       <mat-icon>delete</mat-icon>
                     </button>
                   </div>
@@ -169,7 +209,13 @@
               </div>
               <div class="section-header">
                 <h3>{{ 'products.form.sections.variants' | translate }}</h3>
-                <button mat-stroked-button type="button" color="primary" (click)="addVariant()">
+                <button
+                  mat-stroked-button
+                  type="button"
+                  color="primary"
+                  (click)="addVariant()"
+                  [disabled]="!canModify(perms)"
+                >
                   <mat-icon>add</mat-icon>
                   {{ 'products.form.sections.variantsAdd' | translate }}
                 </button>
@@ -180,7 +226,14 @@
                     <mat-card-title>
                       {{ 'products.form.sections.variantTitle' | translate:{ index: i + 1 } }}
                     </mat-card-title>
-                    <button mat-icon-button color="warn" type="button" (click)="removeVariant(i)" aria-label="{{ 'products.form.sections.variantsRemove' | translate }}">
+                    <button
+                      mat-icon-button
+                      color="warn"
+                      type="button"
+                      (click)="removeVariant(i)"
+                      [disabled]="!canModify(perms)"
+                      aria-label="{{ 'products.form.sections.variantsRemove' | translate }}"
+                    >
                       <mat-icon>delete</mat-icon>
                     </button>
                   </mat-card-header>
@@ -209,7 +262,13 @@
                     <div class="variant-attributes">
                       <div class="variant-attributes-header">
                         <h4>{{ 'products.form.fields.variant.attributes' | translate }}</h4>
-                        <button mat-stroked-button type="button" color="primary" (click)="addVariantAttribute(i)">
+                        <button
+                          mat-stroked-button
+                          type="button"
+                          color="primary"
+                          (click)="addVariantAttribute(i)"
+                          [disabled]="!canModify(perms)"
+                        >
                           <mat-icon>add</mat-icon>
                           {{ 'products.form.sections.variantAttributeAdd' | translate }}
                         </button>
@@ -223,7 +282,14 @@
                           <mat-label>{{ 'products.form.fields.attribute.value' | translate }}</mat-label>
                           <input matInput formControlName="value" />
                         </mat-form-field>
-                        <button mat-icon-button color="warn" type="button" (click)="removeVariantAttribute(i, j)" aria-label="{{ 'products.form.sections.attributesRemove' | translate }}">
+                        <button
+                          mat-icon-button
+                          color="warn"
+                          type="button"
+                          (click)="removeVariantAttribute(i, j)"
+                          [disabled]="!canModify(perms)"
+                          aria-label="{{ 'products.form.sections.attributesRemove' | translate }}"
+                        >
                           <mat-icon>delete</mat-icon>
                         </button>
                       </div>
@@ -263,7 +329,12 @@
         <button mat-stroked-button type="button" color="primary" routerLink="/admin/products">
           {{ 'products.form.actions.cancel' | translate }}
         </button>
-        <button mat-raised-button color="primary" type="submit" [disabled]="loading || form.invalid">
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="loading || form.invalid || !canModify(perms)"
+        >
           {{ 'products.form.actions.save' | translate }}
         </button>
       </mat-card-actions>
@@ -272,3 +343,4 @@
 
   <app-error-banner [key]="errorKey" [error]="lastError"></app-error-banner>
 </div>
+</ng-container>

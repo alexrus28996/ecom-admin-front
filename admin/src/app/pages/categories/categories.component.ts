@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnIni
 import { UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { PageEvent } from '@angular/material/paginator';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, combineLatest, takeUntil } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
 
 import { Category, CategoryService } from '../../services/category.service';
@@ -10,6 +10,7 @@ import { ToastService } from '../../core/toast.service';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
 import { CategoryFormDialogComponent } from './category-form-dialog.component';
 import { CategoryReorderDialogComponent } from './category-reorder-dialog.component';
+import { PermissionsService } from '../../core/permissions.service';
 
 interface CategoryOption {
   id: string;
@@ -44,13 +45,21 @@ export class CategoriesComponent implements OnInit, OnDestroy {
 
   private readonly destroy$ = new Subject<void>();
 
+  readonly categoryPermissions$ = combineLatest({
+    create: this.permissions.can$('categories.create'),
+    update: this.permissions.can$('categories.update'),
+    delete: this.permissions.can$('categories.delete'),
+    reorder: this.permissions.can$('categories.reorder')
+  });
+
   constructor(
     private readonly fb: UntypedFormBuilder,
     private readonly categories: CategoryService,
     private readonly dialog: MatDialog,
     private readonly toast: ToastService,
     private readonly translate: TranslateService,
-    private readonly cdr: ChangeDetectorRef
+    private readonly cdr: ChangeDetectorRef,
+    private readonly permissions: PermissionsService
   ) {}
 
   ngOnInit(): void {
@@ -110,6 +119,9 @@ export class CategoriesComponent implements OnInit, OnDestroy {
   }
 
   openCreate(): void {
+    if (!this.permissions.can('categories.create')) {
+      return;
+    }
     this.dialog
       .open(CategoryFormDialogComponent, {
         width: '480px'
@@ -124,6 +136,9 @@ export class CategoriesComponent implements OnInit, OnDestroy {
   }
 
   openEdit(category: Category): void {
+    if (!this.permissions.can('categories.update')) {
+      return;
+    }
     this.dialog
       .open(CategoryFormDialogComponent, {
         width: '480px',
@@ -139,6 +154,9 @@ export class CategoriesComponent implements OnInit, OnDestroy {
   }
 
   openReorder(category: Category): void {
+    if (!this.permissions.can('categories.reorder')) {
+      return;
+    }
     this.dialog
       .open(CategoryReorderDialogComponent, {
         width: '420px',
@@ -153,6 +171,9 @@ export class CategoriesComponent implements OnInit, OnDestroy {
   }
 
   confirmDelete(category: Category): void {
+    if (!this.permissions.can('categories.delete')) {
+      return;
+    }
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '360px',
       data: {
@@ -172,6 +193,10 @@ export class CategoriesComponent implements OnInit, OnDestroy {
 
   delete(category: Category): void {
     if (!category?._id) {
+      return;
+    }
+
+    if (!this.permissions.can('categories.delete')) {
       return;
     }
 

@@ -7,8 +7,10 @@ import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { ToastService } from '../../core/toast.service';
 import { TranslateService } from '@ngx-translate/core';
 import { AdminService } from '../../services/admin.service';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, combineLatest, takeUntil } from 'rxjs';
+import { map, distinctUntilChanged } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+import { PermissionsService } from '../../core/permissions.service';
 
 interface CategoryOption {
   id: string;
@@ -47,6 +49,12 @@ export class ProductFormComponent implements OnInit, OnDestroy {
   readonly currencyOptions = ['USD', 'EUR', 'GBP', 'INR'];
   categories: CategoryOption[] = [];
 
+  readonly productFormPermissions$ = combineLatest({
+    create: this.permissions.can$('products.create'),
+    update: this.permissions.can$('products.update')
+  });
+  canEditProduct = true;
+
   private readonly destroy$ = new Subject<void>();
 
   constructor(
@@ -58,16 +66,18 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     private readonly translate: TranslateService,
     private readonly adminService: AdminService,
     private readonly cdr: ChangeDetectorRef,
-    private readonly uploads: UploadService
+    private readonly uploads: UploadService,
+    private readonly permissions: PermissionsService
   ) {}
 
   ngOnInit(): void {
     this.id = this.route.snapshot.paramMap.get('id');
+    this.watchPermissions();
     this.loadCategories();
     if (this.id) {
       this.fetchProduct(this.id);
     } else {
-      this.addImage();
+      this.addImage(undefined, true);
     }
   }
 
@@ -109,7 +119,32 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     };
   }
 
-  addImage(image?: ProductImage): void {
+  canModify(perms: { create: boolean; update: boolean }): boolean {
+    return this.id ? !!perms.update : !!perms.create;
+  }
+
+  private watchPermissions(): void {
+    this.productFormPermissions$
+      .pipe(
+        map((perms) => (this.id ? perms.update : perms.create)),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((canEdit) => {
+        this.canEditProduct = !!canEdit;
+        if (this.canEditProduct) {
+          this.form.enable({ emitEvent: false });
+        } else {
+          this.form.disable({ emitEvent: false });
+        }
+        this.cdr.markForCheck();
+      });
+  }
+
+  addImage(image?: ProductImage, bypass = false): void {
+    if (!bypass && !this.canEditProduct) {
+      return;
+    }
     this.images.push(
       this.fb.group({
         url: [image?.url || '', Validators.required],
@@ -120,6 +155,9 @@ export class ProductFormComponent implements OnInit, OnDestroy {
   }
 
   onImageSelected(evt: Event, index: number): void {
+    if (!this.canEditProduct) {
+      return;
+    }
     const input = evt.target as HTMLInputElement;
     if (!input.files || !input.files.length) return;
     const file = input.files[0];
@@ -139,6 +177,9 @@ export class ProductFormComponent implements OnInit, OnDestroy {
   }
 
   imagesDrop(ev: CdkDragDrop<any[]>): void {
+    if (!this.canEditProduct) {
+      return;
+    }
     const arr = this.images;
     const prev = ev.previousIndex;
     const curr = ev.currentIndex;
@@ -150,27 +191,42 @@ export class ProductFormComponent implements OnInit, OnDestroy {
   }
 
   removeImage(index: number): void {
+    if (!this.canEditProduct) {
+      return;
+    }
     this.images.removeAt(index);
     this.cdr.markForCheck();
   }
 
-  addAttribute(entry?: { key?: string; value?: string }): void {
+  addAttribute(entry?: { key?: string; value?: string }, bypass = false): void {
+    if (!bypass && !this.canEditProduct) {
+      return;
+    }
     this.attributes.push(this.createAttributeGroup(entry?.key || '', entry?.value || ''));
     this.cdr.markForCheck();
   }
 
   removeAttribute(index: number): void {
+    if (!this.canEditProduct) {
+      return;
+    }
     this.attributes.removeAt(index);
     this.cdr.markForCheck();
   }
 
-  addVariant(variant?: ProductVariant): void {
+  addVariant(variant?: ProductVariant, bypass = false): void {
+    if (!bypass && !this.canEditProduct) {
+      return;
+    }
     // TODO: Support variant matrix builder when backend exposes option metadata.
     this.variants.push(this.createVariantGroup(variant));
     this.cdr.markForCheck();
   }
 
   removeVariant(index: number): void {
+    if (!this.canEditProduct) {
+      return;
+    }
     this.variants.removeAt(index);
     this.cdr.markForCheck();
   }
@@ -179,12 +235,18 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     return this.variants.at(index).get('attributes') as UntypedFormArray;
   }
 
-  addVariantAttribute(variantIndex: number, entry?: { key?: string; value?: string }): void {
+  addVariantAttribute(variantIndex: number, entry?: { key?: string; value?: string }, bypass = false): void {
+    if (!bypass && !this.canEditProduct) {
+      return;
+    }
     this.variantAttributes(variantIndex).push(this.createAttributeGroup(entry?.key || '', entry?.value || ''));
     this.cdr.markForCheck();
   }
 
   removeVariantAttribute(variantIndex: number, attributeIndex: number): void {
+    if (!this.canEditProduct) {
+      return;
+    }
     this.variantAttributes(variantIndex).removeAt(attributeIndex);
     this.cdr.markForCheck();
   }
@@ -267,10 +329,10 @@ export class ProductFormComponent implements OnInit, OnDestroy {
   private setImages(images: ProductImage[]): void {
     this.images.clear();
     if (!images.length) {
-      this.addImage();
+      this.addImage(undefined, true);
       return;
     }
-    images.forEach((image) => this.addImage(image));
+    images.forEach((image) => this.addImage(image, true));
   }
 
   private setAttributes(attrs: Record<string, string>): void {
@@ -279,12 +341,12 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     if (!entries.length) {
       return;
     }
-    entries.forEach(([key, value]) => this.addAttribute({ key, value }));
+    entries.forEach(([key, value]) => this.addAttribute({ key, value }, true));
   }
 
   private setVariants(variants: ProductVariant[]): void {
     this.variants.clear();
-    variants.forEach((variant: ProductVariant) => this.addVariant(variant));
+    variants.forEach((variant: ProductVariant) => this.addVariant(variant, true));
   }
 
   hasError(control: string, error: string): boolean {
@@ -293,7 +355,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
   }
 
   save(): void {
-    if (this.loading) {
+    if (this.loading || !this.canEditProduct) {
       return;
     }
 

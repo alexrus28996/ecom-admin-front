@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 
 import { AuthService } from '../core/auth.service';
+import { PermissionsService } from '../core/permissions.service';
 
 @Component({
   selector: 'app-root',
@@ -10,7 +11,11 @@ import { AuthService } from '../core/auth.service';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppComponent implements OnInit {
-  constructor(private readonly auth: AuthService, private readonly translate: TranslateService) {
+  constructor(
+    private readonly auth: AuthService,
+    private readonly translate: TranslateService,
+    private readonly permissions: PermissionsService
+  ) {
     this.translate.addLangs(['en']);
     this.translate.setDefaultLang('en');
     this.translate.use('en');
@@ -22,6 +27,7 @@ export class AppComponent implements OnInit {
     }
 
     this.auth.getCurrentUser().subscribe({ next: () => {}, error: () => {} });
+    this.permissions.load().subscribe({ next: () => {}, error: () => {} });
     this.auth.getPreferences().subscribe({
       next: ({ preferences }) => {
         if (preferences?.locale) {

@@ -3,6 +3,7 @@ import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { AuthService } from '../../core/auth.service';
+import { PermissionsService } from '../../core/permissions.service';
 
 @Component({
   selector: 'app-login',
@@ -19,7 +20,12 @@ export class LoginComponent {
   errorKey: string | null = null;
   lastError: any = null;
 
-  constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {}
+  constructor(
+    private fb: FormBuilder,
+    private auth: AuthService,
+    private router: Router,
+    private permissions: PermissionsService
+  ) {}
 
   submit(): void {
     if (this.loading) {
@@ -44,7 +50,10 @@ export class LoginComponent {
       .login(email.trim(), password)
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
-        next: () => this.router.navigate(['/dashboard']),
+        next: () => {
+          this.permissions.load().subscribe({ next: () => {}, error: () => {} });
+          this.router.navigate(['/dashboard']);
+        },
         error: (err) => {
           const code = err?.error?.error?.code;
           const message = err?.error?.error?.message;

@@ -9,6 +9,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../core/auth.service';
 import { ThemeService } from '../core/theme.service';
 import { LayoutNavItem, BreadcrumbItem } from './layout.models';
+import { PermissionsService } from '../core/permissions.service';
 
 @Component({
   selector: 'app-layout-wrapper',
@@ -44,6 +45,7 @@ export class LayoutWrapperComponent implements OnInit {
     private readonly router: Router,
     private readonly activatedRoute: ActivatedRoute,
     private readonly theme: ThemeService,
+    private readonly permissions: PermissionsService,
     breakpointObserver: BreakpointObserver,
     private readonly destroyRef: DestroyRef
   ) {
@@ -117,6 +119,7 @@ export class LayoutWrapperComponent implements OnInit {
 
   logout(): void {
     this.auth.logout();
+    this.permissions.clear();
     this.router.navigate(['/login']);
   }
 

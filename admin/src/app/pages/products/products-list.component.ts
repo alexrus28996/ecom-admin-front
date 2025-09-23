@@ -2,14 +2,14 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnIni
 import { FormBuilder } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { PageEvent } from '@angular/material/paginator';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, combineLatest, takeUntil } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
 import { ProductsService, ProductSummary } from '../../services/products.service';
-import { AuthService } from '../../core/auth.service';
 import { ToastService } from '../../core/toast.service';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
 import { AdminService } from '../../services/admin.service';
 import { ProductVariantsDialogComponent } from './product-variants-dialog.component';
+import { PermissionsService } from '../../core/permissions.service';
 
 interface CategoryOption {
   id: string;
@@ -47,15 +47,22 @@ export class ProductsListComponent implements OnInit, OnDestroy {
 
   private readonly destroy$ = new Subject<void>();
 
+  readonly productPermissions$ = combineLatest({
+    create: this.permissions.can$('products.create'),
+    update: this.permissions.can$('products.update'),
+    delete: this.permissions.can$('products.delete'),
+    variants: this.permissions.can$('products.manageVariants')
+  });
+
   constructor(
     private readonly products: ProductsService,
-    public readonly auth: AuthService,
     private readonly fb: FormBuilder,
     private readonly dialog: MatDialog,
     private readonly toast: ToastService,
     public readonly translate: TranslateService,
     private readonly adminService: AdminService,
-    private readonly cdr: ChangeDetectorRef
+    private readonly cdr: ChangeDetectorRef,
+    private readonly permissions: PermissionsService
   ) {}
 
   ngOnInit(): void {

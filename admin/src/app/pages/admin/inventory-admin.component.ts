@@ -2,8 +2,10 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnIn
 import { UntypedFormBuilder } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { TranslateService } from '@ngx-translate/core';
+import { combineLatest } from 'rxjs';
 import { AdminService } from '../../services/admin.service';
 import { InventoryAdjustmentDialogComponent, InventoryAdjustmentDialogData } from './inventory-adjustment-dialog.component';
+import { PermissionsService } from '../../core/permissions.service';
 
 type InventoryStatus = 'in-stock' | 'low' | 'out-of-stock';
 
@@ -76,12 +78,17 @@ export class AdminInventoryComponent implements OnInit {
 
   inventoryTabIndex = 0;
 
+  readonly inventoryPermissions$ = combineLatest({
+    adjust: this.permissions.can$('inventory.adjust')
+  });
+
   constructor(
     private readonly admin: AdminService,
     private readonly fb: UntypedFormBuilder,
     private readonly cdr: ChangeDetectorRef,
     private readonly dialog: MatDialog,
-    private readonly i18n: TranslateService
+    private readonly i18n: TranslateService,
+    private readonly permissions: PermissionsService
   ) {}
 
   ngOnInit(): void {
@@ -200,6 +207,9 @@ export class AdminInventoryComponent implements OnInit {
   }
 
   openAdjustmentDialog(context?: InventoryViewModel): void {
+    if (!this.permissions.can('inventory.adjust')) {
+      return;
+    }
     const data: InventoryAdjustmentDialogData = context ? {
       productId: context.productId,
       variantId: context.variantId,

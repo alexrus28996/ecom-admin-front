@@ -1,14 +1,17 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FormBuilder, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { TranslateService } from '@ngx-translate/core';
+import { combineLatest, Subject } from 'rxjs';
+import { distinctUntilChanged, map, takeUntil } from 'rxjs/operators';
 import { ToastService } from '../../core/toast.service';
 import { OrdersService, Order, OrderTimelineEntry, OrderAddress, OrderItem } from '../../services/orders.service';
 import { ORDER_STATUS_OPTIONS, PAYMENT_STATUS_OPTIONS, StatusOption, orderStatusKey, paymentStatusKey, OrderStatusValue, PaymentStatusValue } from './order-status.util';
 import { MoneyAmount } from '../../services/api.types';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
 import { ShipmentFormComponent, ShipmentFormData } from './shipments/shipment-form.component';
+import { PermissionsService } from '../../core/permissions.service';
 
 @Component({
   selector: 'app-admin-order-detail',
@@ -16,7 +19,7 @@ import { ShipmentFormComponent, ShipmentFormData } from './shipments/shipment-fo
   styleUrls: ['./order-admin-detail.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class AdminOrderDetailComponent implements OnInit {
+export class AdminOrderDetailComponent implements OnInit, OnDestroy {
   id = '';
   order: Order | null = null;
   loading = false;
@@ -39,6 +42,13 @@ export class AdminOrderDetailComponent implements OnInit {
     status: ['', Validators.required],
     paymentStatus: ['', Validators.required]
   });
+
+  readonly orderPermissions$ = combineLatest({
+    update: this.permissions.can$('orders.update'),
+    shipment: this.permissions.can$('orders.shipments.create')
+  });
+  canUpdateOrder = true;
+  private readonly destroy$ = new Subject<void>();
 
   private readonly statusTone: Record<string, 'warning' | 'success' | 'danger' | 'info' | 'neutral'> = {
     pending: 'warning',
@@ -65,12 +75,37 @@ export class AdminOrderDetailComponent implements OnInit {
     private readonly i18n: TranslateService,
     private readonly fb: FormBuilder,
     private readonly dialog: MatDialog,
-    private readonly cdr: ChangeDetectorRef
+    private readonly cdr: ChangeDetectorRef,
+    private readonly permissions: PermissionsService
   ) {}
 
   ngOnInit(): void {
     this.id = this.route.snapshot.paramMap.get('id') || '';
+    this.observePermissions();
     this.load();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private observePermissions(): void {
+    this.orderPermissions$
+      .pipe(
+        map((perms) => perms.update),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((canUpdate) => {
+        this.canUpdateOrder = !!canUpdate;
+        if (this.canUpdateOrder) {
+          this.statusForm.enable({ emitEvent: false });
+        } else {
+          this.statusForm.disable({ emitEvent: false });
+        }
+        this.cdr.markForCheck();
+      });
   }
 
   load(): void {
@@ -101,6 +136,10 @@ export class AdminOrderDetailComponent implements OnInit {
   }
 
   updateStatus(): void {
+    if (!this.canUpdateOrder) {
+      return;
+    }
+
     if (!this.order || this.statusForm.invalid) {
       this.statusForm.markAllAsTouched();
       return;
@@ -165,7 +204,7 @@ export class AdminOrderDetailComponent implements OnInit {
   }
 
   cancelOrder(): void {
-    if (!this.order || this.cancelling) {
+    if (!this.canUpdateOrder || !this.order || this.cancelling) {
       return;
     }
 
@@ -208,7 +247,7 @@ export class AdminOrderDetailComponent implements OnInit {
   }
 
   createShipment(): void {
-    if (!this.order) {
+    if (!this.permissions.can('orders.shipments.create') || !this.order) {
       return;
     }
 

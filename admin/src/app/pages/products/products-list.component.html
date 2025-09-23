@@ -1,3 +1,4 @@
+<ng-container *ngIf="productPermissions$ | async as perms">
 <div class="products-panel">
   <header class="products-panel__header">
     <div class="products-panel__title">
@@ -13,8 +14,7 @@
         mat-raised-button
         color="primary"
         routerLink="/admin/products/new"
-        *ngIf="auth.isAdmin"
-        [disabled]="loading"
+        [disabled]="loading || !perms.create"
       >
         <mat-icon>add</mat-icon>
         {{ 'products.add' | translate }}
@@ -107,8 +107,7 @@
                 color="primary"
                 type="button"
                 (click)="manageVariants(product)"
-                *ngIf="auth.isAdmin"
-                [disabled]="loading"
+                [disabled]="loading || !perms.variants"
                 matTooltip="{{ 'products.actions.manageVariants' | translate }}"
               >
                 <mat-icon>tune</mat-icon>
@@ -117,8 +116,7 @@
                 mat-icon-button
                 color="primary"
                 [routerLink]="['/admin/products', product._id, 'edit']"
-                *ngIf="auth.isAdmin"
-                [disabled]="loading"
+                [disabled]="loading || !perms.update"
                 matTooltip="{{ 'products.edit' | translate }}"
               >
                 <mat-icon>edit</mat-icon>
@@ -127,8 +125,7 @@
                 mat-icon-button
                 color="warn"
                 (click)="confirmDelete(product)"
-                *ngIf="auth.isAdmin"
-                [disabled]="loading"
+                [disabled]="loading || !perms.delete"
                 matTooltip="{{ 'products.actions.delete' | translate }}"
               >
                 <mat-icon>delete</mat-icon>
@@ -173,5 +170,4 @@
   <span>{{ 'common.empty' | translate }}</span>
 </ng-template>
 
-
-
+</ng-container>

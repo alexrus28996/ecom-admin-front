@@ -1,3 +1,4 @@
+<ng-container *ngIf="inventoryPermissions$ | async as perms">
 <div class="page inventory-shell">
   <section class="page__header">
     <div class="page__headline">
@@ -11,7 +12,13 @@
           <mat-icon>refresh</mat-icon>
           {{ 'inventory.actions.refresh' | translate }}
         </button>
-        <button mat-raised-button color="primary" type="button" (click)="openAdjustmentDialog()">
+        <button
+          mat-raised-button
+          color="primary"
+          type="button"
+          (click)="openAdjustmentDialog()"
+          [disabled]="!perms.adjust"
+        >
           <mat-icon>inventory</mat-icon>
           {{ 'inventory.actions.newAdjustment' | translate }}
         </button>
@@ -115,6 +122,7 @@
                           color="primary"
                           type="button"
                           (click)="openAdjustmentDialog(row)"
+                          [disabled]="!perms.adjust"
                           matTooltip="{{ 'inventory.actions.adjust' | translate }}"
                           aria-label="{{ 'inventory.actions.adjust' | translate }}"
                         >
@@ -325,3 +333,4 @@
     </mat-card>
   </div>
 </div>
+</ng-container>

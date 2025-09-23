@@ -1,3 +1,4 @@
+<ng-container *ngIf="categoryPermissions$ | async as perms">
 <div class="categories-panel">
   <header class="categories-panel__header">
     <div class="categories-panel__title">
@@ -5,7 +6,13 @@
       <p>{{ 'categories.subtitle' | translate }}</p>
     </div>
     <div class="categories-panel__actions">
-      <button mat-raised-button color="primary" type="button" (click)="openCreate()">
+      <button
+        mat-raised-button
+        color="primary"
+        type="button"
+        (click)="openCreate()"
+        [disabled]="!perms.create"
+      >
         <mat-icon>add</mat-icon>
         {{ 'categories.addButton' | translate }}
       </button>
@@ -69,13 +76,34 @@
           <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'categories.table.actions' | translate }}</th>
           <td mat-cell *matCellDef="let category">
             <div class="row-actions">
-              <button mat-icon-button color="primary" type="button" (click)="openEdit(category)" matTooltip="{{ 'categories.actions.edit' | translate }}">
+              <button
+                mat-icon-button
+                color="primary"
+                type="button"
+                (click)="openEdit(category)"
+                [disabled]="!perms.update"
+                matTooltip="{{ 'categories.actions.edit' | translate }}"
+              >
                 <mat-icon>edit</mat-icon>
               </button>
-              <button mat-icon-button color="primary" type="button" (click)="openReorder(category)" matTooltip="{{ 'categories.actions.reorder' | translate }}">
+              <button
+                mat-icon-button
+                color="primary"
+                type="button"
+                (click)="openReorder(category)"
+                [disabled]="!perms.reorder"
+                matTooltip="{{ 'categories.actions.reorder' | translate }}"
+              >
                 <mat-icon>reorder</mat-icon>
               </button>
-              <button mat-icon-button color="warn" type="button" (click)="confirmDelete(category)" matTooltip="{{ 'categories.actions.delete' | translate }}">
+              <button
+                mat-icon-button
+                color="warn"
+                type="button"
+                (click)="confirmDelete(category)"
+                [disabled]="!perms.delete"
+                matTooltip="{{ 'categories.actions.delete' | translate }}"
+              >
                 <mat-icon>delete</mat-icon>
               </button>
             </div>
@@ -108,3 +136,4 @@
 
   <app-error-banner [key]="errorKey" [error]="lastError"></app-error-banner>
 </div>
+</ng-container>

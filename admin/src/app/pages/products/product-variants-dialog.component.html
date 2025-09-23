@@ -1,3 +1,4 @@
+<ng-container *ngIf="canManageVariants$ | async as canManage">
 <h2 mat-dialog-title>
   {{ 'products.variants.title' | translate:{ name: productName } }}
 </h2>
@@ -16,7 +17,7 @@
     <mat-card class="variant-card" *ngFor="let variant of variants.controls; let i = index; trackBy: trackByIndex" [formGroup]="variant">
       <mat-card-header>
         <mat-card-title>{{ 'products.variants.itemTitle' | translate:{ index: i + 1 } }}</mat-card-title>
-        <button mat-icon-button color="warn" type="button" (click)="removeVariant(i)">
+        <button mat-icon-button color="warn" type="button" (click)="removeVariant(i)" [disabled]="!canManage">
           <mat-icon>delete</mat-icon>
         </button>
       </mat-card-header>
@@ -46,7 +47,13 @@
         <div class="variant-attributes">
           <div class="variant-attributes-header">
             <h4>{{ 'products.variants.fields.attributes' | translate }}</h4>
-            <button mat-stroked-button color="primary" type="button" (click)="addVariantAttribute(i)">
+            <button
+              mat-stroked-button
+              color="primary"
+              type="button"
+              (click)="addVariantAttribute(i)"
+              [disabled]="!canManage"
+            >
               <mat-icon>add</mat-icon>
               {{ 'products.variants.actions.addAttribute' | translate }}
             </button>
@@ -60,7 +67,13 @@
               <mat-label>{{ 'products.variants.fields.attributeValue' | translate }}</mat-label>
               <input matInput formControlName="value" />
             </mat-form-field>
-            <button mat-icon-button color="warn" type="button" (click)="removeVariantAttribute(i, j)">
+            <button
+              mat-icon-button
+              color="warn"
+              type="button"
+              (click)="removeVariantAttribute(i, j)"
+              [disabled]="!canManage"
+            >
               <mat-icon>delete</mat-icon>
             </button>
           </div>
@@ -70,7 +83,7 @@
   </div>
 
   <div class="variant-actions" *ngIf="!loading">
-    <button mat-stroked-button color="primary" type="button" (click)="addVariant()">
+    <button mat-stroked-button color="primary" type="button" (click)="addVariant()" [disabled]="!canManage">
       <mat-icon>add</mat-icon>
       {{ 'products.variants.actions.addVariant' | translate }}
     </button>
@@ -79,7 +92,8 @@
 
 <mat-dialog-actions align="end">
   <button mat-button type="button" (click)="cancel()">{{ 'common.actions.cancel' | translate }}</button>
-  <button mat-raised-button color="primary" type="button" (click)="save()" [disabled]="saving">
+  <button mat-raised-button color="primary" type="button" (click)="save()" [disabled]="saving || !canManage">
     {{ 'products.variants.actions.save' | translate }}
   </button>
 </mat-dialog-actions>
+</ng-container>
