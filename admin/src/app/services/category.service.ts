@@ -47,7 +47,7 @@ export class CategoryService {
 
   list(params: { q?: string; parent?: string | null; page?: number; limit?: number } = {}): Observable<Paginated<Category>> {
     let httpParams = new HttpParams();
-    if (params.q) httpParams = httpParams.set('q', params.q);
+    if (params.q) httpParams = httpParams.set('search', params.q);
     if (params.parent !== undefined) {
       httpParams = httpParams.set('parent', params.parent === null ? '' : String(params.parent));
     }
@@ -85,7 +85,7 @@ export class CategoryService {
 
   listBrands(params: { q?: string; page?: number; limit?: number } = {}): Observable<Paginated<Brand>> {
     let httpParams = new HttpParams();
-    if (params.q) httpParams = httpParams.set('q', params.q);
+    if (params.q) httpParams = httpParams.set('search', params.q);
     if (params.page) httpParams = httpParams.set('page', String(params.page));
     if (params.limit) httpParams = httpParams.set('limit', String(params.limit));
     return this.http.get<Paginated<Brand>>(this.adminBrandBase, { params: httpParams });

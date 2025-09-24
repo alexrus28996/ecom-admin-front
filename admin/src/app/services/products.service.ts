@@ -121,14 +121,14 @@ export class ProductsService {
 
   list(params: ListProductsParams = {}): Observable<Paginated<ProductSummary>> {
     let httpParams = new HttpParams();
-    if (params.q) httpParams = httpParams.set('q', params.q);
+    if (params.q) httpParams = httpParams.set('search', params.q);
     if (params.category) httpParams = httpParams.set('category', params.category);
     if (params.brand) httpParams = httpParams.set('brand', params.brand);
     if (typeof params.priceMin === 'number') {
-      httpParams = httpParams.set('priceMin', String(params.priceMin));
+      httpParams = httpParams.set('minPrice', String(params.priceMin));
     }
     if (typeof params.priceMax === 'number') {
-      httpParams = httpParams.set('priceMax', String(params.priceMax));
+      httpParams = httpParams.set('maxPrice', String(params.priceMax));
     }
     if (params.sort) httpParams = httpParams.set('sort', params.sort);
     if (params.page) httpParams = httpParams.set('page', String(params.page));
@@ -157,6 +157,6 @@ export class ProductsService {
   }
 
   remove(id: string): Observable<{ success: boolean }> {
-    return this.http.delete<{ success: boolean }>(`${this.productsUrl}/${id}`);
+    return this.http.delete<{  success: boolean }>(`${this.productsUrl}/${id}`);
   }
 }

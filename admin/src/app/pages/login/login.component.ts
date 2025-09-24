@@ -50,7 +50,9 @@ export class LoginComponent {
       .login(email.trim(), password)
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
-        next: () => {
+        next: (response) => {
+          console.log('Login successful:', response);
+          console.log('User from login response:', response.user);
           this.permissions.load().subscribe({ next: () => {}, error: () => {} });
           this.router.navigate(['/dashboard']);
         },

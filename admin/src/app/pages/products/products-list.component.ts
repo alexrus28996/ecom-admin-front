@@ -96,9 +96,9 @@ export class ProductsListComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (res) => {
-          this.dataSource = res.items;
-          this.total = res.total;
-          this.pageIndex = res.page - 1;
+          this.dataSource = res.data || res.items || [];
+          this.total = res.pagination?.total || res.total || 0;
+          this.pageIndex = (res.pagination?.page || res.page || 1) - 1;
           this.loading = false;
           this.cdr.markForCheck();
         },

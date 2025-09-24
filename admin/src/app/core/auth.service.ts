@@ -5,7 +5,8 @@ import { tap, catchError, map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export interface PublicUser {
-  id: string;
+  _id?: string;
+  id?: string;
   name: string;
   email: string;
   roles: string[];
@@ -65,6 +66,7 @@ export class AuthService {
     }
 
     const userRoles = this.roles;
+    console.log('hasAnyRole check:', { required: roles, userRoles, result: roles.some((role) => userRoles.includes(role)) });
     return roles.some((role) => userRoles.includes(role));
   }
 

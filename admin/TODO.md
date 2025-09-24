@@ -9,6 +9,9 @@ Legend
 - P1 = important follow-up for full coverage
 - P2 = polish / scale / backlog
 
+## API.md Sync Log
+- 2025-09-23: Reviewed authentication flows (`/api/auth` register/login/me/refresh/logout/password/email verify/change/preferences) and confirmed existing TODO coverage, with preferences UX still pending. Also rechecked product CRUD endpoints under `/api/products` and validated that variant manager/upload backlog items remain accurate.
+
 ## Execution Plan (Next Up)
 1. Establish Angular Material baseline: configure theme palette, typography, and responsive layout shell (app toolbar + sidenav) to support Material-first UI. [done]
 2. Wire localization scaffolding: ensure i18n module loads, seed translation files, and replace static strings in shell/auth views. [done]

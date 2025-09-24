@@ -20,9 +20,14 @@ import { PermissionsService } from '../core/permissions.service';
 export class LayoutWrapperComponent implements OnInit {
   readonly navItems: LayoutNavItem[] = [
     { label: 'Dashboard', icon: 'grid_view', route: '/dashboard', exact: true },
+    { label: 'Orders', icon: 'receipt_long', route: '/orders' },
+    { label: 'Cart', icon: 'shopping_cart', route: '/cart' },
+    { label: 'Addresses', icon: 'location_on', route: '/addresses' },
+    { label: 'Profile', icon: 'person', route: '/profile' },
     { label: 'Products', icon: 'inventory_2', route: '/admin/products', roles: ['admin'] },
-    { label: 'Orders', icon: 'receipt_long', route: '/admin/orders', roles: ['admin'] },
+    { label: 'Admin Orders', icon: 'receipt_long', route: '/admin/orders', roles: ['admin'] },
     { label: 'Users', icon: 'group', route: '/admin/users', roles: ['admin'] },
+    { label: 'Categories', icon: 'category', route: '/admin/categories', roles: ['admin'] },
     { label: 'Inventory', icon: 'warehouse', route: '/admin/inventory', roles: ['admin'] },
     { label: 'Returns', icon: 'assignment_return', route: '/admin/returns', roles: ['admin'] },
     { label: 'Reviews', icon: 'reviews', route: '/admin/reviews', roles: ['admin'] },
@@ -55,7 +60,17 @@ export class LayoutWrapperComponent implements OnInit {
     );
 
     this.visibleNav$ = this.auth.user$.pipe(
-      map(() => this.navItems.filter((item) => this.auth.hasAnyRole(item.roles))),
+      map((user) => {
+        console.log('User changed:', user);
+        console.log('User roles:', user?.roles);
+        const filtered = this.navItems.filter((item) => {
+          const hasRole = this.auth.hasAnyRole(item.roles);
+          console.log(`Item: ${item.label}, Required roles: ${JSON.stringify(item.roles)}, Has role: ${hasRole}`);
+          return hasRole;
+        });
+        console.log('Visible nav items:', filtered);
+        return filtered;
+      }),
       shareReplay({ bufferSize: 1, refCount: true })
     );
   }

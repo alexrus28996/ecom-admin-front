@@ -56,9 +56,9 @@ export class OrdersListComponent implements OnInit {
 
     this.orders.list({ page: this.pageIndex + 1, limit: this.pageSize }).subscribe({
       next: (res) => {
-        this.rows = res.items || [];
-        this.total = res.total;
-        this.pageIndex = Math.max(res.page - 1, 0);
+        this.rows = res.data || res.items || [];
+        this.total = res.pagination?.total || res.total || 0;
+        this.pageIndex = Math.max((res.pagination?.page || res.page || 1) - 1, 0);
         this.loading = false;
         this.cdr.markForCheck();
       },

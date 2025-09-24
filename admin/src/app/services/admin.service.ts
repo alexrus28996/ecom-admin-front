@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { MetricSummary, HealthStatus } from './dashboard.models';
 
@@ -10,7 +11,9 @@ export class AdminService {
   constructor(private http: HttpClient) {}
 
   getMetrics(): Observable<MetricSummary> {
-    return this.http.get<MetricSummary>(`${this.base}/metrics`);
+    return this.http.get<{ metrics: MetricSummary }>(`${this.base}/metrics`).pipe(
+      map(response => response.metrics || response as any)
+    );
   }
 
   getHealth(): Observable<HealthStatus> {
@@ -27,11 +30,18 @@ export class AdminService {
 
   listUsers(params: { q?: string; page?: number; limit?: number } = {}): Observable<{ items: any[]; total: number; page: number; pages: number; }> {
     let query = new URLSearchParams();
-    if (params.q) query.set('q', params.q);
+    if (params.q) query.set('search', params.q);
     if (params.page) query.set('page', String(params.page));
     if (params.limit) query.set('limit', String(params.limit));
     const qs = query.toString();
-    return this.http.get<{ items: any[]; total: number; page: number; pages: number; }>(`${this.base}/users${qs ? ('?' + qs) : ''}`);
+    return this.http.get<any>(`${this.base}/users${qs ? ('?' + qs) : ''}`).pipe(
+      map(response => ({
+        items: response.users || response.data || response.items || [],
+        total: response.pagination?.total || response.total || 0,
+        page: response.pagination?.page || response.page || 1,
+        pages: response.pagination?.pages || response.pages || 1
+      }))
+    );
   }
 
   getUser(id: string): Observable<{ user: any }> {
@@ -54,7 +64,14 @@ export class AdminService {
     if (params.status) usp.set('status', params.status);
     if (params.paymentStatus) usp.set('paymentStatus', params.paymentStatus);
     const qs = usp.toString();
-    return this.http.get<{ items: any[]; total: number; page: number; pages: number; }>(`${this.base}/orders${qs ? ('?' + qs) : ''}`);
+    return this.http.get<any>(`${this.base}/orders${qs ? ('?' + qs) : ''}`).pipe(
+      map(response => ({
+        items: response.data || response.items || [],
+        total: response.pagination?.total || response.total || 0,
+        page: response.pagination?.page || response.page || 1,
+        pages: response.pagination?.pages || response.pages || 1
+      }))
+    );
   }
 
   listReviews(params: {
@@ -206,12 +223,19 @@ export class AdminService {
 
   listCategories(params: { q?: string; page?: number; limit?: number; parent?: string|null } = {}): Observable<{ items: any[]; total: number; page: number; pages: number; }> {
     const usp = new URLSearchParams();
-    if (params.q) usp.set('q', params.q);
+    if (params.q) usp.set('search', params.q);
     if (params.page) usp.set('page', String(params.page));
     if (params.limit) usp.set('limit', String(params.limit));
     if (params.parent !== undefined) usp.set('parent', params.parent === null ? '' : String(params.parent));
     const qs = usp.toString();
-    return this.http.get<{ items: any[]; total: number; page: number; pages: number; }>(`${this.categoriesAdminBase}${qs ? ('?' + qs) : ''}`);
+    return this.http.get<any>(`${this.categoriesAdminBase}${qs ? ('?' + qs) : ''}`).pipe(
+      map(response => ({
+        items: response.categories || response.data || response.items || [],
+        total: response.pagination?.total || response.total || (response.categories?.length || 0),
+        page: response.pagination?.page || response.page || 1,
+        pages: response.pagination?.pages || response.pages || 1
+      }))
+    );
   }
 
   getCategory(id: string): Observable<{ category: any }> {

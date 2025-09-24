@@ -49,6 +49,7 @@ import { ShipmentFormComponent } from './pages/admin/shipments/shipment-form.com
 import { CouponsListComponent } from './pages/admin/coupons/coupons-list.component';
 import { CouponFormComponent } from './pages/admin/coupons/coupon-form.component';
 import { ReviewsListComponent } from './pages/admin/reviews/reviews-list.component';
+import { DebugUserComponent } from './shared/debug-user.component';
 
 import { MaterialModule } from './shared/material.module';
 import { AuthInterceptor } from './core/auth.interceptor';
@@ -99,7 +100,8 @@ export function translateHttpLoaderFactory(http: HttpClient) {
     ShipmentFormComponent,
     AdminSettingsPlaceholderComponent,
     CouponsListComponent,
-    CouponFormComponent
+    CouponFormComponent,
+    DebugUserComponent
   ],
   imports: [
     BrowserModule,

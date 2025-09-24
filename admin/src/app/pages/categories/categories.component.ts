@@ -91,9 +91,9 @@ export class CategoriesComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (res) => {
-          this.dataSource = res.items || [];
-          this.total = res.total || 0;
-          this.pageIndex = (res.page || 1) - 1;
+          this.dataSource = res.data || res.items || [];
+          this.total = res.pagination?.total || res.total || 0;
+          this.pageIndex = Math.max((res.pagination?.page || res.page || 1) - 1, 0);
           this.loading = false;
           this.cdr.markForCheck();
         },
@@ -251,7 +251,7 @@ export class CategoriesComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (res) => {
-          this.parents = (res.items || []).map((item) => ({ id: item._id, name: item.name }));
+          this.parents = (res.data || res.items || []).map((item) => ({ id: item._id, name: item.name }));
           this.cdr.markForCheck();
         },
         error: () => {

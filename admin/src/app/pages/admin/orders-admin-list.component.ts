@@ -84,9 +84,9 @@ export class AdminOrdersListComponent implements OnInit {
 
     this.ordersService.adminList(params).subscribe({
       next: (res) => {
-        this.orders = res.items || [];
-        this.total = res.total || this.orders.length;
-        this.pageIndex = Math.max((res.page || 1) - 1, 0);
+        this.orders = res.data || res.items || [];
+        this.total = res.pagination?.total || res.total || this.orders.length;
+        this.pageIndex = Math.max((res.pagination?.page || res.page || 1) - 1, 0);
         this.loading = false;
         this.cdr.markForCheck();
       },
