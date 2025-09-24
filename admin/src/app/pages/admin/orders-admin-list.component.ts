@@ -169,17 +169,21 @@ export class AdminOrdersListComponent implements OnInit {
     return `badge badge--${tone}`;
   }
 
-  private money(value: number | MoneyAmount | null | undefined, fallbackCurrency: string): { amount: number; currency: string } {
+  private money(value: number | MoneyAmount | null | undefined, fallbackCurrency?: string): { amount: number; currency: string } {
+    const currency = this.isMoneyAmount(value)
+      ? value.currency || fallbackCurrency || 'USD'
+      : fallbackCurrency || 'USD';
+
     if (this.isMoneyAmount(value)) {
       return {
-        amount: Number(value.amount || 0),
-        currency: value.currency || fallbackCurrency
+        amount: Number(value.amount ?? 0),
+        currency
       };
     }
     if (typeof value === 'number' && !Number.isNaN(value)) {
-      return { amount: value, currency: fallbackCurrency };
+      return { amount: value, currency };
     }
-    return { amount: 0, currency: fallbackCurrency };
+    return { amount: 0, currency };
   }
 
   private isMoneyAmount(value: unknown): value is MoneyAmount {

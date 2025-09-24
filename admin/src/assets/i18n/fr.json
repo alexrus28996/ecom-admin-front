@@ -881,36 +881,36 @@
       "out-of-stock": "Out of stock"
     },
     "adjustDialog": {
-      "title": "Ajustement de stock",
+      "title": "Inventory adjustment",
       "fields": {
-        "product": "Produit",
-        "productPlaceholder": "Rechercher des produits",
-        "variant": "Variante",
-        "direction": "Sens de l'ajustement",
-        "quantity": "Quantité",
-        "reason": "Motif",
-        "note": "Note interne",
-        "location": "Emplacement"
+        "product": "Product",
+        "productPlaceholder": "Search products",
+        "variant": "Variant",
+        "direction": "Direction",
+        "quantity": "Quantity",
+        "reason": "Reason",
+        "note": "Internal note",
+        "location": "Location"
       },
       "labels": {
-        "sku": "SKU : {{ sku }}",
-        "allVariants": "Toutes les variantes",
-        "increase": "Augmenter",
-        "decrease": "Réduire"
+        "sku": "SKU: {{ sku }}",
+        "allVariants": "All variants",
+        "increase": "Increase",
+        "decrease": "Decrease"
       },
       "actions": {
-        "submit": "Enregistrer l'ajustement",
-        "clearProduct": "Effacer le produit"
+        "submit": "Save adjustment",
+        "clearProduct": "Clear product"
       },
       "emptyStates": {
-        "noProducts": "Aucun produit ne correspond à votre recherche."
+        "noProducts": "No products match your search."
       },
       "validation": {
-        "productRequired": "Sélectionnez un produit à ajuster.",
-        "quantityRequired": "La quantité est requise.",
-        "quantityPositive": "Saisissez une quantité supérieure à zéro."
+        "productRequired": "Select a product to adjust.",
+        "quantityRequired": "Quantity is required.",
+        "quantityPositive": "Enter a quantity greater than zero."
       },
-      "loadingVariants": "Chargement des variantes…"
+      "loadingVariants": "Loading variants…"
     }
   },
   "adminUsers": {
@@ -996,7 +996,7 @@
     "messages": {
       "saveSuccess": "Category saved successfully.",
       "updateSuccess": "Category updated successfully.",
-      "deleteSuccess": "Category deleted successfully.",
+      "deleteSuccess": "Deleted {{ name }}.",
       "deleteError": "Failed to delete category.",
       "saveError": "Failed to save category.",
       "reorderSuccess": "Category order saved.",
@@ -1220,7 +1220,7 @@
       "UNAUTHORIZED": "You need to sign in to continue.",
       "FORBIDDEN": "You do not have permission to perform this action.",
       "NOT_FOUND": "The requested resource could not be found.",
-      "ROUTE_NOT_FOUND": "The requested backend route is not available.",
+      "ROUTE_NOT_FOUND": "अनुरोधित बैकएंड रूट उपलब्ध नहीं है।",
       "VALIDATION_ERROR": "Some fields have validation errors.",
       "CONFLICT": "The resource is in a conflicting state.",
       "RATE_LIMITED": "Too many requests. Please try again later.",

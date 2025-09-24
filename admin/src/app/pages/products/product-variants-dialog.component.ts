@@ -5,7 +5,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { Subject } from 'rxjs';
 import { distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
-import { ProductsService, ProductDetail, ProductVariant } from '../../services/products.service';
+import { ProductsService, ProductDetail, ProductVariant, ProductAttribute } from '../../services/products.service';
 import { ToastService } from '../../core/toast.service';
 import { PermissionsService } from '../../core/permissions.service';
 
@@ -32,6 +32,7 @@ export class ProductVariantsDialogComponent implements OnInit, OnDestroy {
   lastError: BackendError = null;
   productName = '';
   canEditVariants = true;
+  private productCurrency = 'USD';
 
   readonly canManageVariants$ = this.permissions.can$('products.manageVariants');
   private readonly destroy$ = new Subject<void>();
@@ -141,26 +142,21 @@ export class ProductVariantsDialogComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const payload = (this.variants.controls || []).map((ctrl) => {
+    const variantPayloads = (this.variants.controls || []).map((ctrl) => {
       const raw = ctrl.getRawValue();
-      const attributes = this.mapKeyValueArray(raw.attributes);
-      return {
-        _id: raw._id || undefined,
-        sku: raw.sku || undefined,
-        stock: raw.stock !== null && raw.stock !== undefined ? Number(raw.stock) : undefined,
-        price: raw.price !== null && raw.price !== undefined ? Number(raw.price) : undefined,
-        priceDelta: raw.priceDelta !== null && raw.priceDelta !== undefined ? Number(raw.priceDelta) : undefined,
-        isActive: raw.isActive ?? true,
-        attributes
-      } as ProductVariant;
+      return this.buildVariantPayload(raw);
     });
+
+    const cleaned = variantPayloads
+      .map((variant) => this.cleanVariantForSave(variant))
+      .filter((variant) => this.variantHasContent(variant));
 
     this.saving = true;
     this.errorKey = null;
     this.lastError = null;
     this.cdr.markForCheck();
 
-    this.products.update(this.data.id, { variants: payload }).subscribe({
+    this.products.update(this.data.id, { variants: cleaned }).subscribe({
       next: () => {
         this.saving = false;
         this.toast.success(this.translate.instant('products.variants.toasts.saved'));
@@ -195,6 +191,7 @@ export class ProductVariantsDialogComponent implements OnInit, OnDestroy {
     this.products.get(this.data.id).subscribe({
       next: ({ product }) => {
         this.productName = product.name;
+        this.productCurrency = product.price?.currency || this.productCurrency;
         this.setVariants(product.variants || []);
         this.loading = false;
         this.cdr.markForCheck();
@@ -220,12 +217,13 @@ export class ProductVariantsDialogComponent implements OnInit, OnDestroy {
 
   private createVariantGroup(variant?: ProductVariant): UntypedFormGroup {
     const attrs = this.fb.array([]);
-    if (variant?.attributes) {
-      Object.entries(variant.attributes).forEach(([key, value]) => {
-        attrs.push(this.createAttributeGroup(key, value));
+    const normalizedAttributes = this.normalizeAttributesInput(variant?.attributes);
+
+    if (normalizedAttributes.length) {
+      normalizedAttributes.forEach((attr) => {
+        attrs.push(this.createAttributeGroup(attr.key, attr.value));
       });
-    }
-    if (attrs.length === 0) {
+    } else {
       attrs.push(this.createAttributeGroup());
     }
 
@@ -233,7 +231,7 @@ export class ProductVariantsDialogComponent implements OnInit, OnDestroy {
       _id: [variant?._id || null],
       sku: [variant?.sku || ''],
       stock: [variant?.stock ?? 0, [Validators.min(0)]],
-      price: [variant?.price ?? null, [Validators.min(0)]],
+      price: [variant?.price?.amount ?? null, [Validators.min(0)]],
       priceDelta: [variant?.priceDelta ?? null],
       isActive: [variant?.isActive ?? true],
       attributes: attrs
@@ -247,18 +245,159 @@ export class ProductVariantsDialogComponent implements OnInit, OnDestroy {
     });
   }
 
-  private mapKeyValueArray(entries: Array<{ key?: string; value?: string }> | undefined) {
-    if (!entries || !entries.length) {
+  private parseNumber(value: unknown): number | undefined {
+    if (value === null || value === undefined) {
       return undefined;
     }
-    const result: Record<string, string> = {};
-    entries
-      .filter((entry) => entry && entry.key)
-      .forEach((entry) => {
-        if (entry?.key) {
-          result[entry.key] = entry.value ?? '';
-        }
-      });
-    return Object.keys(result).length ? result : undefined;
+    if (typeof value === 'number') {
+      return Number.isFinite(value) ? value : undefined;
+    }
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) {
+        return undefined;
+      }
+      const parsed = Number(trimmed);
+      return Number.isFinite(parsed) ? parsed : undefined;
+    }
+    return undefined;
+  }
+
+  private normalizeAttributesInput(attrs: ProductAttribute[] | Record<string, any> | undefined | null): Array<{ key: string; value: string }> {
+    if (!attrs) {
+      return [];
+    }
+    if (Array.isArray(attrs)) {
+      return attrs
+        .map((attr) => ({
+          key: (attr?.key ?? '').toString().trim(),
+          value: (attr?.value ?? '').toString()
+        }))
+        .filter((attr) => !!attr.key);
+    }
+    return Object.entries(attrs)
+      .map(([key, value]) => ({
+        key: key.trim(),
+        value: (value ?? '').toString()
+      }))
+      .filter((attr) => !!attr.key);
+  }
+
+  private mapKeyValueArray(entries: Array<{ key?: string; value?: string }> | undefined): ProductAttribute[] {
+    if (!entries || !entries.length) {
+      return [];
+    }
+    return entries
+      .map((entry) => ({
+        key: (entry?.key ?? '').toString().trim(),
+        value: (entry?.value ?? '').toString()
+      }))
+      .filter((entry) => !!entry.key);
+  }
+
+  private buildVariantPayload(raw: any): Partial<ProductVariant> {
+    const variant: Partial<ProductVariant> = {};
+
+    if (raw?._id) {
+      variant._id = raw._id;
+    }
+
+    const sku = raw?.sku ? String(raw.sku).trim() : '';
+    if (sku) {
+      variant.sku = sku;
+    }
+
+    const stock = this.parseNumber(raw?.stock);
+    if (stock !== undefined) {
+      variant.stock = stock;
+    }
+
+    if (raw?.isActive !== null && raw?.isActive !== undefined) {
+      variant.isActive = !!raw.isActive;
+    }
+
+    const attributes = this.mapKeyValueArray(raw?.attributes);
+    if (attributes.length) {
+      variant.attributes = attributes;
+    }
+
+    const priceAmount = this.parseNumber(raw?.price);
+    if (priceAmount !== undefined) {
+      variant.price = { amount: priceAmount, currency: this.productCurrency };
+    }
+
+    const priceDelta = this.parseNumber(raw?.priceDelta);
+    if (priceDelta !== undefined) {
+      variant.priceDelta = priceDelta;
+    }
+
+    return variant;
+  }
+
+  private cleanVariantForSave(input: Partial<ProductVariant>): ProductVariant {
+    const attributes = this.normalizeAttributesInput(input.attributes as any).map((attr) => ({
+      key: attr.key,
+      value: attr.value
+    }));
+    const stock = this.parseNumber(input.stock);
+
+    const variant: ProductVariant = {
+      stock: stock ?? 0,
+      isActive: typeof input.isActive === 'boolean' ? input.isActive : true,
+      attributes
+    };
+
+    if (input._id) {
+      variant._id = input._id;
+    }
+
+    const sku = typeof input.sku === 'string' ? input.sku.trim() : '';
+    if (sku) {
+      variant.sku = sku;
+    }
+
+    if (input.price && typeof input.price === 'object') {
+      const amount = this.parseNumber((input.price as any).amount);
+      const currency = (input.price as any).currency || this.productCurrency;
+      if (amount !== undefined) {
+        variant.price = { amount, currency };
+      }
+    }
+
+    const priceDelta = this.parseNumber(input.priceDelta);
+    if (priceDelta !== undefined) {
+      variant.priceDelta = priceDelta;
+    }
+
+    return variant;
+  }
+
+  private variantHasContent(variant: Partial<ProductVariant>): boolean {
+    if (!variant) {
+      return false;
+    }
+    if (variant._id) {
+      return true;
+    }
+    if (typeof variant.sku === 'string' && variant.sku.trim().length > 0) {
+      return true;
+    }
+    if (variant.price) {
+      return true;
+    }
+    if (typeof variant.priceDelta === 'number' && !Number.isNaN(variant.priceDelta)) {
+      return true;
+    }
+    if (typeof variant.stock === 'number' && variant.stock > 0) {
+      return true;
+    }
+    if (Array.isArray(variant.attributes) && variant.attributes.some((attr) => attr.key && attr.key.trim().length > 0)) {
+      return true;
+    }
+    if (variant.isActive === false) {
+      return true;
+    }
+    return false;
   }
 }
+

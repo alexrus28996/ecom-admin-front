@@ -1,139 +1,227 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+
 import { environment } from '../../environments/environment';
-import { Paginated, MoneyAmount } from './api.types';
+import {
+  Order,
+  OrderFilters,
+  OrderTimelineEvent,
+  OrderItem,
+  Paginated,
+  ApiResponse,
+  Address
+} from './api.types';
 
-export interface OrderItem {
-  product: string;
-  variant?: string | null;
-  name: string;
-  price: number | MoneyAmount;
-  currency: string;
-  quantity: number;
-  image?: string | null;
-}
+// Export types for backward compatibility
+export {
+  Order,
+  OrderTimelineEvent,
+  OrderTimelineEvent as OrderTimelineEntry, // Alias for backward compatibility
+  OrderItem,
+  Address as OrderAddress
+};
 
-export interface OrderAddress {
-  name?: string | null;
-  company?: string | null;
-  line1: string;
-  line2?: string | null;
-  city?: string | null;
-  region?: string | null;
-  postalCode?: string | null;
-  country?: string | null;
-  phone?: string | null;
-}
-
-export interface Order {
-  _id: string;
-  number?: string;
-  user?: string | { _id: string; name: string; email?: string } | null;
-  customer?: { name?: string | null; email?: string | null } | null;
-  items: OrderItem[];
-  subtotal: number | MoneyAmount;
-  discount?: number | MoneyAmount | null;
-  shipping?: number | MoneyAmount | null;
-  tax?: number | MoneyAmount | null;
-  total: number | MoneyAmount;
-  currency: string;
-  status: string;
-  paymentStatus: string;
-  couponCode?: string | null;
-  shippingAddress?: OrderAddress | null;
-  billingAddress?: OrderAddress | null;
-  invoiceUrl?: string | null;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface OrderTimelineEntry {
-  _id?: string;
-  time?: string;
-  createdAt?: string;
-  type: string;
-  message?: string | null;
-  actor?: { _id?: string; name?: string } | null;
-  data?: any;
-}
-
-export interface ListOrdersParams {
-  page?: number;
-  limit?: number;
-}
-
-export interface ListAdminOrdersParams extends ListOrdersParams {
-  status?: string;
-  paymentStatus?: string;
-  user?: string;
-  email?: string;
-  from?: string;
-  to?: string;
+export interface CreateOrderRequest {
+  shippingAddress?: Partial<Address>;
+  billingAddress?: Partial<Address>;
+  shipping?: number;
+  taxRate?: number;
+  idempotencyKey?: string;
 }
 
 @Injectable({ providedIn: 'root' })
-export class OrderService {
-  protected readonly base = `${environment.apiBaseUrl}/orders`;
-  protected readonly adminBase = `${environment.apiBaseUrl}/admin/orders`;
+export class OrdersService {
+  private readonly baseUrl = `${environment.apiBaseUrl}`;
 
-  constructor(protected readonly http: HttpClient) {}
+  constructor(private readonly http: HttpClient) {}
 
-  create(payload: { shippingAddress?: any; billingAddress?: any; shipping?: number; taxRate?: number }): Observable<{ order: Order }> {
-    return this.http.post<{ order: Order }>(this.base, payload);
+  // User endpoints
+  getUserOrders(filters: Partial<OrderFilters> = {}): Observable<Paginated<Order>> {
+    let params = new HttpParams();
+
+    if (filters.page) params = params.set('page', filters.page.toString());
+    if (filters.limit) params = params.set('limit', filters.limit.toString());
+    if (filters.sort) params = params.set('sort', filters.sort);
+    if (filters.order) params = params.set('order', filters.order);
+
+    return this.http.get<Paginated<Order>>(`${this.baseUrl}/orders`, { params });
   }
 
-  list(params: ListOrdersParams = {}): Observable<Paginated<Order>> {
-    let httpParams = new HttpParams();
-    if (params.page) httpParams = httpParams.set('page', String(params.page));
-    if (params.limit) httpParams = httpParams.set('limit', String(params.limit));
-    return this.http.get<Paginated<Order>>(this.base, { params: httpParams });
+  getUserOrder(id: string): Observable<Order> {
+    return this.http.get<ApiResponse<Order>>(`${this.baseUrl}/orders/${id}`)
+      .pipe(map(response => response.data!));
+  }
+
+  getOrderTimeline(id: string): Observable<OrderTimelineEvent[]> {
+    return this.http.get<ApiResponse<OrderTimelineEvent[]>>(`${this.baseUrl}/orders/${id}/timeline`)
+      .pipe(map(response => response.data!));
+  }
+
+  getOrderInvoice(id: string): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/orders/${id}/invoice`, { responseType: 'blob' });
+  }
+
+  createOrder(orderData: CreateOrderRequest): Observable<Order> {
+    const headers: any = {};
+    if (orderData.idempotencyKey) {
+      headers['Idempotency-Key'] = orderData.idempotencyKey;
+    } else {
+      headers['Idempotency-Key'] = this.generateIdempotencyKey();
+    }
+
+    return this.http.post<ApiResponse<Order>>(`${this.baseUrl}/orders`, orderData, { headers })
+      .pipe(map(response => response.data!));
+  }
+
+  requestOrderReturn(orderId: string, returnData: any): Observable<{ success: boolean }> {
+    return this.http.post<ApiResponse<{ success: boolean }>>(`${this.baseUrl}/orders/${orderId}/returns`, returnData)
+      .pipe(map(response => response.data!));
+  }
+
+  // Admin endpoints
+  getAdminOrders(filters: OrderFilters = {}): Observable<Paginated<Order>> {
+    let params = new HttpParams();
+
+    if (filters.status) params = params.set('status', filters.status);
+    if (filters.paymentStatus) params = params.set('paymentStatus', filters.paymentStatus);
+    if (filters.userId) params = params.set('userId', filters.userId);
+    if (filters.userEmail) params = params.set('userEmail', filters.userEmail);
+    if (filters.dateStart) params = params.set('dateStart', filters.dateStart);
+    if (filters.dateEnd) params = params.set('dateEnd', filters.dateEnd);
+    if (filters.page) params = params.set('page', filters.page.toString());
+    if (filters.limit) params = params.set('limit', filters.limit.toString());
+    if (filters.sort) params = params.set('sort', filters.sort);
+    if (filters.order) params = params.set('order', filters.order);
+
+    return this.http.get<Paginated<Order>>(`${this.baseUrl}/admin/orders`, { params });
+  }
+
+  getAdminOrder(id: string): Observable<Order> {
+    return this.http.get<ApiResponse<Order>>(`${this.baseUrl}/admin/orders/${id}`)
+      .pipe(map(response => response.data!));
+  }
+
+  updateAdminOrder(id: string, orderData: Partial<Order>): Observable<Order> {
+    const cleanData = this.cleanOrderForSave(orderData);
+
+    return this.http.patch<ApiResponse<Order>>(`${this.baseUrl}/admin/orders/${id}`, cleanData)
+      .pipe(map(response => response.data!));
+  }
+
+  // Backward compatibility methods
+  list(params: any = {}): Observable<Paginated<Order>> {
+    // Map old parameter names to new ones for user orders
+    const filters: Partial<OrderFilters> = {
+      page: params.page,
+      limit: params.limit,
+      sort: params.sort
+    };
+
+    return this.getUserOrders(filters);
   }
 
   get(id: string): Observable<{ order: Order }> {
-    return this.http.get<{ order: Order }>(`${this.base}/${id}`);
+    return this.getUserOrder(id).pipe(
+      map(order => ({ order }))
+    );
   }
 
-  timeline(id: string, params: ListOrdersParams = {}): Observable<Paginated<OrderTimelineEntry>> {
-    let httpParams = new HttpParams();
-    if (params.page) httpParams = httpParams.set('page', String(params.page));
-    if (params.limit) httpParams = httpParams.set('limit', String(params.limit));
-    return this.http.get<Paginated<OrderTimelineEntry>>(`${this.base}/${id}/timeline`, { params: httpParams });
+  timeline(id: string, params: any = {}): Observable<Paginated<OrderTimelineEvent>> {
+    return this.getOrderTimeline(id).pipe(
+      map(timeline => ({
+        data: timeline,
+        items: timeline,
+        total: timeline.length,
+        page: 1,
+        pages: 1,
+        pagination: {
+          page: 1,
+          limit: timeline.length,
+          total: timeline.length,
+          pages: 1
+        }
+      }))
+    );
   }
 
   invoice(id: string): Observable<Blob> {
-    return this.http.get(`${this.base}/${id}/invoice`, { responseType: 'blob' });
+    return this.getOrderInvoice(id);
   }
 
-  adminList(params: ListAdminOrdersParams = {}): Observable<Paginated<Order>> {
-    let httpParams = new HttpParams();
-    if (params.status) httpParams = httpParams.set('status', params.status);
-    if (params.paymentStatus) httpParams = httpParams.set('paymentStatus', params.paymentStatus);
-    if (params.user) httpParams = httpParams.set('user', params.user);
-    if (params.email) httpParams = httpParams.set('email', params.email);
-    if (params.from) httpParams = httpParams.set('from', params.from);
-    if (params.to) httpParams = httpParams.set('to', params.to);
-    if (params.page) httpParams = httpParams.set('page', String(params.page));
-    if (params.limit) httpParams = httpParams.set('limit', String(params.limit));
-    return this.http.get<Paginated<Order>>(this.adminBase, { params: httpParams });
+  create(payload: CreateOrderRequest): Observable<{ order: Order }> {
+    return this.createOrder(payload).pipe(
+      map(order => ({ order }))
+    );
+  }
+
+  adminList(params: any = {}): Observable<Paginated<Order>> {
+    // Map old parameter names to new ones
+    const filters: OrderFilters = {
+      status: params.status,
+      paymentStatus: params.paymentStatus,
+      userId: params.user,
+      userEmail: params.email,
+      dateStart: params.from,
+      dateEnd: params.to,
+      page: params.page,
+      limit: params.limit,
+      sort: params.sort
+    };
+
+    return this.getAdminOrders(filters);
   }
 
   adminGet(id: string): Observable<{ order: Order }> {
-    return this.http.get<{ order: Order }>(`${this.adminBase}/${id}`);
+    return this.getAdminOrder(id).pipe(
+      map(order => ({ order }))
+    );
   }
 
-  adminUpdate(id: string, payload: { status?: string; paymentStatus?: string }): Observable<{ order: Order }> {
-    return this.http.patch<{ order: Order }>(`${this.adminBase}/${id}`, payload);
+  adminUpdate(id: string, payload: any): Observable<{ order: Order }> {
+    return this.updateAdminOrder(id, payload).pipe(
+      map(order => ({ order }))
+    );
   }
 
   adminCancel(id: string): Observable<{ order: Order }> {
-    return this.http.patch<{ order: Order }>(`${this.adminBase}/${id}`, { status: 'cancelled' });
+    return this.updateAdminOrder(id, { status: 'cancelled' }).pipe(
+      map(order => ({ order }))
+    );
   }
 
-  requestReturn(id: string): Observable<{ success?: boolean }> {
-    return this.http.post<{ success?: boolean }>(`${this.base}/${id}/returns`, {});
+  requestReturn(orderId: string): Observable<{ success?: boolean }> {
+    return this.requestOrderReturn(orderId, {}).pipe(
+      map(result => ({ success: result.success }))
+    );
+  }
+
+  private cleanOrderForSave(orderData: Partial<Order>): any {
+    const cleanData = { ...orderData };
+
+    // Remove read-only fields
+    delete cleanData._id;
+    delete cleanData.createdAt;
+    delete cleanData.updatedAt;
+    delete cleanData.orderNumber;
+    delete cleanData.timeline;
+
+    return cleanData;
+  }
+
+  private generateIdempotencyKey(): string {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      return crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
   }
 }
 
+// Backward compatibility export
 @Injectable({ providedIn: 'root' })
-export class OrdersService extends OrderService {}
+export class OrderService extends OrdersService {}

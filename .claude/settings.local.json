@@ -2,7 +2,14 @@
   "permissions": {
     "allow": [
       "WebSearch",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(touch:*)",
+      "Bash(cp:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run serve:*)",
+      "Bash(npm run:*)",
+      "Bash(npm start)"
     ],
     "deny": [],
     "ask": []

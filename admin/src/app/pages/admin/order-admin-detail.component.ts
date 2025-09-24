@@ -331,17 +331,23 @@ export class AdminOrderDetailComponent implements OnInit, OnDestroy {
     return { amount: price.amount * (item.quantity ?? 0), currency: price.currency };
   }
 
-  money(value: number | MoneyAmount | null | undefined, fallbackCurrency: string): { amount: number; currency: string } {
+  money(value: number | MoneyAmount | null | undefined, fallbackCurrency?: string): { amount: number; currency: string } {
+    const currency = this.isMoneyAmount(value)
+      ? value.currency || fallbackCurrency || 'USD'
+      : fallbackCurrency || 'USD';
+
     if (this.isMoneyAmount(value)) {
       return {
-        amount: Number(value.amount || 0),
-        currency: value.currency || fallbackCurrency
+        amount: Number(value.amount ?? 0),
+        currency
       };
     }
+
     if (typeof value === 'number' && !Number.isNaN(value)) {
-      return { amount: value, currency: fallbackCurrency };
+      return { amount: value, currency };
     }
-    return { amount: 0, currency: fallbackCurrency };
+
+    return { amount: 0, currency };
   }
 
   timelineLabel(entry: OrderTimelineEntry): string {
@@ -353,10 +359,25 @@ export class AdminOrderDetailComponent implements OnInit, OnDestroy {
     if (entry?.message) {
       return entry.message;
     }
-    if (entry?.actor?.name) {
-      return entry.actor.name;
+    const actor = this.timelineActorName(entry?.actor);
+    if (actor) {
+      return actor;
     }
     return this.i18n.instant('orders.timelineNoDetails');
+  }
+
+  private timelineActorName(actor: unknown): string | null {
+    if (!actor) {
+      return null;
+    }
+    if (typeof actor === 'string') {
+      return actor;
+    }
+    if (typeof actor === 'object') {
+      const anyActor = actor as { name?: string; email?: string; id?: string };
+      return anyActor.name || anyActor.email || anyActor.id || null;
+    }
+    return null;
   }
 
   private isMoneyAmount(value: unknown): value is MoneyAmount {

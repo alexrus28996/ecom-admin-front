@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UntypedFormArray, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
-import { ProductsService, ProductDetail, ProductImage, ProductInput, ProductVariant } from '../../services/products.service';
+import { ProductsService, ProductDetail, ProductImage, ProductInput, ProductVariant, ProductAttribute } from '../../services/products.service';
 import { UploadService } from '../../services/upload.service';
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { ToastService } from '../../core/toast.service';
@@ -260,19 +260,20 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
   private createVariantGroup(variant?: ProductVariant): UntypedFormGroup {
     const attributesArray = this.fb.array([]);
-    if (variant?.attributes) {
-      Object.entries(variant.attributes).forEach(([attrKey, attrValue]) => {
-        attributesArray.push(this.createAttributeGroup(attrKey, attrValue));
+    const normalizedAttributes = this.normalizeAttributesInput(variant?.attributes);
+
+    if (normalizedAttributes.length) {
+      normalizedAttributes.forEach((attr) => {
+        attributesArray.push(this.createAttributeGroup(attr.key, attr.value));
       });
-    }
-    if (attributesArray.length === 0) {
+    } else {
       attributesArray.push(this.createAttributeGroup());
     }
 
     return this.fb.group({
       _id: [variant?._id || null],
       sku: [variant?.sku || ''],
-      price: [variant?.price ?? null, [Validators.min(0)]],
+      price: [variant?.price?.amount ?? null, [Validators.min(0)]],
       priceDelta: [variant?.priceDelta ?? null],
       stock: [variant?.stock ?? 0, [Validators.min(0)]],
       isActive: [variant?.isActive ?? true],
@@ -288,12 +289,15 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: ({ product }: { product: ProductDetail }) => {
+          const priceAmount = Number(product.price?.amount ?? 0);
+          const priceCurrency = product.price?.currency || 'USD';
+
           this.form.patchValue({
             name: product.name,
             description: product.description || '',
             longDescription: product.longDescription || '',
-            price: product.price,
-            currency: product.currency || 'USD',
+            price: priceAmount,
+            currency: priceCurrency,
             stock: product.stock ?? 0,
             isActive: product.isActive ?? true,
             category: typeof product.category === 'object' ? product.category?._id || '' : product.category || '',
@@ -302,7 +306,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
             metaDescription: product.metaDescription || ''
           });
           this.setImages(product.images || []);
-          this.setAttributes(product.attributes || {});
+          this.setAttributes(product.attributes);
           this.setVariants(product.variants || []);
           this.loading = false;
           this.lastError = null;
@@ -335,13 +339,13 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     images.forEach((image) => this.addImage(image, true));
   }
 
-  private setAttributes(attrs: Record<string, string>): void {
+  private setAttributes(attrs: ProductAttribute[] | Record<string, any> | undefined): void {
     this.attributes.clear();
-    const entries = Object.entries(attrs);
-    if (!entries.length) {
+    const normalized = this.normalizeAttributesInput(attrs);
+    if (!normalized.length) {
       return;
     }
-    entries.forEach(([key, value]) => this.addAttribute({ key, value }, true));
+    normalized.forEach((entry) => this.addAttribute(entry, true));
   }
 
   private setVariants(variants: ProductVariant[]): void {
@@ -365,24 +369,55 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     }
 
     const raw = this.form.getRawValue();
-    const payload: ProductInput = {
+    const currency = raw.currency || 'USD';
+    const priceAmount = this.parseNumber(raw.price) ?? 0;
+    const stockAmount = this.parseNumber(raw.stock) ?? 0;
+
+    const images = (raw.images as Array<ProductImage>)
+      .filter((img) => img?.url)
+      .map((img) => ({ url: img.url, alt: img.alt || undefined }));
+
+    const attributes = this.mapKeyValueArray(raw.attributes as Array<{ key?: string; value?: string }>);
+    const variantInputs = (raw.variants as Array<any>).map((variant) => this.buildVariantPayload(variant, currency));
+    const cleanedVariants = variantInputs
+      .map((variant) => this.cleanVariantForSave(variant))
+      .filter((variant) => this.variantHasContent(variant));
+
+    const payload: Partial<ProductInput> = {
       name: (raw.name || '').trim(),
-      sku: (raw.sku || '').trim() || undefined,
-      description: raw.description || '',
-      longDescription: raw.longDescription || undefined,
-      price: raw.price ?? 0,
-      currency: raw.currency || 'USD',
-      stock: raw.stock ?? 0,
-      isActive: raw.isActive ?? true,
-      category: raw.category || null,
-      images: (raw.images as Array<ProductImage>)
-        .filter((img) => img?.url)
-        .map((img) => ({ url: img.url, alt: img.alt || undefined })),
-      attributes: this.mapKeyValueArray(raw.attributes as Array<{ key?: string; value?: string }>),
-      variants: (raw.variants as Array<any>).map((variant) => this.buildVariantPayload(variant)),
-      metaTitle: raw.metaTitle || undefined,
-      metaDescription: raw.metaDescription || undefined
+      price: { amount: priceAmount, currency },
+      stock: stockAmount,
+      isActive: raw.isActive ?? true
     };
+
+    const sku = (raw.sku || '').trim();
+    if (sku) {
+      payload.sku = sku;
+    }
+    if (raw.description) {
+      payload.description = raw.description;
+    }
+    if (raw.longDescription) {
+      payload.longDescription = raw.longDescription;
+    }
+    if (raw.category) {
+      payload.category = raw.category as any;
+    }
+    if (images.length) {
+      payload.images = images;
+    }
+    if (attributes.length) {
+      payload.attributes = attributes;
+    }
+    if (cleanedVariants.length) {
+      payload.variants = cleanedVariants;
+    }
+    if (raw.metaTitle) {
+      payload.metaTitle = raw.metaTitle;
+    }
+    if (raw.metaDescription) {
+      payload.metaDescription = raw.metaDescription;
+    }
 
     const cleanedPayload = this.cleanProductPayload(payload);
 
@@ -417,32 +452,162 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       });
   }
 
-  private buildVariantPayload(value: any): ProductVariant {
+  private buildVariantPayload(value: any, currency: string): Partial<ProductVariant> {
+    const variant: Partial<ProductVariant> = {};
+
+    if (value?._id) {
+      variant._id = value._id;
+    }
+
+    const sku = value?.sku ? String(value.sku).trim() : '';
+    if (sku) {
+      variant.sku = sku;
+    }
+
+    const stock = this.parseNumber(value?.stock);
+    if (stock !== undefined) {
+      variant.stock = stock;
+    }
+
+    if (value?.isActive !== null && value?.isActive !== undefined) {
+      variant.isActive = !!value.isActive;
+    }
+
     const attrs = this.mapKeyValueArray(value?.attributes);
-    const variant: ProductVariant = {
-      sku: value?.sku || undefined,
-      price: value?.price !== null && value?.price !== undefined ? Number(value.price) : undefined,
-      priceDelta: value?.priceDelta !== null && value?.priceDelta !== undefined ? Number(value.priceDelta) : undefined,
-      stock: value?.stock !== null && value?.stock !== undefined ? Number(value.stock) : undefined,
-      isActive: value?.isActive ?? true,
-      attributes: attrs
-    };
+    if (attrs.length) {
+      variant.attributes = attrs;
+    }
+
+    const priceAmount = this.parseNumber(value?.price);
+    if (priceAmount !== undefined) {
+      variant.price = { amount: priceAmount, currency };
+    }
+
+    const priceDelta = this.parseNumber(value?.priceDelta);
+    if (priceDelta !== undefined) {
+      variant.priceDelta = priceDelta;
+    }
+
     return variant;
   }
 
-  private mapKeyValueArray(entries?: Array<{ key?: string; value?: string }>): Record<string, string> | undefined {
-    if (!entries || !entries.length) {
+  private parseNumber(value: unknown): number | undefined {
+    if (value === null || value === undefined) {
       return undefined;
     }
-    const result: Record<string, string> = {};
-    entries
-      .filter((entry) => entry && entry.key)
-      .forEach((entry) => {
-        if (entry?.key) {
-          result[entry.key] = entry.value ?? '';
-        }
-      });
-    return Object.keys(result).length ? result : undefined;
+    if (typeof value === 'number') {
+      return Number.isFinite(value) ? value : undefined;
+    }
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) {
+        return undefined;
+      }
+      const parsed = Number(trimmed);
+      return Number.isFinite(parsed) ? parsed : undefined;
+    }
+    return undefined;
+  }
+
+  private normalizeAttributesInput(attrs: ProductAttribute[] | Record<string, any> | undefined | null): Array<{ key: string; value: string }> {
+    if (!attrs) {
+      return [];
+    }
+    if (Array.isArray(attrs)) {
+      return attrs
+        .map((attr) => ({
+          key: (attr?.key ?? '').toString().trim(),
+          value: (attr?.value ?? '').toString()
+        }))
+        .filter((attr) => !!attr.key);
+    }
+    return Object.entries(attrs)
+      .map(([key, value]) => ({
+        key: key.trim(),
+        value: (value ?? '').toString()
+      }))
+      .filter((attr) => !!attr.key);
+  }
+
+  private cleanVariantForSave(input: Partial<ProductVariant>): ProductVariant {
+    const attributes = this.normalizeAttributesInput(input.attributes as any).map((attr) => ({
+      key: attr.key,
+      value: attr.value
+    }));
+    const stock = this.parseNumber(input.stock);
+
+    const variant: ProductVariant = {
+      stock: stock ?? 0,
+      isActive: typeof input.isActive === 'boolean' ? input.isActive : true,
+      attributes
+    };
+
+    if (input._id) {
+      variant._id = input._id;
+    }
+
+    const sku = typeof input.sku === 'string' ? input.sku.trim() : '';
+    if (sku) {
+      variant.sku = sku;
+    }
+
+    if (input.price && typeof input.price === 'object') {
+      const amount = this.parseNumber((input.price as any).amount);
+      const currency = (input.price as any).currency;
+      if (amount !== undefined) {
+        variant.price = {
+          amount,
+          currency: typeof currency === 'string' && currency ? currency : 'USD'
+        };
+      }
+    }
+
+    const priceDelta = this.parseNumber(input.priceDelta);
+    if (priceDelta !== undefined) {
+      variant.priceDelta = priceDelta;
+    }
+
+    return variant;
+  }
+
+  private variantHasContent(variant: Partial<ProductVariant>): boolean {
+    if (!variant) {
+      return false;
+    }
+    if (variant._id) {
+      return true;
+    }
+    if (typeof variant.sku === 'string' && variant.sku.trim().length > 0) {
+      return true;
+    }
+    if (variant.price) {
+      return true;
+    }
+    if (typeof variant.priceDelta === 'number' && !Number.isNaN(variant.priceDelta)) {
+      return true;
+    }
+    if (typeof variant.stock === 'number' && variant.stock > 0) {
+      return true;
+    }
+    if (Array.isArray(variant.attributes) && variant.attributes.some((attr) => attr.key && attr.key.trim().length > 0)) {
+      return true;
+    }
+    if (variant.isActive === false) {
+      return true;
+    }
+    return false;
+  }
+
+  private mapKeyValueArray(entries?: Array<{ key?: string; value?: string }>): ProductAttribute[] {
+    if (!entries || !entries.length) {
+      return [];
+    }
+    return entries
+      .map((entry) => ({
+        key: (entry?.key ?? '').toString().trim(),
+        value: (entry?.value ?? '').toString()
+      }))
+      .filter((entry) => !!entry.key);
   }
 
   private loadCategories(): void {
@@ -469,58 +634,40 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       });
   }
 
-  private cleanProductPayload(payload: ProductInput): ProductInput {
-    const result: ProductInput = { ...payload };
+  private cleanProductPayload(payload: Partial<ProductInput>): Partial<ProductInput> {
+    const result: Partial<ProductInput> = { ...payload };
     delete (result as any)._id;
     delete (result as any).createdAt;
     delete (result as any).updatedAt;
 
-    if (!result.images || !result.images.length) {
-      delete result.images;
-    }
-    if (result.images) {
-      result.images = result.images.filter((image) => !!image.url);
+    if (Array.isArray(result.images)) {
+      result.images = result.images
+        .filter((image) => !!image?.url)
+        .map((image) => ({ url: image.url, alt: image.alt || undefined }));
       if (!result.images.length) {
         delete result.images;
       }
     }
 
-    if (!result.variants || !result.variants.length) {
-      delete result.variants;
-    } else {
-      result.variants = result.variants
-        .map((variant) => {
-          const cleanedIsActive = variant.isActive === null ? undefined : variant.isActive;
-          const next: ProductVariant = { ...variant, isActive: cleanedIsActive };
-          if (next.isActive === undefined) {
-            delete next.isActive;
-          }
-          if (next.attributes && !Object.keys(next.attributes).length) {
-            delete next.attributes;
-          }
-          if (next.isActive === undefined) {
-            delete next.isActive;
-          }
-          if (next.priceDelta === undefined) {
-            delete next.priceDelta;
-          }
-          delete (next as any)._id;
-          delete (next as any).createdAt;
-          delete (next as any).updatedAt;
-          return next;
-        })
-        .filter((variant) => Object.keys(variant).length > 0);
-      if (!result.variants.length) {
-        delete result.variants;
+    if (Array.isArray(result.attributes)) {
+      result.attributes = result.attributes
+        .map((attr) => ({
+          key: (attr?.key ?? '').toString().trim(),
+          value: (attr?.value ?? '').toString()
+        }))
+        .filter((attr) => !!attr.key);
+      if (!result.attributes.length) {
+        delete result.attributes;
       }
     }
 
-    if (!result.attributes || !Object.keys(result.attributes).length) {
-      delete result.attributes;
-    }
-
-    if (!result.tags || !result.tags?.length) {
-      delete result.tags;
+    if (Array.isArray(result.variants)) {
+      result.variants = result.variants
+        .map((variant) => this.cleanVariantForSave(variant))
+        .filter((variant) => this.variantHasContent(variant));
+      if (!result.variants.length) {
+        delete result.variants;
+      }
     }
 
     if (!result.metaTitle) {
@@ -533,6 +680,14 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
     if (!result.longDescription) {
       delete result.longDescription;
+    }
+
+    if (!result.description) {
+      delete result.description;
+    }
+
+    if (!result.tags || !result.tags.length) {
+      delete result.tags;
     }
 
     return result;
