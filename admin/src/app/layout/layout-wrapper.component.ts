@@ -2,7 +2,7 @@ import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
 import { filter, map, shareReplay } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslateService } from '@ngx-translate/core';
@@ -20,6 +20,7 @@ import { PermissionsService } from '../core/permissions.service';
 })
 export class LayoutWrapperComponent implements OnInit {
   navItems: LayoutNavItem[] = [];
+  private readonly navItemsSubject = new BehaviorSubject<LayoutNavItem[]>([]);
 
   readonly searchControl = new FormControl('');
   readonly isHandset$: Observable<boolean>;
@@ -45,24 +46,21 @@ export class LayoutWrapperComponent implements OnInit {
       shareReplay({ bufferSize: 1, refCount: true })
     );
 
-    this.visibleNav$ = this.auth.user$.pipe(
-      map((user) => {
-        console.log('User changed:', user);
-        console.log('User roles:', user?.roles);
-        const filtered = this.navItems.filter((item) => {
-          const hasRole = this.auth.hasAnyRole(item.roles);
-          console.log(`Item: ${item.label}, Required roles: ${JSON.stringify(item.roles)}, Has role: ${hasRole}`);
-          return hasRole;
-        });
-        console.log('Visible nav items:', filtered);
-        return filtered;
-      }),
+    this.visibleNav$ = combineLatest([
+      this.auth.user$,
+      this.navItemsSubject.asObservable()
+    ]).pipe(
+      map(([, items]) => items.filter((item) => this.auth.hasAnyRole(item.roles))),
       shareReplay({ bufferSize: 1, refCount: true })
     );
   }
 
   ngOnInit(): void {
     this.initializeNavItems();
+
+    this.translate.onLangChange
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.initializeNavItems());
 
     this.theme.changes.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((mode) => {
       this.isDark = mode === 'dark';
@@ -84,7 +82,6 @@ export class LayoutWrapperComponent implements OnInit {
         this.breadcrumbs = this.buildBreadcrumbs(this.activatedRoute.root);
       });
 
-    // Seed initial breadcrumbs on load
     this.breadcrumbs = this.buildBreadcrumbs(this.activatedRoute.root);
   }
 
@@ -127,7 +124,7 @@ export class LayoutWrapperComponent implements OnInit {
   }
 
   private initializeNavItems(): void {
-    this.navItems = [
+    const items: LayoutNavItem[] = [
       { label: this.translate.instant('shell.nav.dashboard'), icon: 'grid_view', route: '/dashboard', exact: true },
       { label: this.translate.instant('shell.nav.orders'), icon: 'receipt_long', route: '/orders' },
       { label: this.translate.instant('shell.nav.cart'), icon: 'shopping_cart', route: '/cart' },
@@ -144,6 +141,9 @@ export class LayoutWrapperComponent implements OnInit {
       { label: this.translate.instant('shell.nav.admin.coupons'), icon: 'confirmation_number', route: '/admin/coupons', roles: ['admin'] },
       { label: this.translate.instant('shell.nav.admin.settings'), icon: 'settings', route: '/admin/settings', roles: ['admin'] }
     ];
+
+    this.navItems = items;
+    this.navItemsSubject.next(items);
   }
 
   private buildBreadcrumbs(route: ActivatedRoute, url = '', breadcrumbs: BreadcrumbItem[] = []): BreadcrumbItem[] {

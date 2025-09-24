@@ -1,41 +1,79 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 
 type Mode = 'light' | 'dark';
 
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
-  private readonly key = 'theme';
-  private readonly changesSubject = new BehaviorSubject<Mode>('light');
-  readonly changes = this.changesSubject.asObservable();
+  private readonly storageKey = 'theme';
+  private readonly changesSubject: BehaviorSubject<Mode>;
+  readonly changes: Observable<Mode>;
 
   constructor() {
-    const saved = (localStorage.getItem(this.key) as Mode) || 'light';
-    this.apply(saved);
+    const initial = this.resolveInitialMode();
+    this.changesSubject = new BehaviorSubject<Mode>(initial);
+    this.changes = this.changesSubject.asObservable();
+    this.apply(initial, false);
   }
 
-  set(mode: Mode) {
+  set(mode: Mode): void {
     this.apply(mode);
   }
 
-  toggle() {
-    this.apply(this.changesSubject.value === 'dark' ? 'light' : 'dark');
+  toggle(): void {
+    const next = this.changesSubject.value === 'dark' ? 'light' : 'dark';
+    this.apply(next);
   }
 
-  private apply(mode: Mode) {
-    const root = document.documentElement;
-    const body = document.body;
-
-    if (mode === 'dark') {
-      root.classList.add('theme-dark');
-      body.classList.add('theme-dark');
-    } else {
-      root.classList.remove('theme-dark');
-      body.classList.remove('theme-dark');
+  private resolveInitialMode(): Mode {
+    if (typeof window === 'undefined') {
+      return 'dark';
     }
 
-    body.classList.add('mat-app-background');
-    localStorage.setItem(this.key, mode);
+    try {
+      const stored = window.localStorage.getItem(this.storageKey) as Mode | null;
+      if (stored === 'light' || stored === 'dark') {
+        return stored;
+      }
+    } catch (err) {
+      console.warn('Unable to access theme preference storage.', err);
+    }
+
+    const mediaQuery = typeof window.matchMedia === 'function'
+      ? window.matchMedia('(prefers-color-scheme: dark)')
+      : null;
+
+    if (mediaQuery && !mediaQuery.matches) {
+      return 'light';
+    }
+
+    return 'dark';
+  }
+
+  private apply(mode: Mode, persist: boolean = true): void {
+    if (typeof document === 'undefined') {
+      this.changesSubject.next(mode);
+      return;
+    }
+
+    const root = document.documentElement;
+    const body = document.body;
+    const themeClass = mode === 'dark' ? 'theme-dark' : 'theme-light';
+
+    root.classList.remove('theme-dark', 'theme-light');
+    body.classList.remove('theme-dark', 'theme-light');
+
+    root.classList.add(themeClass);
+    body.classList.add(themeClass, 'mat-app-background');
+
+    if (persist && typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem(this.storageKey, mode);
+      } catch (err) {
+        console.warn('Failed to persist theme preference.', err);
+      }
+    }
+
     this.changesSubject.next(mode);
   }
 }

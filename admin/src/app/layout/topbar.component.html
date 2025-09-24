@@ -1,22 +1,40 @@
 <header class="topbar">
   <div class="topbar__left">
-    <button mat-icon-button type="button" class="topbar__menu" *ngIf="isHandset" (click)="menuClick.emit()">
+    <button
+      mat-icon-button
+      type="button"
+      class="topbar__menu"
+      *ngIf="isHandset"
+      (click)="menuClick.emit()"
+      [attr.aria-label]="'shell.topbar.menu.toggleNav' | translate"
+      [matTooltip]="'shell.topbar.menu.toggleNav' | translate"
+      matTooltipPosition="below"
+    >
       <mat-icon>menu</mat-icon>
     </button>
     <div class="topbar__brand">
-      <span class="topbar__logo">EA</span>
+      <span class="topbar__logo">{{ 'shell.brandShort' | translate }}</span>
       <div class="topbar__brand-text">
-        <span class="topbar__brand-name">Ecom Admin</span>
-        <span class="topbar__brand-sub">Enterprise Command</span>
+        <span class="topbar__brand-name">{{ 'shell.brand' | translate }}</span>
+        <span class="topbar__brand-sub">{{ 'shell.brandTagline' | translate }}</span>
       </div>
     </div>
   </div>
 
   <form class="topbar__search" (ngSubmit)="submit()" novalidate>
     <mat-form-field appearance="outline">
-      <mat-label>Global search</mat-label>
-      <input matInput [formControl]="searchControl" [placeholder]="placeholder" />
-      <button mat-icon-button matSuffix type="submit" aria-label="Search">
+      <mat-label>{{ 'shell.topbar.search.label' | translate }}</mat-label>
+      <input
+        matInput
+        [formControl]="searchControl"
+        [placeholder]="'shell.topbar.search.placeholder' | translate"
+      />
+      <button
+        mat-icon-button
+        matSuffix
+        type="submit"
+        [attr.aria-label]="'shell.topbar.search.aria' | translate"
+      >
         <mat-icon>search</mat-icon>
       </button>
     </mat-form-field>
@@ -28,11 +46,18 @@
       type="button"
       class="topbar__action"
       (click)="toggleTheme.emit()"
-      [matTooltip]="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+      [matTooltip]="(isDark ? 'shell.actions.setLight' : 'shell.actions.setDark') | translate"
+      [attr.aria-label]="(isDark ? 'shell.actions.setLight' : 'shell.actions.setDark') | translate"
     >
       <mat-icon>{{ isDark ? 'light_mode' : 'dark_mode' }}</mat-icon>
     </button>
-    <button mat-icon-button type="button" class="topbar__action" matTooltip="Notifications">
+    <button
+      mat-icon-button
+      type="button"
+      class="topbar__action"
+      [matTooltip]="'shell.topbar.notifications' | translate"
+      [attr.aria-label]="'shell.topbar.notifications' | translate"
+    >
       <mat-icon>notifications</mat-icon>
     </button>
     <button
@@ -42,21 +67,25 @@
       [matMenuTriggerFor]="profileMenu"
       *ngIf="user; else anonymous"
     >
-      <span class="topbar__avatar" [class.topbar__avatar--image]="!!user?.avatarUrl" [style.background-image]="user?.avatarUrl ? 'url(' + user?.avatarUrl + ')' : ''">
+      <span
+        class="topbar__avatar"
+        [class.topbar__avatar--image]="!!user?.avatarUrl"
+        [style.background-image]="user?.avatarUrl ? 'url(' + user?.avatarUrl + ')' : ''"
+      >
         <ng-container *ngIf="!user?.avatarUrl">{{ avatarInitials }}</ng-container>
       </span>
       <span class="topbar__identity">
-        <strong>{{ user?.name || 'Admin' }}</strong>
-        <small>{{ user?.email }}</small>
+        <strong>{{ user?.name || ('shell.topbar.anonymous.name' | translate) }}</strong>
+        <small>{{ user?.email || ('shell.topbar.anonymous.email' | translate) }}</small>
       </span>
       <mat-icon>expand_more</mat-icon>
     </button>
     <ng-template #anonymous>
       <button mat-button type="button" class="topbar__profile" [matMenuTriggerFor]="profileMenu">
-        <span class="topbar__avatar">EA</span>
+        <span class="topbar__avatar">{{ 'shell.brandShort' | translate }}</span>
         <span class="topbar__identity">
-          <strong>Administrator</strong>
-          <small>admin&#64;example.com</small>
+          <strong>{{ 'shell.topbar.anonymous.name' | translate }}</strong>
+          <small>{{ 'shell.topbar.anonymous.email' | translate }}</small>
         </span>
         <mat-icon>expand_more</mat-icon>
       </button>
@@ -64,16 +93,16 @@
     <mat-menu #profileMenu="matMenu">
       <button mat-menu-item routerLink="/profile">
         <mat-icon>account_circle</mat-icon>
-        <span>Profile</span>
+        <span>{{ 'shell.topbar.menu.profile' | translate }}</span>
       </button>
       <button mat-menu-item routerLink="/admin/settings">
         <mat-icon>tune</mat-icon>
-        <span>Settings</span>
+        <span>{{ 'shell.topbar.menu.settings' | translate }}</span>
       </button>
       <mat-divider></mat-divider>
       <button mat-menu-item type="button" (click)="logout.emit()">
         <mat-icon>logout</mat-icon>
-        <span>Logout</span>
+        <span>{{ 'shell.topbar.menu.logout' | translate }}</span>
       </button>
     </mat-menu>
   </div>

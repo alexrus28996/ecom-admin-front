@@ -16,7 +16,7 @@ export class AppComponent implements OnInit {
     private readonly translate: TranslateService,
     private readonly permissions: PermissionsService
   ) {
-    this.translate.addLangs(['en']);
+    this.translate.addLangs(['en', 'fr']);
     this.translate.setDefaultLang('en');
     this.translate.use('en');
   }

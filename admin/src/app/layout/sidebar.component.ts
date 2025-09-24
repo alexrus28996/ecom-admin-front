@@ -16,8 +16,6 @@ export class SidebarComponent {
   @Output() toggleCollapse = new EventEmitter<void>();
   @Output() closeMobile = new EventEmitter<void>();
 
-  readonly logo = 'EA';
-
   trackByRoute(_: number, item: LayoutNavItem): string {
     return item.route;
   }
@@ -28,3 +26,4 @@ export class SidebarComponent {
     }
   }
 }
+

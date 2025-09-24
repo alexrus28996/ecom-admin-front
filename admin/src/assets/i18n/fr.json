@@ -1,7 +1,7 @@
 {
   "__todo": "Translate strings",
   "common": {
-    "loading": "Loading…",
+    "loading": "Chargement...",
     "confirm": {
       "title": "Confirm action",
       "message": "Are you sure you want to continue?"
@@ -13,7 +13,7 @@
       "reset": "Reset",
       "close": "Close"
     },
-    "empty": "—"
+    "empty": "Aucune donnee pour le moment."
   },
   "products": {
     "title": "Products",
@@ -748,11 +748,15 @@
       "orders": "Orders",
       "profile": "Profile",
       "admin": {
-        "users": "Admin / Users",
-        "orders": "Admin / Orders",
-        "categories": "Admin / Categories",
-        "returns": "Admin / Returns",
-        "inventory": "Admin / Inventory"
+        "users": "Utilisateurs (Admin)",
+        "orders": "Commandes (Admin)",
+        "categories": "Categories (Admin)",
+        "returns": "Retours (Admin)",
+        "inventory": "Inventaire (Admin)",
+        "reviews": "Avis (Admin)",
+        "shipments": "Expeditions (Admin)",
+        "coupons": "Coupons (Admin)",
+        "settings": "Parametres Admin"
       }
     },
     "navSections": {
@@ -765,11 +769,11 @@
     },
     "actions": {
       "logout": "Sign out",
-      "toggleTheme": "Toggle theme",
-      "setDark": "Switch to dark mode",
-      "setLight": "Switch to light mode",
-      "collapseNav": "Collapse navigation",
-      "expandNav": "Expand navigation"
+      "toggleTheme": "Changer de theme",
+      "setDark": "Passer en theme sombre",
+      "setLight": "Passer en theme clair",
+      "collapseNav": "Reduire la navigation",
+      "expandNav": "Developper la navigation"
     },
     "footer": {
       "backend": "Backend: /api",
@@ -777,6 +781,26 @@
     },
     "a11y": {
       "toggleNav": "Toggle navigation"
+    },
+    "brandShort": "EA",
+    "brandTagline": "Enterprise Command",
+    "topbar": {
+      "search": {
+        "label": "Recherche globale",
+        "placeholder": "Rechercher produits, commandes, utilisateurs...",
+        "aria": "Lancer la recherche globale"
+      },
+      "notifications": "Notifications",
+      "menu": {
+        "profile": "Profil",
+        "settings": "Parametres",
+        "logout": "Se deconnecter",
+        "toggleNav": "Basculer la navigation"
+      },
+      "anonymous": {
+        "name": "Administrateur",
+        "email": "admin@example.com"
+      }
     }
   },
   "inventory": {
@@ -910,7 +934,7 @@
         "quantityRequired": "Quantity is required.",
         "quantityPositive": "Enter a quantity greater than zero."
       },
-      "loadingVariants": "Loading variants…"
+      "loadingVariants": "Loading variants\u2026"
     }
   },
   "adminUsers": {
@@ -1064,7 +1088,7 @@
     },
     "actions": {
       "submit": "Sign in",
-      "submitting": "Signing in…",
+      "submitting": "Signing in\u2026",
       "forgotPassword": "Forgot password?",
       "noAccount": "Don't have an account?",
       "createAccount": "Create one"
@@ -1102,7 +1126,7 @@
     },
     "actions": {
       "submit": "Create account",
-      "submitting": "Submitting registration…",
+      "submitting": "Submitting registration\u2026",
       "backToLogin": "Back to sign in"
     },
     "success": "Registration successful. You can now sign in.",
@@ -1123,7 +1147,7 @@
     },
     "actions": {
       "submit": "Send reset link",
-      "submitting": "Sending reset link…",
+      "submitting": "Sending reset link\u2026",
       "backToLogin": "Back to sign in"
     },
     "success": "Reset instructions sent. Check your inbox.",
@@ -1144,7 +1168,7 @@
     },
     "actions": {
       "submit": "Update password",
-      "submitting": "Updating password…",
+      "submitting": "Updating password\u2026",
       "backToLogin": "Back to sign in"
     },
     "success": "Password updated. You can now sign in.",
@@ -1155,7 +1179,7 @@
   },
   "emailVerify": {
     "title": "Verify email",
-    "loading": "Verifying your email…",
+    "loading": "Verifying your email\u2026",
     "success": "Email verified successfully.",
     "errors": {
       "generic": "We couldn't verify your email. Please request a new link."
@@ -1167,7 +1191,7 @@
     "actions": {
       "refresh": "Refresh"
     },
-    "loading": "Loading dashboard…",
+    "loading": "Loading dashboard\u2026",
     "cards": {
       "users": "Total customers",
       "usersHint": "Includes active and invited users.",
@@ -1220,7 +1244,7 @@
       "UNAUTHORIZED": "You need to sign in to continue.",
       "FORBIDDEN": "You do not have permission to perform this action.",
       "NOT_FOUND": "The requested resource could not be found.",
-      "ROUTE_NOT_FOUND": "अनुरोधित बैकएंड रूट उपलब्ध नहीं है।",
+      "ROUTE_NOT_FOUND": "\u0905\u0928\u0941\u0930\u094b\u0927\u093f\u0924 \u092c\u0948\u0915\u090f\u0902\u0921 \u0930\u0942\u091f \u0909\u092a\u0932\u092c\u094d\u0927 \u0928\u0939\u0940\u0902 \u0939\u0948\u0964",
       "VALIDATION_ERROR": "Some fields have validation errors.",
       "CONFLICT": "The resource is in a conflicting state.",
       "RATE_LIMITED": "Too many requests. Please try again later.",

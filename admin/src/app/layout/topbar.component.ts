@@ -20,8 +20,6 @@ export class TopbarComponent {
   @Output() logout = new EventEmitter<void>();
   @Output() search = new EventEmitter<string>();
 
-  readonly placeholder = 'Search products, orders, users…';
-
   get avatarInitials(): string {
     if (!this.user) {
       return 'NA';
@@ -31,7 +29,10 @@ export class TopbarComponent {
   }
 
   submit(): void {
-    const value = (this.searchControl?.value || '').toString();
+    const value = (this.searchControl?.value || '').toString().trim();
+    if (!value) {
+      return;
+    }
     this.search.emit(value);
   }
 }
