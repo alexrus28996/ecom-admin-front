@@ -10,6 +10,7 @@ import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
 import { AdminService } from '../../services/admin.service';
 import { ProductVariantsDialogComponent } from './product-variants-dialog.component';
 import { PermissionsService } from '../../core/permissions.service';
+import { environment } from '../../../environments/environment';
 
 interface CategoryOption {
   id: string;
@@ -265,11 +266,20 @@ export class ProductsListComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (res) => {
-          this.categories = res.items.map((category: any) => ({ id: category._id, name: category.name }));
+          const items = Array.isArray(res?.items)
+            ? res.items
+            : Array.isArray((res as any)?.data)
+              ? (res as any).data
+              : [];
+          this.categories = items.map((category: any) => ({ id: category._id, name: category.name }));
           this.cdr.markForCheck();
         },
-        error: () => {
-          // TODO: Surface category load issues once bulk import flows are in place.
+        error: (err) => {
+          this.toast.error(this.translate.instant('categories.errors.load'));
+          if (!environment.production) {
+            // eslint-disable-next-line no-console
+            console.error('Failed to load categories', err);
+          }
         }
       });
   }

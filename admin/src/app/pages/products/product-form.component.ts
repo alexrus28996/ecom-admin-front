@@ -451,7 +451,12 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (res) => {
-          this.categories = res.items.map((category: any) => ({ id: category._id, name: category.name }));
+          const items = Array.isArray(res?.items)
+            ? res.items
+            : Array.isArray((res as any)?.data)
+              ? (res as any).data
+              : [];
+          this.categories = items.map((category: any) => ({ id: category._id, name: category.name }));
           this.cdr.markForCheck();
         },
         error: (err) => {
