@@ -12,8 +12,8 @@
       <div class="sidebar__mark">
         <span class="sidebar__logo">{{ logo }}</span>
         <div class="sidebar__titles">
-          <span class="sidebar__product">{{ productName }}</span>
-          <span class="sidebar__suite">{{ suiteName }}</span>
+          <span class="sidebar__product">{{ 'shell.brand' | translate }}</span>
+          <span class="sidebar__suite">{{ 'shell.nav.commerce' | translate }}</span>
         </div>
       </div>
     </div>
@@ -34,15 +34,15 @@
       </a>
     </div>
     <ng-template #emptyNav>
-      <div class="sidebar__empty">No navigation</div>
+      <div class="sidebar__empty">{{ 'shell.nav.empty' | translate }}</div>
     </ng-template>
 
     <div class="sidebar__footer">
       <div class="sidebar__status">
         <mat-icon>shield</mat-icon>
         <div>
-          <span>Enterprise ready</span>
-          <small>Secured access</small>
+          <span>{{ 'shell.status.ready' | translate }}</span>
+          <small>{{ 'shell.status.secure' | translate }}</small>
         </div>
       </div>
       <button
@@ -53,7 +53,7 @@
         *ngIf="!handset"
       >
         <mat-icon>{{ collapsed ? 'chevron_right' : 'chevron_left' }}</mat-icon>
-        <span>{{ collapsed ? 'Expand' : 'Collapse' }}</span>
+        <span>{{ collapsed ? ('shell.actions.expandNav' | translate) : ('shell.actions.collapseNav' | translate) }}</span>
       </button>
     </div>
   </div>

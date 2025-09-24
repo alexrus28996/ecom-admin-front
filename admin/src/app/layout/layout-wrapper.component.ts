@@ -5,6 +5,7 @@ import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { filter, map, shareReplay } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TranslateService } from '@ngx-translate/core';
 
 import { AuthService } from '../core/auth.service';
 import { ThemeService } from '../core/theme.service';
@@ -18,23 +19,7 @@ import { PermissionsService } from '../core/permissions.service';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LayoutWrapperComponent implements OnInit {
-  readonly navItems: LayoutNavItem[] = [
-    { label: 'Dashboard', icon: 'grid_view', route: '/dashboard', exact: true },
-    { label: 'Orders', icon: 'receipt_long', route: '/orders' },
-    { label: 'Cart', icon: 'shopping_cart', route: '/cart' },
-    { label: 'Addresses', icon: 'location_on', route: '/addresses' },
-    { label: 'Profile', icon: 'person', route: '/profile' },
-    { label: 'Products', icon: 'inventory_2', route: '/admin/products', roles: ['admin'] },
-    { label: 'Admin Orders', icon: 'receipt_long', route: '/admin/orders', roles: ['admin'] },
-    { label: 'Users', icon: 'group', route: '/admin/users', roles: ['admin'] },
-    { label: 'Categories', icon: 'category', route: '/admin/categories', roles: ['admin'] },
-    { label: 'Inventory', icon: 'warehouse', route: '/admin/inventory', roles: ['admin'] },
-    { label: 'Returns', icon: 'assignment_return', route: '/admin/returns', roles: ['admin'] },
-    { label: 'Reviews', icon: 'reviews', route: '/admin/reviews', roles: ['admin'] },
-    { label: 'Shipments', icon: 'local_shipping', route: '/admin/shipments', roles: ['admin'] },
-    { label: 'Coupons', icon: 'confirmation_number', route: '/admin/coupons', roles: ['admin'] },
-    { label: 'Settings', icon: 'settings', route: '/admin/settings', roles: ['admin'] }
-  ];
+  navItems: LayoutNavItem[] = [];
 
   readonly searchControl = new FormControl('');
   readonly isHandset$: Observable<boolean>;
@@ -51,6 +36,7 @@ export class LayoutWrapperComponent implements OnInit {
     private readonly activatedRoute: ActivatedRoute,
     private readonly theme: ThemeService,
     private readonly permissions: PermissionsService,
+    private readonly translate: TranslateService,
     breakpointObserver: BreakpointObserver,
     private readonly destroyRef: DestroyRef
   ) {
@@ -76,6 +62,8 @@ export class LayoutWrapperComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.initializeNavItems();
+
     this.theme.changes.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((mode) => {
       this.isDark = mode === 'dark';
     });
@@ -138,6 +126,26 @@ export class LayoutWrapperComponent implements OnInit {
     this.router.navigate(['/login']);
   }
 
+  private initializeNavItems(): void {
+    this.navItems = [
+      { label: this.translate.instant('shell.nav.dashboard'), icon: 'grid_view', route: '/dashboard', exact: true },
+      { label: this.translate.instant('shell.nav.orders'), icon: 'receipt_long', route: '/orders' },
+      { label: this.translate.instant('shell.nav.cart'), icon: 'shopping_cart', route: '/cart' },
+      { label: this.translate.instant('shell.nav.addresses'), icon: 'location_on', route: '/addresses' },
+      { label: this.translate.instant('shell.nav.profile'), icon: 'person', route: '/profile' },
+      { label: this.translate.instant('shell.nav.products'), icon: 'inventory_2', route: '/admin/products', roles: ['admin'] },
+      { label: this.translate.instant('shell.nav.admin.orders'), icon: 'receipt_long', route: '/admin/orders', roles: ['admin'] },
+      { label: this.translate.instant('shell.nav.admin.users'), icon: 'group', route: '/admin/users', roles: ['admin'] },
+      { label: this.translate.instant('shell.nav.admin.categories'), icon: 'category', route: '/admin/categories', roles: ['admin'] },
+      { label: this.translate.instant('shell.nav.admin.inventory'), icon: 'warehouse', route: '/admin/inventory', roles: ['admin'] },
+      { label: this.translate.instant('shell.nav.admin.returns'), icon: 'assignment_return', route: '/admin/returns', roles: ['admin'] },
+      { label: this.translate.instant('shell.nav.admin.reviews'), icon: 'reviews', route: '/admin/reviews', roles: ['admin'] },
+      { label: this.translate.instant('shell.nav.admin.shipments'), icon: 'local_shipping', route: '/admin/shipments', roles: ['admin'] },
+      { label: this.translate.instant('shell.nav.admin.coupons'), icon: 'confirmation_number', route: '/admin/coupons', roles: ['admin'] },
+      { label: this.translate.instant('shell.nav.admin.settings'), icon: 'settings', route: '/admin/settings', roles: ['admin'] }
+    ];
+  }
+
   private buildBreadcrumbs(route: ActivatedRoute, url = '', breadcrumbs: BreadcrumbItem[] = []): BreadcrumbItem[] {
     const children = route.children;
 
@@ -155,9 +163,14 @@ export class LayoutWrapperComponent implements OnInit {
       const data = child.snapshot.data;
 
       if (data && data['breadcrumb']) {
+        const breadcrumbKey = `breadcrumb.${data['breadcrumb']}`;
         breadcrumbs = [
           ...breadcrumbs,
-          { label: data['breadcrumb'] as string, url: nextUrl || '/' }
+          {
+            label: data['breadcrumb'] as string,
+            url: nextUrl || '/',
+            translationKey: breadcrumbKey
+          }
         ];
       }
 

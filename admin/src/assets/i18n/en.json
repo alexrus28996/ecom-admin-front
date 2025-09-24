@@ -707,12 +707,18 @@
       "cart": "Cart",
       "orders": "Orders",
       "profile": "Profile",
+      "commerce": "Commerce Suite",
+      "empty": "No navigation",
       "admin": {
         "users": "Admin / Users",
         "orders": "Admin / Orders",
         "categories": "Admin / Categories",
         "returns": "Admin / Returns",
-        "inventory": "Admin / Inventory"
+        "inventory": "Admin / Inventory",
+        "reviews": "Admin / Reviews",
+        "shipments": "Admin / Shipments",
+        "coupons": "Admin / Coupons",
+        "settings": "Admin / Settings"
       }
     },
     "navSections": {
@@ -728,8 +734,12 @@
       "toggleTheme": "Toggle theme",
       "setDark": "Switch to dark mode",
       "setLight": "Switch to light mode",
-      "collapseNav": "Collapse navigation",
-      "expandNav": "Expand navigation"
+      "collapseNav": "Collapse",
+      "expandNav": "Expand"
+    },
+    "status": {
+      "ready": "Enterprise ready",
+      "secure": "Secured access"
     },
     "footer": {
       "backend": "Backend: /api",
@@ -738,6 +748,26 @@
     "a11y": {
       "toggleNav": "Toggle navigation"
     }
+  },
+  "breadcrumb": {
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "cart": "Cart",
+    "addresses": "Addresses",
+    "orders": "Orders",
+    "orderDetail": "Order Detail",
+    "products": "Products",
+    "createProduct": "Create Product",
+    "editProduct": "Edit Product",
+    "users": "Users",
+    "roles": "Roles",
+    "returns": "Returns",
+    "inventory": "Inventory",
+    "coupons": "Coupons",
+    "reviews": "Reviews",
+    "shipments": "Shipments",
+    "settings": "Settings",
+    "categories": "Categories"
   },
   "inventory": {
     "title": "Inventory",

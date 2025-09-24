@@ -17,8 +17,6 @@ export class SidebarComponent {
   @Output() closeMobile = new EventEmitter<void>();
 
   readonly logo = 'EA';
-  readonly productName = 'Ecom Admin';
-  readonly suiteName = 'Commerce Suite';
 
   trackByRoute(_: number, item: LayoutNavItem): string {
     return item.route;

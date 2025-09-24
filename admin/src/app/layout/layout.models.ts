@@ -10,4 +10,5 @@ export interface BreadcrumbItem {
   readonly label: string;
   readonly url?: string;
   readonly icon?: string;
+  readonly translationKey?: string;
 }

@@ -7,12 +7,12 @@
         [routerLink]="item.url"
       >
         <mat-icon *ngIf="item.icon" class="breadcrumb__icon">{{ item.icon }}</mat-icon>
-        <span>{{ item.label }}</span>
+        <span>{{ item.translationKey ? (item.translationKey | translate) : item.label }}</span>
       </a>
       <ng-template #current>
         <span class="breadcrumb__current">
           <mat-icon *ngIf="item.icon" class="breadcrumb__icon">{{ item.icon }}</mat-icon>
-          <span>{{ item.label }}</span>
+          <span>{{ item.translationKey ? (item.translationKey | translate) : item.label }}</span>
         </span>
       </ng-template>
       <mat-icon *ngIf="!last" class="breadcrumb__separator">chevron_right</mat-icon>
