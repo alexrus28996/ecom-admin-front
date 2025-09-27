@@ -31,6 +31,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
   readonly form: UntypedFormGroup = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
+    slug: [''],
     sku: [''],
     description: [''],
     longDescription: [''],
@@ -46,7 +47,15 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     variants: this.fb.array([])
   });
 
-  readonly currencyOptions = ['USD', 'EUR', 'GBP', 'INR'];
+  readonly currencyOptions = [
+    { code: 'USD', symbol: '$', name: 'US Dollar' },
+    { code: 'EUR', symbol: '€', name: 'Euro' },
+    { code: 'GBP', symbol: '£', name: 'British Pound' },
+    { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
+    { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
+    { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' }
+  ];
+  defaultProductImage = 'assets/images/product-placeholder.png';
   categories: CategoryOption[] = [];
 
   readonly productFormPermissions$ = combineLatest({
@@ -72,12 +81,21 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.id = this.route.snapshot.paramMap.get('id');
+    this.permissions
+      .load()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => this.cdr.markForCheck(),
+        error: () => this.cdr.markForCheck()
+      });
     this.watchPermissions();
     this.loadCategories();
     if (this.id) {
       this.fetchProduct(this.id);
     } else {
+      // Initialize with default image for new products
       this.addImage(undefined, true);
+      this.cdr.markForCheck();
     }
   }
 
@@ -100,11 +118,11 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
   get variantSummary() {
     const baseStock = Number(this.form.get('stock')?.value) || 0;
-    const variants = this.variants.controls;
+    const variants = this.variants?.controls || [];
     let variantStock = 0;
     let active = 0;
     variants.forEach((ctrl) => {
-      const stock = Number(ctrl.get('stock')?.value);
+      const stock = Number(ctrl.get('stock')?.value) || 0;
       if (!Number.isNaN(stock)) {
         variantStock += stock;
       }
@@ -273,7 +291,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     return this.fb.group({
       _id: [variant?._id || null],
       sku: [variant?.sku || ''],
-      price: [variant?.price?.amount ?? null, [Validators.min(0)]],
+      price: [this.extractPriceValue(variant?.price) ?? null, [Validators.min(0)]],
       priceDelta: [variant?.priceDelta ?? null],
       stock: [variant?.stock ?? 0, [Validators.min(0)]],
       isActive: [variant?.isActive ?? true],
@@ -289,11 +307,18 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: ({ product }: { product: ProductDetail }) => {
-          const priceAmount = Number(product.price?.amount ?? 0);
-          const priceCurrency = product.price?.currency || 'USD';
+          const productCurrency = (product as any).currency;
+          const fallbackCurrency =
+            typeof productCurrency === 'string' && productCurrency ? productCurrency : 'USD';
+          const { amount: priceAmountRaw, currency: priceCurrency } = this.normalizePrice(
+            product.price,
+            fallbackCurrency
+          );
+          const priceAmount = priceAmountRaw ?? 0;
 
           this.form.patchValue({
             name: product.name,
+            slug: product.slug || this.generateSlugFromName(product.name),
             description: product.description || '',
             longDescription: product.longDescription || '',
             price: priceAmount,
@@ -378,14 +403,16 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       .map((img) => ({ url: img.url, alt: img.alt || undefined }));
 
     const attributes = this.mapKeyValueArray(raw.attributes as Array<{ key?: string; value?: string }>);
-    const variantInputs = (raw.variants as Array<any>).map((variant) => this.buildVariantPayload(variant, currency));
+    const variantInputs = (raw.variants as Array<any>).map((variant) => this.buildVariantPayload(variant));
     const cleanedVariants = variantInputs
       .map((variant) => this.cleanVariantForSave(variant))
       .filter((variant) => this.variantHasContent(variant));
 
     const payload: Partial<ProductInput> = {
       name: (raw.name || '').trim(),
-      price: { amount: priceAmount, currency },
+      slug: (raw.slug || '').trim() || this.generateSlugFromName(raw.name),
+      price: priceAmount,
+      currency,
       stock: stockAmount,
       isActive: raw.isActive ?? true
     };
@@ -452,7 +479,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       });
   }
 
-  private buildVariantPayload(value: any, currency: string): Partial<ProductVariant> {
+  private buildVariantPayload(value: any): Partial<ProductVariant> {
     const variant: Partial<ProductVariant> = {};
 
     if (value?._id) {
@@ -480,7 +507,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
     const priceAmount = this.parseNumber(value?.price);
     if (priceAmount !== undefined) {
-      variant.price = { amount: priceAmount, currency };
+      variant.price = priceAmount;
     }
 
     const priceDelta = this.parseNumber(value?.priceDelta);
@@ -507,6 +534,36 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       return Number.isFinite(parsed) ? parsed : undefined;
     }
     return undefined;
+  }
+
+  private extractPriceValue(input: unknown): number | undefined {
+    if (input === null || input === undefined) {
+      return undefined;
+    }
+    if (typeof input === 'object') {
+      const candidate = (input as any).amount ?? (input as any).price ?? (input as any).value;
+      const amount = this.parseNumber(candidate);
+      if (amount !== undefined) {
+        return amount;
+      }
+    }
+    return this.parseNumber(input);
+  }
+
+  private resolveCurrency(input: unknown, fallback: string): string {
+    if (input && typeof input === 'object') {
+      const currency = (input as any).currency;
+      if (typeof currency === 'string' && currency.trim().length) {
+        return currency;
+      }
+    }
+    return fallback;
+  }
+
+  private normalizePrice(input: unknown, fallbackCurrency: string): { amount?: number; currency: string } {
+    const amount = this.extractPriceValue(input);
+    const currency = this.resolveCurrency(input, fallbackCurrency);
+    return { amount, currency };
   }
 
   private normalizeAttributesInput(attrs: ProductAttribute[] | Record<string, any> | undefined | null): Array<{ key: string; value: string }> {
@@ -551,15 +608,9 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       variant.sku = sku;
     }
 
-    if (input.price && typeof input.price === 'object') {
-      const amount = this.parseNumber((input.price as any).amount);
-      const currency = (input.price as any).currency;
-      if (amount !== undefined) {
-        variant.price = {
-          amount,
-          currency: typeof currency === 'string' && currency ? currency : 'USD'
-        };
-      }
+    const priceAmount = this.extractPriceValue(input.price);
+    if (priceAmount !== undefined) {
+      variant.price = priceAmount;
     }
 
     const priceDelta = this.parseNumber(input.priceDelta);
@@ -580,7 +631,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     if (typeof variant.sku === 'string' && variant.sku.trim().length > 0) {
       return true;
     }
-    if (variant.price) {
+    if (this.extractPriceValue(variant.price) !== undefined) {
       return true;
     }
     if (typeof variant.priceDelta === 'number' && !Number.isNaN(variant.priceDelta)) {
@@ -640,6 +691,16 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     delete (result as any).createdAt;
     delete (result as any).updatedAt;
 
+    const priceValue = this.extractPriceValue(result.price);
+    if (priceValue !== undefined) {
+      result.price = priceValue;
+    }
+
+    if (typeof result.currency === 'string') {
+      const trimmedCurrency = result.currency.trim();
+      result.currency = trimmedCurrency || 'USD';
+    }
+
     if (Array.isArray(result.images)) {
       result.images = result.images
         .filter((image) => !!image?.url)
@@ -693,6 +754,69 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     return result;
   }
 
+  onNameChange(event: any): void {
+    const name = event.target.value;
+    if (name && !this.id) {
+      // Auto-generate slug only for new products
+      const slug = this.generateSlugFromName(name);
+      this.form.patchValue({ slug }, { emitEvent: false });
+    }
+  }
+
+  generateSlug(): void {
+    const name = this.form.get('name')?.value;
+    if (name) {
+      const slug = this.generateSlugFromName(name);
+      this.form.patchValue({ slug });
+    }
+  }
+
+  generateSku(): void {
+    const name = this.form.get('name')?.value;
+    if (name) {
+      const sku = this.generateSkuFromName(name);
+      this.form.patchValue({ sku });
+    }
+  }
+
+  getCurrencySymbol(): string {
+    const currency = this.form.get('currency')?.value || 'USD';
+    const option = this.currencyOptions.find(opt => opt.code === currency);
+    return option?.symbol || '$';
+  }
+
+  getImagePreview(url: string): string {
+    return url || this.defaultProductImage;
+  }
+
+  onImageError(event: any): void {
+    event.target.src = this.defaultProductImage;
+  }
+
+  onImageUrlChange(index: number): void {
+    // Trigger change detection for image preview
+    this.cdr.markForCheck();
+  }
+
+  private generateSlugFromName(name: string): string {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single
+      .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+  }
+
+  private generateSkuFromName(name: string): string {
+    const prefix = name
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase())
+      .join('')
+      .slice(0, 3);
+    const timestamp = Date.now().toString().slice(-6);
+    return `${prefix}-${timestamp}`;
+  }
+
   private mapSaveError(code: string | undefined): string {
     if (!code) {
       return 'products.errorSave';
@@ -700,6 +824,8 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     switch (code) {
       case 'PRODUCT_SKU_EXISTS':
         return 'products.errors.duplicateSku';
+      case 'PRODUCT_SLUG_EXISTS':
+        return 'products.errors.duplicateSlug';
       case 'PRODUCT_VALIDATION_FAILED':
         return 'products.errors.validationFailed';
       default:
@@ -707,4 +833,3 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     }
   }
 }
-

@@ -191,7 +191,12 @@ export class ProductVariantsDialogComponent implements OnInit, OnDestroy {
     this.products.get(this.data.id).subscribe({
       next: ({ product }) => {
         this.productName = product.name;
-        this.productCurrency = product.price?.currency || this.productCurrency;
+        const fallbackCurrency =
+          typeof (product as any).currency === 'string' && (product as any).currency
+            ? (product as any).currency
+            : this.productCurrency;
+        const { currency } = this.normalizePrice(product.price, fallbackCurrency);
+        this.productCurrency = currency;
         this.setVariants(product.variants || []);
         this.loading = false;
         this.cdr.markForCheck();
@@ -231,7 +236,7 @@ export class ProductVariantsDialogComponent implements OnInit, OnDestroy {
       _id: [variant?._id || null],
       sku: [variant?.sku || ''],
       stock: [variant?.stock ?? 0, [Validators.min(0)]],
-      price: [variant?.price?.amount ?? null, [Validators.min(0)]],
+      price: [this.extractPriceValue(variant?.price) ?? null, [Validators.min(0)]],
       priceDelta: [variant?.priceDelta ?? null],
       isActive: [variant?.isActive ?? true],
       attributes: attrs
@@ -261,6 +266,36 @@ export class ProductVariantsDialogComponent implements OnInit, OnDestroy {
       return Number.isFinite(parsed) ? parsed : undefined;
     }
     return undefined;
+  }
+
+  private extractPriceValue(input: unknown): number | undefined {
+    if (input === null || input === undefined) {
+      return undefined;
+    }
+    if (typeof input === 'object') {
+      const candidate = (input as any).amount ?? (input as any).price ?? (input as any).value;
+      const amount = this.parseNumber(candidate);
+      if (amount !== undefined) {
+        return amount;
+      }
+    }
+    return this.parseNumber(input);
+  }
+
+  private resolveCurrency(input: unknown, fallback: string): string {
+    if (input && typeof input === 'object') {
+      const currency = (input as any).currency;
+      if (typeof currency === 'string' && currency.trim().length) {
+        return currency;
+      }
+    }
+    return fallback;
+  }
+
+  private normalizePrice(input: unknown, fallbackCurrency: string): { amount?: number; currency: string } {
+    const amount = this.extractPriceValue(input);
+    const currency = this.resolveCurrency(input, fallbackCurrency);
+    return { amount, currency };
   }
 
   private normalizeAttributesInput(attrs: ProductAttribute[] | Record<string, any> | undefined | null): Array<{ key: string; value: string }> {
@@ -323,7 +358,7 @@ export class ProductVariantsDialogComponent implements OnInit, OnDestroy {
 
     const priceAmount = this.parseNumber(raw?.price);
     if (priceAmount !== undefined) {
-      variant.price = { amount: priceAmount, currency: this.productCurrency };
+      variant.price = priceAmount;
     }
 
     const priceDelta = this.parseNumber(raw?.priceDelta);
@@ -356,12 +391,9 @@ export class ProductVariantsDialogComponent implements OnInit, OnDestroy {
       variant.sku = sku;
     }
 
-    if (input.price && typeof input.price === 'object') {
-      const amount = this.parseNumber((input.price as any).amount);
-      const currency = (input.price as any).currency || this.productCurrency;
-      if (amount !== undefined) {
-        variant.price = { amount, currency };
-      }
+    const priceAmount = this.extractPriceValue(input.price);
+    if (priceAmount !== undefined) {
+      variant.price = priceAmount;
     }
 
     const priceDelta = this.parseNumber(input.priceDelta);
@@ -382,7 +414,7 @@ export class ProductVariantsDialogComponent implements OnInit, OnDestroy {
     if (typeof variant.sku === 'string' && variant.sku.trim().length > 0) {
       return true;
     }
-    if (variant.price) {
+    if (this.extractPriceValue(variant.price) !== undefined) {
       return true;
     }
     if (typeof variant.priceDelta === 'number' && !Number.isNaN(variant.priceDelta)) {
@@ -400,4 +432,3 @@ export class ProductVariantsDialogComponent implements OnInit, OnDestroy {
     return false;
   }
 }
-

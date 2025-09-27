@@ -27,12 +27,14 @@ export interface BaseDocument {
 // Product interfaces
 export interface Product extends BaseDocument {
   name: string;
+  slug?: string;
   description?: string;
   longDescription?: string;
   sku?: string;
-  price: MoneyAmount;
-  category?: Category;
+  price: number | MoneyAmount;
+  category?: Category | string;
   categories?: Category[]; // For backward compatibility
+  currency?: string; // For backward compatibility
   brand?: Brand;
   images?: ProductImage[];
   variants?: ProductVariant[];
@@ -42,27 +44,68 @@ export interface Product extends BaseDocument {
   metaTitle?: string;
   metaDescription?: string;
   tags?: string[];
+  weight?: number;
+  dimensions?: {
+    length?: number;
+    width?: number;
+    height?: number;
+    unit?: 'cm' | 'in';
+  };
+  seoKeywords?: string[];
+  featured?: boolean;
+  comparePrice?: number | MoneyAmount;
+  barcode?: string;
+  trackInventory?: boolean;
+  allowBackorder?: boolean;
+  lowStockThreshold?: number;
 }
 
 export interface ProductImage {
+  _id?: string;
   url: string;
   alt?: string;
   isPrimary?: boolean;
+  width?: number;
+  height?: number;
+  size?: number;
+  mimeType?: string;
+  position?: number;
 }
 
 export interface ProductVariant {
   _id?: string;
   sku?: string;
-  price?: MoneyAmount;
+  barcode?: string;
+  price?: number | MoneyAmount;
+  comparePrice?: number | MoneyAmount;
   priceDelta?: number;
-  stock: number;
-  isActive: boolean;
-  attributes: ProductAttribute[];
+  stock?: number;
+  isActive?: boolean;
+  attributes?: ProductAttribute[];
+  weight?: number;
+  dimensions?: {
+    length?: number;
+    width?: number;
+    height?: number;
+    unit?: 'cm' | 'in';
+  };
+  images?: ProductImage[];
+  position?: number;
+  trackInventory?: boolean;
+  allowBackorder?: boolean;
+  lowStockThreshold?: number;
 }
 
 export interface ProductAttribute {
+  _id?: string;
   key: string;
   value: string;
+  type?: 'text' | 'number' | 'boolean' | 'date' | 'color' | 'size';
+  unit?: string;
+  required?: boolean;
+  filterable?: boolean;
+  searchable?: boolean;
+  position?: number;
 }
 
 // Category interfaces
@@ -367,11 +410,29 @@ export interface SortParams {
 
 export interface ProductFilters extends PaginationParams, SortParams {
   q?: string;
+  search?: string; // Alias for q
   category?: string;
+  categories?: string[]; // Multiple categories
   brand?: string;
+  brands?: string[]; // Multiple brands
   minPrice?: number;
   maxPrice?: number;
+  priceMin?: number; // Alias for minPrice
+  priceMax?: number; // Alias for maxPrice
   isActive?: boolean;
+  status?: 'active' | 'inactive' | 'all';
+  featured?: boolean;
+  inStock?: boolean;
+  lowStock?: boolean;
+  outOfStock?: boolean;
+  tags?: string[];
+  attributes?: Record<string, string | string[]>;
+  hasImages?: boolean;
+  hasVariants?: boolean;
+  createdAfter?: string;
+  createdBefore?: string;
+  updatedAfter?: string;
+  updatedBefore?: string;
 }
 
 export interface OrderFilters extends PaginationParams, SortParams {

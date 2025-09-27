@@ -1,17 +1,48 @@
 <ng-container *ngIf="productFormPermissions$ | async as perms">
 <div class="page page--panel product-form-shell">
   <mat-card class="product-form-card">
-    <mat-card-header>
-      <mat-card-title>
-        {{ (id ? 'products.form.title.edit' : 'products.form.title.create') | translate }}
-      </mat-card-title>
-      <mat-card-subtitle>
-        {{ (id ? 'products.form.subtitle.edit' : 'products.form.subtitle.create') | translate }}
-      </mat-card-subtitle>
-    </mat-card-header>
-
     <form [formGroup]="form" (ngSubmit)="save()" novalidate>
       <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
+
+      <section class="product-form-hero">
+        <div class="product-form-hero__content">
+          <div class="product-form-hero__icon">
+            <mat-icon>inventory_2</mat-icon>
+          </div>
+          <div class="product-form-hero__copy">
+            <span class="product-form-hero__eyebrow">{{ 'products.form.tabs.details' | translate }}</span>
+            <h2>{{ (id ? 'products.form.title.edit' : 'products.form.title.create') | translate }}</h2>
+            <p>{{ (id ? 'products.form.subtitle.edit' : 'products.form.subtitle.create') | translate }}</p>
+          </div>
+        </div>
+        <div class="product-form-hero__meta">
+          <div class="product-form-status" [class.product-form-status--inactive]="!form.get('isActive')?.value">
+            <span class="product-form-status__dot"></span>
+            <span>
+              {{
+                (form.get('isActive')?.value ? 'adminUsers.list.status.active' : 'adminUsers.list.status.inactive')
+                  | translate
+              }}
+            </span>
+          </div>
+          <div class="product-form-hero__stats">
+            <div class="stat-card">
+              <span class="stat-card__label">{{ 'products.form.summary.totalVariants' | translate }}</span>
+              <span class="stat-card__value">{{ variantSummary.totalVariants }}</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-card__label">{{ 'products.form.summary.activeVariants' | translate }}</span>
+              <span class="stat-card__value">{{ variantSummary.activeVariants }}</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-card__label">{{ 'products.form.summary.totalStock' | translate }}</span>
+              <span class="stat-card__value">{{ variantSummary.totalStock }}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <mat-divider class="product-form-divider"></mat-divider>
 
       <mat-card-content>
         <mat-tab-group animationDuration="250ms">
@@ -48,7 +79,9 @@
                 <mat-form-field appearance="outline">
                   <mat-label>{{ 'products.form.fields.currency.label' | translate }}</mat-label>
                   <mat-select formControlName="currency">
-                    <mat-option *ngFor="let currency of currencyOptions" [value]="currency">{{ currency }}</mat-option>
+                    <mat-option *ngFor="let currency of currencyOptions" [value]="currency.code">
+                      {{ currency.symbol }} {{ currency.code }} - {{ currency.name }}
+                    </mat-option>
                   </mat-select>
                 </mat-form-field>
 
@@ -93,7 +126,7 @@
                 ></textarea>
               </mat-form-field>
 
-              <section class="form-section">
+              <section class="form-section form-section--card">
                 <div class="section-header">
                   <h3>{{ 'products.form.sections.attributes' | translate }}</h3>
                   <button
@@ -133,7 +166,7 @@
 
           <mat-tab label="{{ 'products.form.tabs.images' | translate }}">
             <div class="tab-content">
-              <section class="form-section">
+              <section class="form-section form-section--card">
                 <div class="section-header">
                   <h3>{{ 'products.form.sections.images' | translate }}</h3>
                   <button
@@ -148,43 +181,60 @@
                   </button>
                 </div>
                 <div class="section-body" cdkDropList (cdkDropListDropped)="imagesDrop($event)">
-                  <div class="media-row" *ngFor="let image of images.controls; let i = index" [formGroup]="image" cdkDrag>
-                    <mat-form-field appearance="outline" class="grow">
-                      <mat-label>{{ 'products.form.fields.image.url' | translate }}</mat-label>
-                      <input matInput formControlName="url" />
-                    </mat-form-field>
-                    <mat-form-field appearance="outline" class="grow">
-                      <mat-label>{{ 'products.form.fields.image.alt' | translate }}</mat-label>
-                      <input matInput formControlName="alt" />
-                    </mat-form-field>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      #fileInput
-                      style="display:none"
-                      (change)="onImageSelected($event, i)"
-                      [disabled]="!canModify(perms)"
-                    />
-                    <button
-                      mat-stroked-button
-                      type="button"
-                      color="primary"
-                      (click)="fileInput.click()"
-                      [disabled]="!canModify(perms)"
-                    >
-                      <mat-icon>cloud_upload</mat-icon>
-                      {{ 'products.form.sections.imagesUpload' | translate }}
-                    </button>
-                    <button
-                      mat-icon-button
-                      color="warn"
-                      type="button"
-                      (click)="removeImage(i)"
-                      [disabled]="!canModify(perms)"
-                      aria-label="{{ 'products.form.sections.imagesRemove' | translate }}"
-                    >
-                      <mat-icon>delete</mat-icon>
-                    </button>
+                  <div class="image-item" *ngFor="let image of images.controls; let i = index" [formGroup]="image" cdkDrag>
+                    <div class="image-preview">
+                      <img
+                        [src]="getImagePreview(image.get('url')?.value)"
+                        [alt]="image.get('alt')?.value || 'Product image'"
+                        class="image-thumbnail"
+                        (error)="onImageError($event)"
+                      />
+                      <div class="image-overlay">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          #fileInput
+                          style="display:none"
+                          (change)="onImageSelected($event, i)"
+                          [disabled]="!canModify(perms)"
+                        />
+                        <button
+                          mat-mini-fab
+                          color="primary"
+                          type="button"
+                          (click)="fileInput.click()"
+                          [disabled]="!canModify(perms)"
+                          matTooltip="{{ 'products.form.sections.imagesUpload' | translate }}"
+                        >
+                          <mat-icon>cloud_upload</mat-icon>
+                        </button>
+                        <button
+                          mat-mini-fab
+                          color="warn"
+                          type="button"
+                          (click)="removeImage(i)"
+                          [disabled]="!canModify(perms)"
+                          matTooltip="{{ 'products.form.sections.imagesRemove' | translate }}"
+                        >
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      </div>
+                      <div class="image-status" *ngIf="i === 0">
+                        <span class="primary-badge">{{ 'products.form.fields.image.primary' | translate }}</span>
+                      </div>
+                    </div>
+                    <div class="image-fields">
+                      <mat-form-field appearance="outline">
+                        <mat-label>{{ 'products.form.fields.image.url' | translate }}</mat-label>
+                        <input matInput formControlName="url" (input)="onImageUrlChange(i)" />
+                        <mat-icon matPrefix>link</mat-icon>
+                      </mat-form-field>
+                      <mat-form-field appearance="outline">
+                        <mat-label>{{ 'products.form.fields.image.alt' | translate }}</mat-label>
+                        <input matInput formControlName="alt" [placeholder]="'products.form.fields.image.altPlaceholder' | translate" />
+                        <mat-icon matPrefix>description</mat-icon>
+                      </mat-form-field>
+                    </div>
                   </div>
                 </div>
               </section>
@@ -193,20 +243,6 @@
 
           <mat-tab label="{{ 'products.form.tabs.variants' | translate }}">
             <div class="tab-content">
-              <div class="variant-summary">
-                <div>
-                  <span class="label">{{ 'products.form.summary.totalVariants' | translate }}</span>
-                  <span class="value">{{ variantSummary.totalVariants }}</span>
-                </div>
-                <div>
-                  <span class="label">{{ 'products.form.summary.activeVariants' | translate }}</span>
-                  <span class="value">{{ variantSummary.activeVariants }}</span>
-                </div>
-                <div>
-                  <span class="label">{{ 'products.form.summary.totalStock' | translate }}</span>
-                  <span class="value">{{ variantSummary.totalStock }}</span>
-                </div>
-              </div>
               <div class="section-header">
                 <h3>{{ 'products.form.sections.variants' | translate }}</h3>
                 <button
@@ -308,7 +344,7 @@
 
           <mat-tab label="{{ 'products.form.tabs.seo' | translate }}">
             <div class="tab-content">
-              <section class="form-section">
+              <section class="form-section form-section--card">
                 <div class="product-form-grid">
                   <mat-form-field appearance="outline">
                     <mat-label>{{ 'products.form.fields.metaTitle.label' | translate }}</mat-label>

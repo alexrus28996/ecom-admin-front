@@ -32,7 +32,8 @@
       "refresh": "Refresh",
       "manageVariants": "Manage variants",
       "edit": "Edit product",
-      "delete": "Delete product"
+      "delete": "Delete product",
+      "duplicate": "Duplicate product"
     },
     "filters": {
       "search": {
@@ -46,9 +47,30 @@
       "price": {
         "min": "Min price",
         "max": "Max price"
-      }
+      },
+      "status": {
+        "label": "Status",
+        "any": "Any status",
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "advanced": "Advanced filters",
+      "clear": "Clear filters"
     },
-    "empty": "No products found. Try refining your filters.",
+    "stock": "Stock",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "stats": {
+      "total": "Total",
+      "active": "Active"
+    },
+    "empty": {
+      "title": "No products found",
+      "subtitle": "Try adjusting your filters or create your first product",
+      "action": "Add Product"
+    },
     "delete": {
       "title": "Delete product",
       "message": "Delete product \"{{ name }}\"? This action cannot be undone.",
@@ -62,7 +84,17 @@
       "loadOne": "Failed to load the product.",
       "delete": "Failed to delete the product.",
       "duplicateSku": "Another product already uses this SKU.",
+      "duplicateSlug": "Another product already uses this slug.",
       "validationFailed": "Product validation failed. Check required fields."
+    },
+    "duplicate": {
+      "success": "Product duplicated successfully",
+      "error": "Failed to duplicate product"
+    },
+    "stock": {
+      "inStock": "In Stock",
+      "lowStock": "Low Stock",
+      "outOfStock": "Out of Stock"
     },
     "messages": {
       "saveSuccess": "Product saved successfully.",
@@ -72,32 +104,45 @@
       "saveError": "Failed to save the product.",
       "errors": {
         "duplicateSku": "Another product already uses this SKU.",
+        "duplicateSlug": "Another product already uses this slug.",
         "validationFailed": "Product validation failed. Check required fields.",
         "imageUpload": "Image upload failed. Please try again."
       }
     },
     "variants": {
       "title": "Manage variants for {{ name }}",
+      "subtitle": "Configure product variations like size, color, or style",
       "itemTitle": "Variant {{ index }}",
-      "summary": {
-        "total": "Variants: {{ count }}",
-        "active": "Active: {{ count }}",
-        "stock": "Variant stock: {{ count }}"
+      "stats": {
+        "total": "Total",
+        "active": "Active",
+        "stock": "Stock"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
       },
       "fields": {
         "sku": "SKU",
+        "skuPlaceholder": "Enter unique SKU",
         "stock": "Stock",
         "price": "Price",
-        "priceDelta": "Price delta",
-        "isActive": "Active",
+        "priceDelta": "Price adjustment",
+        "priceDeltaHint": "Add or subtract from base price",
+        "isActive": "Active variant",
         "attributes": "Attributes",
-        "attributeKey": "Attribute",
-        "attributeValue": "Value"
+        "attributeKey": "Attribute name",
+        "attributeKeyPlaceholder": "e.g., Color, Size",
+        "attributeValue": "Attribute value",
+        "attributeValuePlaceholder": "e.g., Red, Large"
       },
       "actions": {
         "addVariant": "Add variant",
         "addAttribute": "Add attribute",
-        "save": "Save variants"
+        "removeAttribute": "Remove attribute",
+        "remove": "Remove variant",
+        "save": "Save variants",
+        "saving": "Saving..."
       },
       "toasts": {
         "saved": "Variants updated."
@@ -147,8 +192,15 @@
             "minLength": "Name must be at least {{ min }} characters."
           }
         },
+        "slug": {
+          "label": "URL slug",
+          "placeholder": "auto-generated-from-name",
+          "generate": "Generate from name"
+        },
         "sku": {
-          "label": "SKU"
+          "label": "SKU (Stock Keeping Unit)",
+          "placeholder": "Enter unique SKU",
+          "generate": "Auto-generate SKU"
         },
         "description": {
           "label": "Short description",
@@ -180,7 +232,9 @@
           }
         },
         "isActive": {
-          "label": "Active product"
+          "label": "Product status",
+          "activeHelp": "Product is visible and available for purchase",
+          "inactiveHelp": "Product is hidden from customers"
         },
         "metaTitle": {
           "label": "Meta title"
@@ -202,7 +256,21 @@
         },
         "image": {
           "url": "Image URL",
-          "alt": "Alt text"
+          "alt": "Alt text",
+          "altPlaceholder": "Describe this image",
+          "primary": "Primary Image"
+        },
+        "variant": {
+          "sku": "Variant SKU",
+          "skuPlaceholder": "Enter unique variant SKU",
+          "price": "Variant price",
+          "priceDelta": "Price adjustment",
+          "priceDeltaHint": "Amount to add/subtract from base price",
+          "stock": "Variant stock",
+          "isActive": "Active variant",
+          "active": "Active",
+          "inactive": "Inactive",
+          "attributes": "Variant attributes"
         }
       },
       "actions": {
