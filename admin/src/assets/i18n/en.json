@@ -368,6 +368,128 @@
         "activeVariants": "Active variants",
         "totalStock": "Total stock"
       }
+    },
+    "permissions": {
+      "title": "Manage permissions",
+      "noRoles": "No roles assigned",
+      "lastAdminWarning": "This is currently the only admin. Demoting will remove all admin access.",
+      "search": {
+        "label": "Filter permissions",
+        "placeholder": "Search by name or code"
+      },
+      "summary": {
+        "granted": "granted",
+        "toAdd": "to add",
+        "toRemove": "to remove"
+      },
+      "status": {
+        "adding": "Pending add",
+        "removing": "Pending removal",
+        "granted": "Granted",
+        "notGranted": "Not granted"
+      },
+      "actions": {
+        "promote": "Promote to admin",
+        "demote": "Demote admin",
+        "selectAll": "Select all",
+        "clearAll": "Clear all",
+        "grantGroup": "Grant group",
+        "revokeGroup": "Revoke group",
+        "applyAdds": "Apply additions",
+        "applyRemovals": "Apply removals",
+        "saveAll": "Save all changes",
+        "manage": "Manage permissions"
+      },
+      "groups": {
+        "catalog": "Catalog",
+        "orders": "Orders",
+        "inventory": "Inventory",
+        "reports": "Reports",
+        "system": "System"
+      },
+      "items": {
+        "productCreate": "Create products",
+        "productEdit": "Edit products",
+        "productDelete": "Delete products",
+        "categoryCreate": "Create categories",
+        "categoryEdit": "Edit categories",
+        "categoryDelete": "Delete categories",
+        "orderView": "View orders",
+        "orderEdit": "Modify orders",
+        "refundApprove": "Approve refunds",
+        "refundReject": "Reject refunds",
+        "inventoryView": "View inventory",
+        "inventoryAdjust": "Adjust inventory",
+        "inventoryAudit": "Audit inventory",
+        "reportsView": "View reports",
+        "reportsExport": "Export reports",
+        "userInvite": "Invite users",
+        "userSuspend": "Suspend users",
+        "settingsUpdate": "Update system settings"
+      },
+      "empty": "No permissions match your search.",
+      "doc": {
+        "cta": "Permission guide",
+        "title": "Permission management guide",
+        "subtitle": "Understand how to safely grant access",
+        "sections": {
+          "overview": {
+            "title": "How it works",
+            "body": "Each permission grants access to a specific capability. Use the search and group controls to review what a user can do.",
+            "points": {
+              "one": "Toggle checkboxes to mark permissions to add or remove.",
+              "two": "Use group actions to grant or revoke an entire feature area in one click.",
+              "three": "Save all changes to replace permissions or apply incremental updates for quick adjustments."
+            }
+          },
+          "tips": {
+            "title": "Best practices",
+            "body": "Keep least-privilege in mind and review admin access regularly.",
+            "points": {
+              "one": "Promote a user to admin only when they require full platform control.",
+              "two": "Use additions for temporary access and removals for urgent revocations.",
+              "three": "Confirm destructive operations with the dialog prompts to avoid mistakes."
+            }
+          },
+          "safety": {
+            "title": "Safety checks",
+            "body": "Demoting the last administrator will lock everyone out of admin tools. Always ensure at least one trusted admin remains."
+          }
+        }
+      },
+      "confirm": {
+        "clearAll": {
+          "title": "Remove all permissions?",
+          "message": "This will clear every permission for the user.",
+          "confirm": "Clear permissions"
+        },
+        "remove": {
+          "title": "Confirm removals",
+          "message": "The selected permissions will be removed immediately.",
+          "confirm": "Remove permissions"
+        },
+        "demote": {
+          "title": "Demote administrator",
+          "message": "The user will lose access to admin areas.",
+          "confirm": "Demote"
+        },
+        "demoteLastAdmin": {
+          "title": "Demote the last admin?",
+          "message": "You are about to demote the only administrator. Proceed with caution.",
+          "confirm": "Demote last admin"
+        }
+      },
+      "toasts": {
+        "promoted": "{{ name }} is now an admin.",
+        "demoted": "{{ name }} is no longer an admin.",
+        "replaced": "Permissions updated.",
+        "added": "Permissions added.",
+        "removed": "Permissions removed."
+      },
+      "errors": {
+        "loadFailed": "Unable to load permissions.",
+        "actionFailed": "The permission update failed."
+      }
     }
   },
   "denied": {

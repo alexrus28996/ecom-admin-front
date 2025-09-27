@@ -27,8 +27,8 @@ Command executed: `npm test`.
 | Area | Status | Evidence / Notes |
 | --- | --- | --- |
 | Authentication, JWT rotation, address book, cart CRUD, coupon pricing, FX conversion, catalog CRUD | Working (automated) | Covered by Jest suites in `__tests__/auth.test.js`, `addresses.test.js`, `cart.test.js`, `coupons.test.js`, `currency.test.js`, `products.test.js`, `pricing.test.js`, `jwt.test.js`, `errors.test.js`. |
-| Cart to order conversion, inventory reservations, Stripe payment success, admin reservation release | Broken | `POST /api/orders` and related flows throw `TypeError: Right-hand side of 'instanceof' is not an object` because Mongoose 8 no longer exposes `mongoose.ClientSession`. Offending guards are in `src/modules/inventory/reservation.service.js` lines 40, 88, and 112. |
-| Product review mutations (create/update/delete/moderation) | Broken | `Product.castObjectId` is invoked in `src/modules/reviews/review.service.js:61` but the model does not define the helper, causing `TypeError: Product.castObjectId is not a function`. |
+| Cart to order conversion, inventory reservations, Stripe payment success, admin reservation release | Working (automated) | Covered by Jest suites in `__tests__/checkout.test.js` and `__tests__/payments.test.js`, which exercise order creation, reservation release, and payment capture fallbacks. |
+| Product review mutations (create/update/delete/moderation) | Working (automated) | Covered by `__tests__/reviews.test.js`, ensuring ratings recompute correctly after upsert, moderation, and deletion. |
 | Remaining admin operations (metrics, reports, stock adjustments, imports, uploads, shipments) | Working (manual review) | Code paths inspected; no automated coverage yet. |
 
 ## Endpoint reference
@@ -145,11 +145,11 @@ Audience legend: Public (no auth), Authenticated user (valid JWT), Admin (requir
 
 | Endpoint | Audience | Status | Request | Response / Notes |
 | --- | --- | --- | --- | --- |
-| `GET /api/products/:productId/reviews` | Public | Working (manual review) | Query `page?`, `limit?`, `includeUnapproved?` | `{ "items": Review[], "total", "page", "pages" }`. |
-| `POST /api/products/:productId/reviews` | Authenticated user | Broken | Body `{ "rating": 1-5, "comment?" }` | Fails because `Product.castObjectId` is undefined in `review.service.js`. |
-| `DELETE /api/products/:productId/reviews/:reviewId` | Authenticated user or admin | Broken | None | Triggers the same `Product.castObjectId` error when recomputing product ratings after delete. |
-| `POST /api/products/:productId/reviews/:reviewId/approve` | Admin (role) | Broken | None | Moderation hits the same rating recompute bug. |
-| `POST /api/products/:productId/reviews/:reviewId/hide` | Admin (role) | Broken | None | Moderation hits the same rating recompute bug. |
+| `GET /api/products/:productId/reviews` | Public | Working (automated) | Query `page?`, `limit?`, `includeUnapproved?` | `{ "items": Review[], "total", "page", "pages" }`. Covered by `__tests__/reviews.test.js`. |
+| `POST /api/products/:productId/reviews` | Authenticated user | Working (automated) | Body `{ "rating": 1-5, "comment?" }` | Upserts the caller's review, recomputes product rating, and marks verified purchases when a paid order exists. |
+| `DELETE /api/products/:productId/reviews/:reviewId` | Authenticated user or admin | Working (automated) | None | Deletes a review (author or admin) and refreshes product rating counts. |
+| `POST /api/products/:productId/reviews/:reviewId/approve` | Admin (role) | Working (automated) | None | Approves a review and recalculates product rating averages. |
+| `POST /api/products/:productId/reviews/:reviewId/hide` | Admin (role) | Working (automated) | None | Hides a review (sets `isApproved=false`) and excludes it from rating aggregates. |
 
 ### Cart management
 
@@ -168,27 +168,27 @@ Audience legend: Public (no auth), Authenticated user (valid JWT), Admin (requir
 
 | Endpoint | Audience | Status | Request | Response / Notes |
 | --- | --- | --- | --- | --- |
-| `POST /api/orders` | Authenticated user | Broken | Body `{ "shippingAddress?", "billingAddress?", "shipping?", "taxRate?" }` | Fails with `TypeError: Right-hand side of 'instanceof' is not an object` because `mongoose.ClientSession` is no longer exported in Mongoose 8 (`reservation.service.js`). |
-| `GET /api/orders` | Authenticated user | Blocked (awaiting order fix) | Query `page?`, `limit?` | `{ "items": Order[], "total", "page", "pages" }` once orders can be created. |
-| `GET /api/orders/:id` | Authenticated user | Blocked (awaiting order fix) | Params `{ id }` | `{ "order": Order }`. |
-| `GET /api/orders/:id/invoice` | Authenticated user | Blocked (awaiting order fix) | None | HTTP 302 redirect to `invoiceUrl`, 404 if invoice missing. Depends on successful order creation. |
-| `GET /api/orders/:id/timeline` | Authenticated user | Blocked (awaiting order fix) | Query `page?`, `limit?` | `{ "items": TimelineEntry[], "total", "page", "pages" }`. |
-| `POST /api/orders/:id/returns` | Authenticated user | Blocked (awaiting order fix) | Body `{ "reason?" }` | `201 { "return": ReturnRequest }` when order exists and is paid. |
+| `POST /api/orders` | Authenticated user | Working (automated) | Body `{ "shippingAddress?", "billingAddress?", "shipping?", "taxRate?" }` | Creates an order from the active cart, generates a PDF invoice, and reserves stock. Covered by `__tests__/checkout.test.js`. |
+| `GET /api/orders` | Authenticated user | Working (automated) | Query `page?`, `limit?` | `{ "items": Order[], "total", "page", "pages" }`. Verified via `__tests__/checkout.test.js`. |
+| `GET /api/orders/:id` | Authenticated user | Working (automated) | Params `{ id }` | `{ "order": Order }`. Verified via `__tests__/checkout.test.js`. |
+| `GET /api/orders/:id/invoice` | Authenticated user | Working (manual review) | None | HTTP 302 redirect to `invoiceUrl`, 404 if invoice missing. |
+| `GET /api/orders/:id/timeline` | Authenticated user | Working (manual review) | Query `page?`, `limit?` | `{ "items": TimelineEntry[], "total", "page", "pages" }`. |
+| `POST /api/orders/:id/returns` | Authenticated user | Working (manual review) | Body `{ "reason?" }` | `201 { "return": ReturnRequest }` when order exists and is paid. |
 
 ### Payments
 
 | Endpoint | Audience | Status | Request | Response / Notes |
 | --- | --- | --- | --- | --- |
-| `POST /api/payments/stripe/intent` | Authenticated user | Blocked (Stripe not configured) | Body `{ "orderId" }` | Requires `STRIPE_SECRET_KEY`. With Stripe configured and a valid order, returns `{ "clientSecret": string }`. |
-| `POST /api/payments/stripe/webhook` | Public (Stripe) | Broken | Raw Stripe payload with `Stripe-Signature` header | `applyPaymentIntentSucceeded` hits the same `mongoose.ClientSession` bug when converting reservations to stock, so payment success events fail. |
+| `POST /api/payments/stripe/intent` | Authenticated user | Working (manual review) | Body `{ "orderId" }` | Returns 503 `PAYMENTS_NOT_CONFIGURED` when Stripe keys are absent; otherwise creates a PaymentIntent and returns `{ "clientSecret" }`. |
+| `POST /api/payments/stripe/webhook` | Public (Stripe) | Working (automated) | Raw Stripe payload with `Stripe-Signature` header | Processes `payment_intent.succeeded`, marks orders as paid, and converts reservations to stock. Covered by `__tests__/payments.test.js`. |
 
 ### Media uploads
 
 | Endpoint | Audience | Status | Request | Response / Notes |
 | --- | --- | --- | --- | --- |
 | `POST /api/uploads` | Admin (role) | Working (manual review) | Multipart form-data with field `file` | `201 { "url", "filename", "mimetype", "size" }`. Stores file under `uploads/`. |
-| `POST /api/uploads/cloudinary` | Admin (role) | Blocked (Cloudinary required) | Multipart form-data with field `file` | Returns 503 unless Cloudinary credentials are configured. On success responds with `{ "url", "publicId", "width", "height", "format", "bytes" }`. |
-| `POST /api/uploads/cloudinary/delete` | Admin (role) | Blocked (Cloudinary required) | Body `{ "publicId" }` | `{ "result": "ok" }` after cloud deletion. |
+| `POST /api/uploads/cloudinary` | Admin (role) | Working (automated) | Multipart form-data with field `file` | `201 { "url", "publicId", "width", "height", "format", "bytes" }`. Validates image uploads, surfaces auth failures, and pulls credentials from `CLOUDINARY_*`. Covered by `__tests__/uploads.test.js`. |
+| `POST /api/uploads/cloudinary/delete` | Admin (role) | Working (automated) | Body `{ "publicId" }` | `{ "result": { ... } }`. Returns 400 for missing ids and 401 on Cloudinary auth errors. Covered by `__tests__/uploads.test.js`. |
 
 ### Admin: users and roles
 
@@ -199,6 +199,10 @@ Audience legend: Public (no auth), Authenticated user (valid JWT), Admin (requir
 | `PATCH /api/admin/users/:id` | Admin (role) | Working (manual review) | Body `{ "isActive?" }` | `{ "user": { ... } }`. |
 | `POST /api/admin/users/:id/promote` | Admin (role) | Working (manual review) | None | `{ "user": { ...roles updated... } }`. Adds `admin` role. |
 | `POST /api/admin/users/:id/demote` | Admin (role) | Working (manual review) | None | `{ "user": { ...roles updated... } }`. Removes `admin`, ensures at least `customer`. |
+| `GET /api/admin/users/:id/permissions` | Admin (role) | Working (automated) | Params `{ id }` | `{ "userId", "permissions" }`. Covered by `__tests__/admin-permissions.test.js`. |
+| `POST /api/admin/users/:id/permissions` | Admin (role) | Working (automated) | Body `{ "permissions": string[] }` | Replaces the full permission set. Covered by `__tests__/admin-permissions.test.js`. |
+| `PATCH /api/admin/users/:id/permissions/add` | Admin (role) | Working (automated) | Body `{ "permissions": string[] }` | Adds unique permissions without duplicates. Covered by `__tests__/admin-permissions.test.js`. |
+| `PATCH /api/admin/users/:id/permissions/remove` | Admin (role) | Working (automated) | Body `{ "permissions": string[] }` | Removes any matching permissions. Covered by `__tests__/admin-permissions.test.js`. |
 
 ### Admin: metrics
 
@@ -210,9 +214,9 @@ Audience legend: Public (no auth), Authenticated user (valid JWT), Admin (requir
 
 | Endpoint | Audience | Status | Request | Response / Notes |
 | --- | --- | --- | --- | --- |
-| `GET /api/admin/orders` | Admin (role) | Blocked (awaiting order fix) | Query `status?`, `paymentStatus?`, `user?`, `from?`, `to?`, `page?`, `limit?` | `{ "items": Order[], "total", "page", "pages" }` once orders exist. |
-| `GET /api/admin/orders/:id` | Admin (role) | Blocked (awaiting order fix) | Params `{ id }` | `{ "order": Order }`. |
-| `PATCH /api/admin/orders/:id` | Admin (role) | Broken | Body `{ "status?", "paymentStatus?" }` | Cancelling an order calls `releaseOrderReservations`, which triggers the `mongoose.ClientSession` TypeError. Other updates depend on orders existing. |
+| `GET /api/admin/orders` | Admin (role) | Working (manual review) | Query `status?`, `paymentStatus?`, `user?`, `from?`, `to?`, `page?`, `limit?` | `{ "items": Order[], "total", "page", "pages" }` sorted by newest. Supports status and payment filters. |
+| `GET /api/admin/orders/:id` | Admin (role) | Working (manual review) | Params `{ id }` | `{ "order": Order }`. |
+| `PATCH /api/admin/orders/:id` | Admin (role) | Working (manual review) | Body `{ "status?", "paymentStatus?" }` | Enforces linear status transitions (pending → paid → shipped → delivered or cancelled) and releases reservations on cancellation. |
 
 ### Admin: coupons
 
@@ -245,7 +249,7 @@ Audience legend: Public (no auth), Authenticated user (valid JWT), Admin (requir
 
 | Endpoint | Audience | Status | Request | Response / Notes |
 | --- | --- | --- | --- | --- |
-| `GET /api/admin/returns` | Admin (role) | Blocked (awaiting order fix) | Query `status?`, `page?`, `limit?` | `{ "items": ReturnRequest[], "total", "page", "pages" }`. |
+| `GET /api/admin/returns` | Admin (role) | Working (manual review) | Query `status?`, `page?`, `limit?` | `{ "items": ReturnRequest[], "total", "page", "pages" }` with newest first. |
 | `POST /api/admin/returns/:id/approve` | Admin (role) | Working (manual review) | Optional body `{ "items?" [{ "product", "variant?", "quantity", "locationId?" }], "amount?", "locationId?" }` with optional `Idempotency-Key` | `{ "return": ReturnRequest, "order": Order, "refund?": Refund }`. Processes Stripe refund when configured and restocks via `adjustStockLevels`. |
 | `POST /api/admin/returns/:id/reject` | Admin (role) | Working (manual review) | None | `{ "return": ReturnRequest }`. |
 
@@ -253,19 +257,19 @@ Audience legend: Public (no auth), Authenticated user (valid JWT), Admin (requir
 
 | Endpoint | Audience | Status | Request | Response / Notes |
 | --- | --- | --- | --- | --- |
-| `GET /api/admin/transactions` | Admin (role) | Blocked (awaiting order fix) | Query `order?`, `provider?`, `status?`, `page?`, `limit?` | `{ "items": PaymentTransaction[], "total", "page", "pages" }`. |
-| `GET /api/admin/transactions/:id` | Admin (role) | Blocked (awaiting order fix) | Params `{ id }` | `{ "transaction": PaymentTransaction }`. |
-| `GET /api/admin/refunds` | Admin (role) | Blocked (awaiting order fix) | Query `order?`, `provider?`, `status?`, `page?`, `limit?` | `{ "items": Refund[], "total", "page", "pages" }`. |
-| `GET /api/admin/refunds/:id` | Admin (role) | Blocked (awaiting order fix) | Params `{ id }` | `{ "refund": Refund }`. |
+| `GET /api/admin/transactions` | Admin (role) | Working (automated) | Query `orderId?`, `provider?`, `status?`, `page?`, `limit?` | `{ "items": PaymentTransaction[], "total", "page", "pages" }`. Returns an empty dataset when no orders exist. Covered by `__tests__/admin-payments.test.js`. |
+| `GET /api/admin/transactions/:id` | Admin (role) | Working (automated) | Params `{ id }` | `{ "transaction": PaymentTransaction }`. Covered by `__tests__/admin-payments.test.js`. |
+| `GET /api/admin/refunds` | Admin (role) | Working (automated) | Query `orderId?`, `provider?`, `status?`, `page?`, `limit?` | `{ "items": Refund[], "total", "page", "pages" }`. Syncs with Stripe refund webhooks; returns empty datasets when none exist. Covered by `__tests__/admin-payments.test.js`. |
+| `GET /api/admin/refunds/:id` | Admin (role) | Working (automated) | Params `{ id }` | `{ "refund": Refund }`. Covered by `__tests__/admin-payments.test.js`. |
 
 ### Admin: shipments
 
 | Endpoint | Audience | Status | Request | Response / Notes |
 | --- | --- | --- | --- | --- |
-| `GET /api/admin/shipments` | Admin (role) | Blocked (awaiting order fix) | Query `order?`, `page?`, `limit?` | `{ "items": Shipment[], "total", "page", "pages" }`. |
-| `GET /api/admin/shipments/:id` | Admin (role) | Blocked (awaiting order fix) | Params `{ id }` | `{ "shipment": Shipment }`. |
-| `POST /api/admin/orders/:id/shipments` | Admin (role) | Blocked (awaiting order fix) | Body `{ "carrier?", "tracking?", "service?", "items?" }` | `201 { "shipment": Shipment }`. Defaults to order items when `items` omitted. |
-| `GET /api/admin/orders/:id/shipments` | Admin (role) | Blocked (awaiting order fix) | Query `page?`, `limit?` | `{ "items": Shipment[], "total", "page", "pages" }`. |
+| `GET /api/admin/shipments` | Admin (role) | Working (automated) | Query `orderId?`, `page?`, `limit?` | `{ "items": Shipment[], "total", "page", "pages" }`. Returns empty datasets until shipments exist. Covered by `__tests__/admin-shipments.test.js`. |
+| `GET /api/admin/shipments/:id` | Admin (role) | Working (automated) | Params `{ id }` | `{ "shipment": Shipment }`. Covered by `__tests__/admin-shipments.test.js`. |
+| `POST /api/admin/orders/:id/shipments` | Admin (role) | Working (automated) | Body `{ "carrier?", "tracking?", "service?", "items?" }` | `201 { "shipment": Shipment }`. Only allowed for paid orders; defaults to full order items when omitted. Covered by `__tests__/admin-shipments.test.js`. |
+| `GET /api/admin/orders/:id/shipments` | Admin (role) | Working (automated) | Query `page?`, `limit?` | `{ "items": Shipment[], "total", "page", "pages" }`. Returns 404 when the order is not found. Covered by `__tests__/admin-shipments.test.js`. |
 
 ### Admin: products under /api/admin
 
@@ -310,4 +314,4 @@ Audience legend: Public (no auth), Authenticated user (valid JWT), Admin (requir
 | Endpoint | Audience | Status | Request | Response / Notes |
 | --- | --- | --- | --- | --- |
 | `GET /api/admin/reservations` | Admin (role) | Working (manual review) | Query `orderId?`, `productId?`, `status?`, `page?`, `limit?` | `{ "items": Reservation[], "total", "page", "pages" }`. Useful for debugging holds. |
-| `POST /api/admin/reservations/:orderId/release` | Admin (role) | Broken | Body `{ "reason?", "notes?" }` | Fails with the same `mongoose.ClientSession` TypeError when releasing reservations. |
+| `POST /api/admin/reservations/:orderId/release` | Admin (role) | Working (manual review) | Body `{ "reason?", "notes?" }` | Immediately releases active reservations for the order and restores stock quantities. |

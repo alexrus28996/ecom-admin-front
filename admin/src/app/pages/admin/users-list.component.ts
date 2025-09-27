@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@
 import { UntypedFormControl } from '@angular/forms';
 import { PageEvent } from '@angular/material/paginator';
 import { AdminService } from '../../services/admin.service';
+import { MatDialog } from '@angular/material/dialog';
+import { UserPermissionsDialogComponent } from './user-permissions-dialog.component';
 
 @Component({ selector: 'app-admin-users-list', templateUrl: './users-list.component.html', changeDetection: ChangeDetectionStrategy.OnPush })
 export class AdminUsersListComponent implements OnInit {
@@ -10,8 +12,9 @@ export class AdminUsersListComponent implements OnInit {
   rows: any[] = [];
   total = 0; pageIndex = 0; pageSize = 10; pageSizeOptions = [10,25,50,100];
   loading = false; errorKey: string | null = null;
+  documentation = { toggle: false };
 
-  constructor(private admin: AdminService, private cdr: ChangeDetectorRef) {}
+  constructor(private admin: AdminService, private cdr: ChangeDetectorRef, private dialog: MatDialog) {}
   ngOnInit() { this.load(); }
 
   load() {
@@ -30,5 +33,39 @@ export class AdminUsersListComponent implements OnInit {
       next: ({ user }) => { const it = this.rows.find(x => x.id === user.id); if (it) { it.isActive = user.isActive; this.cdr.markForCheck(); } },
       error: () => {}
     });
+  }
+
+  managePermissions(user: any): void {
+    if (!user) {
+      return;
+    }
+
+    const ref = this.dialog.open(UserPermissionsDialogComponent, {
+      width: '880px',
+      maxWidth: '95vw',
+      data: {
+        user: { ...user },
+        isLastAdmin: this.isLastAdmin(user)
+      }
+    });
+
+    ref.afterClosed().subscribe((result) => {
+      if (!result) {
+        return;
+      }
+      const existing = this.rows.find((row) => row.id === user.id);
+      if (existing && Array.isArray(result.roles)) {
+        existing.roles = result.roles;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  private isLastAdmin(user: any): boolean {
+    if (!user?.roles?.includes?.('admin')) {
+      return false;
+    }
+    const totalAdmins = this.rows.filter((row) => Array.isArray(row.roles) && row.roles.includes('admin')).length;
+    return totalAdmins <= 1;
   }
 }

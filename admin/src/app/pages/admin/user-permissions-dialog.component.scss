@@ -1,0 +1,267 @@
+.dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  mat-icon {
+    color: var(--color-primary, #1976d2);
+  }
+}
+
+.permissions-dialog {
+  min-width: 640px;
+  max-width: 840px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  &--loading {
+    opacity: 0.7;
+  }
+}
+
+.user-summary {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+
+  &__info {
+    flex: 1 1 320px;
+
+    h3 {
+      margin: 0 0 0.25rem;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    p {
+      margin: 0;
+      color: rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  &__meta {
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  &__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-end;
+
+    button {
+      min-width: 180px;
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      justify-content: center;
+
+      mat-progress-spinner {
+        width: 16px !important;
+        height: 16px !important;
+      }
+    }
+  }
+
+  &__hint {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: #c62828;
+    font-size: 0.85rem;
+  }
+}
+
+.permissions-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+
+  mat-form-field {
+    flex: 1 1 320px;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+}
+
+.permissions-summary {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+
+  &__item {
+    display: inline-flex;
+    gap: 0.35rem;
+    align-items: baseline;
+
+    strong {
+      font-size: 1.1rem;
+    }
+
+    &--adding {
+      color: #2e7d32;
+    }
+
+    &--removing {
+      color: #c62828;
+    }
+  }
+}
+
+.permissions-spinner {
+  display: flex;
+  justify-content: center;
+}
+
+.permissions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  mat-expansion-panel {
+    border-radius: 12px !important;
+    overflow: hidden;
+  }
+
+  mat-expansion-panel-header mat-icon {
+    margin-right: 0.5rem;
+  }
+}
+
+.group-actions {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem 0;
+  flex-wrap: wrap;
+}
+
+.group-permissions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.75rem;
+  padding: 0.75rem 1rem 1rem;
+}
+
+.permission-item {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  background: #fafafa;
+
+  &__label {
+    display: block;
+    font-weight: 600;
+  }
+
+  &__code {
+    display: block;
+    font-size: 0.75rem;
+    color: rgba(0, 0, 0, 0.54);
+  }
+
+  &__status {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  &--granted {
+    border-color: rgba(56, 142, 60, 0.35);
+    background: rgba(200, 230, 201, 0.35);
+  }
+
+  &--adding {
+    border-color: rgba(46, 125, 50, 0.6);
+    background: rgba(200, 230, 201, 0.65);
+  }
+
+  &--removing {
+    border-color: rgba(198, 40, 40, 0.6);
+    background: rgba(255, 205, 210, 0.6);
+  }
+}
+
+.status {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.54);
+
+  &--adding {
+    color: #2e7d32;
+  }
+
+  &--removing {
+    color: #c62828;
+  }
+
+  &--granted {
+    color: #2e7d32;
+  }
+}
+
+.permissions-empty {
+  padding: 2rem 0;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.6);
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.permissions-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+
+  &__spacer {
+    flex: 1 1 auto;
+  }
+
+  button {
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
+
+    mat-progress-spinner {
+      width: 16px !important;
+      height: 16px !important;
+    }
+  }
+}
+
+@media (max-width: 720px) {
+  .permissions-dialog {
+    min-width: 100%;
+  }
+
+  .user-summary {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .group-permissions {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+}

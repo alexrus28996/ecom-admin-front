@@ -1,0 +1,184 @@
+<h2 mat-dialog-title class="dialog-title">
+  <mat-icon>shield_person</mat-icon>
+  {{ 'adminUsers.permissions.title' | translate }}
+</h2>
+
+<mat-dialog-content class="permissions-dialog" [class.permissions-dialog--loading]="loading">
+  <section class="user-summary">
+    <div class="user-summary__info">
+      <h3>{{ data.user?.name || (data.user?.email || data.user?.id) }}</h3>
+      <p class="user-summary__email">{{ data.user?.email }}</p>
+      <div class="user-summary__meta">
+        <mat-chip-set aria-label="Roles" *ngIf="data.user?.roles?.length">
+          <mat-chip *ngFor="let role of data.user.roles" [color]="role === 'admin' ? 'primary' : undefined" [selected]="role === 'admin'">
+            {{ role }}
+          </mat-chip>
+        </mat-chip-set>
+        <span class="badge badge--neutral" *ngIf="!data.user?.roles?.length">
+          {{ 'adminUsers.permissions.noRoles' | translate }}
+        </span>
+      </div>
+    </div>
+    <div class="user-summary__actions">
+      <button mat-stroked-button color="primary" type="button" (click)="promote()" [disabled]="!canPromote() || actionLoading.promote">
+        <mat-progress-spinner *ngIf="actionLoading.promote" diameter="16" mode="indeterminate"></mat-progress-spinner>
+        <mat-icon *ngIf="!actionLoading.promote">upgrade</mat-icon>
+        {{ 'adminUsers.permissions.actions.promote' | translate }}
+      </button>
+      <button mat-stroked-button color="warn" type="button" (click)="demote()" [disabled]="!canDemote() || actionLoading.demote">
+        <mat-progress-spinner *ngIf="actionLoading.demote" diameter="16" mode="indeterminate"></mat-progress-spinner>
+        <mat-icon *ngIf="!actionLoading.demote">download</mat-icon>
+        {{ 'adminUsers.permissions.actions.demote' | translate }}
+      </button>
+      <p class="user-summary__hint" *ngIf="data.isLastAdmin && canDemote()">
+        <mat-icon color="warn">warning</mat-icon>
+        {{ 'adminUsers.permissions.lastAdminWarning' | translate }}
+      </p>
+    </div>
+  </section>
+
+  <section class="permissions-toolbar">
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'adminUsers.permissions.search.label' | translate }}</mat-label>
+      <input matInput [formControl]="searchControl" [placeholder]="'adminUsers.permissions.search.placeholder' | translate" />
+      <button mat-icon-button matSuffix type="button" (click)="searchControl.setValue('')" *ngIf="searchControl.value">
+        <mat-icon>clear</mat-icon>
+      </button>
+    </mat-form-field>
+    <div class="permissions-toolbar__actions">
+      <button mat-button type="button" (click)="selectAll()" [disabled]="loading">
+        <mat-icon>select_all</mat-icon>
+        {{ 'adminUsers.permissions.actions.selectAll' | translate }}
+      </button>
+      <button mat-button type="button" color="warn" (click)="clearAll()" [disabled]="loading">
+        <mat-icon>clear_all</mat-icon>
+        {{ 'adminUsers.permissions.actions.clearAll' | translate }}
+      </button>
+    </div>
+  </section>
+
+  <div class="permissions-summary">
+    <span class="permissions-summary__item">
+      <strong>{{ permissions.size }}</strong>
+      {{ 'adminUsers.permissions.summary.granted' | translate }}
+    </span>
+    <span class="permissions-summary__item permissions-summary__item--adding" *ngIf="addCount()">
+      <strong>+{{ addCount() }}</strong>
+      {{ 'adminUsers.permissions.summary.toAdd' | translate }}
+    </span>
+    <span class="permissions-summary__item permissions-summary__item--removing" *ngIf="removeCount()">
+      <strong>-{{ removeCount() }}</strong>
+      {{ 'adminUsers.permissions.summary.toRemove' | translate }}
+    </span>
+  </div>
+
+  <app-error-banner [key]="loadErrorKey"></app-error-banner>
+
+  <div class="permissions-spinner" *ngIf="loading">
+    <mat-progress-spinner diameter="32" mode="indeterminate"></mat-progress-spinner>
+  </div>
+
+  <ng-container *ngIf="!loading && !loadErrorKey">
+    <ng-container *ngIf="filteredGroups().length; else permissionsEmpty">
+      <mat-accordion displayMode="flat" multi class="permissions-list">
+        <mat-expansion-panel *ngFor="let group of filteredGroups(); trackBy: trackByGroup" [expanded]="true">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon>{{ group.icon || 'folder' }}</mat-icon>
+              {{ group.labelKey | translate }}
+            </mat-panel-title>
+            <mat-panel-description>
+              {{ groupGrantedCount(group) }}/{{ group.permissions.length }}
+            </mat-panel-description>
+          </mat-expansion-panel-header>
+          <div class="group-actions">
+            <button mat-button type="button" (click)="toggleGroup(group, true)">
+              <mat-icon>done_all</mat-icon>
+              {{ 'adminUsers.permissions.actions.grantGroup' | translate }}
+            </button>
+            <button mat-button type="button" (click)="toggleGroup(group, false)">
+              <mat-icon>remove_done</mat-icon>
+              {{ 'adminUsers.permissions.actions.revokeGroup' | translate }}
+            </button>
+          </div>
+          <div class="group-permissions">
+            <div
+              class="permission-item"
+              *ngFor="let permission of group.permissions; trackBy: trackByPermission"
+              [ngClass]="'permission-item--' + badgeTone(permission.id)"
+            >
+              <mat-checkbox
+                [checked]="isGranted(permission.id)"
+                (change)="togglePermission(permission.id, $event.checked)"
+                [disabled]="loading"
+              >
+                <span class="permission-item__label">{{ permission.labelKey | translate }}</span>
+                <span class="permission-item__code">{{ permission.id }}</span>
+              </mat-checkbox>
+              <span class="permission-item__status" [ngSwitch]="badgeTone(permission.id)">
+                <span *ngSwitchCase="'adding'" class="status status--adding">
+                  {{ 'adminUsers.permissions.status.adding' | translate }}
+                </span>
+                <span *ngSwitchCase="'removing'" class="status status--removing">
+                  {{ 'adminUsers.permissions.status.removing' | translate }}
+                </span>
+                <span *ngSwitchCase="'granted'" class="status status--granted">
+                  {{ 'adminUsers.permissions.status.granted' | translate }}
+                </span>
+                <span *ngSwitchDefault class="status">
+                  {{ 'adminUsers.permissions.status.notGranted' | translate }}
+                </span>
+              </span>
+            </div>
+          </div>
+        </mat-expansion-panel>
+      </mat-accordion>
+    </ng-container>
+    <ng-template #permissionsEmpty>
+      <div class="permissions-empty">
+        <mat-icon>search_off</mat-icon>
+        <p>{{ 'adminUsers.permissions.empty' | translate }}</p>
+      </div>
+    </ng-template>
+  </ng-container>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="permissions-actions">
+  <button mat-button type="button" (click)="close()">
+    {{ 'common.close' | translate }}
+  </button>
+  <span class="permissions-actions__spacer"></span>
+  <button
+    mat-stroked-button
+    color="primary"
+    type="button"
+    (click)="applyAdds()"
+    [disabled]="!addCount() || actionLoading.add"
+  >
+    <mat-progress-spinner *ngIf="actionLoading.add" diameter="16" mode="indeterminate"></mat-progress-spinner>
+    <mat-icon *ngIf="!actionLoading.add">add_task</mat-icon>
+    {{ 'adminUsers.permissions.actions.applyAdds' | translate }}
+  </button>
+  <button
+    mat-stroked-button
+    color="warn"
+    type="button"
+    (click)="applyRemovals()"
+    [disabled]="!removeCount() || actionLoading.remove"
+  >
+    <mat-progress-spinner *ngIf="actionLoading.remove" diameter="16" mode="indeterminate"></mat-progress-spinner>
+    <mat-icon *ngIf="!actionLoading.remove">delete_sweep</mat-icon>
+    {{ 'adminUsers.permissions.actions.applyRemovals' | translate }}
+  </button>
+  <button
+    mat-flat-button
+    color="primary"
+    type="button"
+    (click)="saveAll()"
+    [disabled]="!hasChanges() || actionLoading.replace"
+  >
+    <mat-progress-spinner *ngIf="actionLoading.replace" diameter="16" mode="indeterminate"></mat-progress-spinner>
+    <mat-icon *ngIf="!actionLoading.replace">save</mat-icon>
+    {{ 'adminUsers.permissions.actions.saveAll' | translate }}
+  </button>
+</mat-dialog-actions>

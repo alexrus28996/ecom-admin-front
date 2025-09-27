@@ -258,6 +258,128 @@
         "activeVariants": "Active variants",
         "totalStock": "Total stock"
       }
+    },
+    "permissions": {
+      "title": "Gérer les permissions",
+      "noRoles": "Aucun rôle attribué",
+      "lastAdminWarning": "Il s'agit actuellement du seul administrateur. Le rétrograder supprimera tout accès admin.",
+      "search": {
+        "label": "Filtrer les permissions",
+        "placeholder": "Rechercher par nom ou code"
+      },
+      "summary": {
+        "granted": "accordées",
+        "toAdd": "à ajouter",
+        "toRemove": "à retirer"
+      },
+      "status": {
+        "adding": "En attente d'ajout",
+        "removing": "En attente de retrait",
+        "granted": "Accordée",
+        "notGranted": "Non accordée"
+      },
+      "actions": {
+        "promote": "Promouvoir admin",
+        "demote": "Rétrograder admin",
+        "selectAll": "Tout sélectionner",
+        "clearAll": "Tout effacer",
+        "grantGroup": "Attribuer le groupe",
+        "revokeGroup": "Retirer le groupe",
+        "applyAdds": "Appliquer les ajouts",
+        "applyRemovals": "Appliquer les retraits",
+        "saveAll": "Enregistrer toutes les modifications",
+        "manage": "Gérer les permissions"
+      },
+      "groups": {
+        "catalog": "Catalogue",
+        "orders": "Commandes",
+        "inventory": "Inventaire",
+        "reports": "Rapports",
+        "system": "Système"
+      },
+      "items": {
+        "productCreate": "Créer des produits",
+        "productEdit": "Modifier des produits",
+        "productDelete": "Supprimer des produits",
+        "categoryCreate": "Créer des catégories",
+        "categoryEdit": "Modifier des catégories",
+        "categoryDelete": "Supprimer des catégories",
+        "orderView": "Voir les commandes",
+        "orderEdit": "Modifier les commandes",
+        "refundApprove": "Approuver les remboursements",
+        "refundReject": "Refuser les remboursements",
+        "inventoryView": "Voir l'inventaire",
+        "inventoryAdjust": "Ajuster l'inventaire",
+        "inventoryAudit": "Auditer l'inventaire",
+        "reportsView": "Voir les rapports",
+        "reportsExport": "Exporter les rapports",
+        "userInvite": "Inviter des utilisateurs",
+        "userSuspend": "Suspendre des utilisateurs",
+        "settingsUpdate": "Mettre à jour les paramètres"
+      },
+      "empty": "Aucune permission ne correspond à votre recherche.",
+      "doc": {
+        "cta": "Guide des permissions",
+        "title": "Guide de gestion des permissions",
+        "subtitle": "Comprendre comment accorder l'accès en toute sécurité",
+        "sections": {
+          "overview": {
+            "title": "Fonctionnement",
+            "body": "Chaque permission ouvre une capacité précise. Utilisez la recherche et les groupes pour vérifier ce qu'un utilisateur peut faire.",
+            "points": {
+              "one": "Activez les cases pour marquer les permissions à ajouter ou retirer.",
+              "two": "Utilisez les actions de groupe pour gérer rapidement un domaine fonctionnel entier.",
+              "three": "Enregistrez toutes les modifications pour remplacer les permissions ou appliquez les mises à jour incrémentales."
+            }
+          },
+          "tips": {
+            "title": "Bonnes pratiques",
+            "body": "Respectez le principe du moindre privilège et révisez régulièrement les accès admin.",
+            "points": {
+              "one": "Promouvez un utilisateur admin uniquement s'il a besoin du contrôle complet.",
+              "two": "Utilisez les ajouts pour un accès temporaire et les retraits pour les urgences.",
+              "three": "Confirmez les actions destructrices avec les boîtes de dialogue pour éviter les erreurs."
+            }
+          },
+          "safety": {
+            "title": "Sécurité",
+            "body": "Rétrograder le dernier administrateur bloquera tout le monde. Assurez-vous de conserver au moins un admin fiable."
+          }
+        }
+      },
+      "confirm": {
+        "clearAll": {
+          "title": "Supprimer toutes les permissions ?",
+          "message": "Cela retirera chaque permission pour l'utilisateur.",
+          "confirm": "Effacer les permissions"
+        },
+        "remove": {
+          "title": "Confirmer les retraits",
+          "message": "Les permissions sélectionnées seront retirées immédiatement.",
+          "confirm": "Retirer les permissions"
+        },
+        "demote": {
+          "title": "Rétrograder l'administrateur",
+          "message": "L'utilisateur perdra l'accès aux zones admin.",
+          "confirm": "Rétrograder"
+        },
+        "demoteLastAdmin": {
+          "title": "Rétrograder le dernier admin ?",
+          "message": "Vous êtes sur le point de rétrograder l'unique administrateur. Soyez prudent.",
+          "confirm": "Rétrograder le dernier admin"
+        }
+      },
+      "toasts": {
+        "promoted": "{{ name }} est désormais administrateur.",
+        "demoted": "{{ name }} n'est plus administrateur.",
+        "replaced": "Permissions mises à jour.",
+        "added": "Permissions ajoutées.",
+        "removed": "Permissions retirées."
+      },
+      "errors": {
+        "loadFailed": "Impossible de charger les permissions.",
+        "actionFailed": "La mise à jour des permissions a échoué."
+      }
     }
   },
   "denied": {

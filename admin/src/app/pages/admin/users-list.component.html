@@ -11,10 +11,10 @@
           <mat-icon>refresh</mat-icon>
           {{ 'adminUsers.list.actions.refresh' | translate }}
         </button>
-        <a mat-raised-button color="primary" routerLink="/admin/roles">
-          <mat-icon>admin_panel_settings</mat-icon>
-          {{ 'adminUsers.list.actions.manageRoles' | translate }}
-        </a>
+        <button mat-raised-button color="accent" type="button" (click)="documentation.toggle = !documentation.toggle">
+          <mat-icon>menu_book</mat-icon>
+          {{ 'adminUsers.permissions.doc.cta' | translate }}
+        </button>
       </div>
     </div>
     <form class="page__filters" (ngSubmit)="onSearch()" novalidate>
@@ -26,6 +26,44 @@
         </button>
       </mat-form-field>
     </form>
+  </section>
+
+  <section class="page__info" [class.page__info--expanded]="documentation.toggle">
+    <mat-expansion-panel [expanded]="documentation.toggle" (opened)="documentation.toggle = true" (closed)="documentation.toggle = false">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <mat-icon>verified_user</mat-icon>
+          {{ 'adminUsers.permissions.doc.title' | translate }}
+        </mat-panel-title>
+        <mat-panel-description>
+          {{ 'adminUsers.permissions.doc.subtitle' | translate }}
+        </mat-panel-description>
+      </mat-expansion-panel-header>
+      <div class="doc-grid">
+        <div class="doc-grid__section">
+          <h4>{{ 'adminUsers.permissions.doc.sections.overview.title' | translate }}</h4>
+          <p>{{ 'adminUsers.permissions.doc.sections.overview.body' | translate }}</p>
+          <ul>
+            <li>{{ 'adminUsers.permissions.doc.sections.overview.points.one' | translate }}</li>
+            <li>{{ 'adminUsers.permissions.doc.sections.overview.points.two' | translate }}</li>
+            <li>{{ 'adminUsers.permissions.doc.sections.overview.points.three' | translate }}</li>
+          </ul>
+        </div>
+        <div class="doc-grid__section">
+          <h4>{{ 'adminUsers.permissions.doc.sections.tips.title' | translate }}</h4>
+          <p>{{ 'adminUsers.permissions.doc.sections.tips.body' | translate }}</p>
+          <ul>
+            <li>{{ 'adminUsers.permissions.doc.sections.tips.points.one' | translate }}</li>
+            <li>{{ 'adminUsers.permissions.doc.sections.tips.points.two' | translate }}</li>
+            <li>{{ 'adminUsers.permissions.doc.sections.tips.points.three' | translate }}</li>
+          </ul>
+        </div>
+        <div class="doc-grid__section doc-grid__section--highlight">
+          <h4>{{ 'adminUsers.permissions.doc.sections.safety.title' | translate }}</h4>
+          <p>{{ 'adminUsers.permissions.doc.sections.safety.body' | translate }}</p>
+        </div>
+      </div>
+    </mat-expansion-panel>
   </section>
 
   <section class="page__body">
@@ -66,23 +104,15 @@
           <td mat-cell *matCellDef="let u">
             <div class="table-actions">
               <button
-                mat-icon-button
-                color="primary"
-                [routerLink]="['/admin/roles']"
-                matTooltip="{{ 'adminUsers.list.actions.manageRoles' | translate }}"
-                aria-label="{{ 'adminUsers.list.actions.manageRoles' | translate }}"
-              >
-                <mat-icon>admin_panel_settings</mat-icon>
-              </button>
-              <button
-                mat-icon-button
+                mat-raised-button
                 color="primary"
                 type="button"
-                disabled
-                matTooltip="{{ 'adminUsers.list.actions.viewDetail' | translate }}"
-                aria-label="{{ 'adminUsers.list.actions.viewDetail' | translate }}"
+                (click)="managePermissions(u)"
+                matTooltip="{{ 'adminUsers.permissions.actions.manage' | translate }}"
+                aria-label="{{ 'adminUsers.permissions.actions.manage' | translate }}"
               >
-                <mat-icon>open_in_new</mat-icon>
+                <mat-icon>admin_panel_settings</mat-icon>
+                <span>{{ 'adminUsers.permissions.actions.manage' | translate }}</span>
               </button>
             </div>
           </td>
