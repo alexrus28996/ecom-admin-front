@@ -35,6 +35,32 @@
       "delete": "Delete product",
       "duplicate": "Duplicate product"
     },
+    "permissions": {
+      "loading": "Checking permissions...",
+      "createDenied": "You don't have permission to create products.",
+      "editDenied": "You don't have permission to update products.",
+      "deleteDenied": "You don't have permission to delete products.",
+      "variantsDenied": "You don't have permission to manage product variants.",
+      "importDenied": "You don't have permission to import products.",
+      "exportDenied": "You don't have permission to export products."
+    },
+    "import": {
+      "title": "Import",
+      "invalidFormat": "Unsupported file format. Please choose CSV or JSON.",
+      "invalidJSON": "The selected file is not valid JSON.",
+      "csvNotSupported": "CSV import isn't available yet. Please use a JSON export.",
+      "success": "{{ inserted }} products imported. {{ failed }} failed.",
+      "error": "Import failed. Please try again."
+    },
+    "export": {
+      "title": "Export",
+      "success": "Export started. Your download should begin shortly.",
+      "error": "Export failed. Try again.",
+      "options": {
+        "json": "Download JSON",
+        "csv": "Download CSV"
+      }
+    },
     "filters": {
       "search": {
         "label": "Search products",
@@ -57,7 +83,11 @@
       "advanced": "Advanced filters",
       "clear": "Clear filters"
     },
-    "stock": "Stock",
+    "stock": {
+      "inStock": "In Stock",
+      "lowStock": "Low Stock",
+      "outOfStock": "Out of Stock"
+    },
     "status": {
       "active": "Active",
       "inactive": "Inactive"
@@ -91,11 +121,6 @@
       "success": "Product duplicated successfully",
       "error": "Failed to duplicate product"
     },
-    "stock": {
-      "inStock": "In Stock",
-      "lowStock": "Low Stock",
-      "outOfStock": "Out of Stock"
-    },
     "messages": {
       "saveSuccess": "Product saved successfully.",
       "updateSuccess": "Product updated successfully.",
@@ -106,7 +131,8 @@
         "duplicateSku": "Another product already uses this SKU.",
         "duplicateSlug": "Another product already uses this slug.",
         "validationFailed": "Product validation failed. Check required fields.",
-        "imageUpload": "Image upload failed. Please try again."
+        "imageUpload": "Image upload failed. Please try again.",
+        "brandsLoad": "Could not load brands."
       }
     },
     "variants": {
@@ -247,20 +273,6 @@
           "value": "Attribute value"
         },
         "variant": {
-          "sku": "SKU",
-          "price": "Price",
-          "priceDelta": "Price delta",
-          "stock": "Stock",
-          "isActive": "Active",
-          "attributes": "Variant attributes"
-        },
-        "image": {
-          "url": "Image URL",
-          "alt": "Alt text",
-          "altPlaceholder": "Describe this image",
-          "primary": "Primary Image"
-        },
-        "variant": {
           "sku": "Variant SKU",
           "skuPlaceholder": "Enter unique variant SKU",
           "price": "Variant price",
@@ -271,6 +283,50 @@
           "active": "Active",
           "inactive": "Inactive",
           "attributes": "Variant attributes"
+        },
+        "image": {
+          "url": "Image URL",
+          "alt": "Alt text",
+          "altPlaceholder": "Describe this image",
+          "primary": "Primary Image"
+        },
+        "compareAtPrice": {
+          "label": "Compare-at price",
+          "hint": "Shown as the original price when this item is on sale"
+        },
+        "costPrice": {
+          "label": "Cost per item"
+        },
+        "brand": {
+          "label": "Brand",
+          "none": "No brand"
+        },
+        "vendor": {
+          "label": "Vendor"
+        },
+        "barcode": {
+          "label": "Barcode"
+        },
+        "taxClass": {
+          "label": "Tax class"
+        },
+        "tags": {
+          "label": "Tags",
+          "placeholder": "summer, linen, shirts",
+          "hint": "Separate tags with commas"
+        },
+        "requiresShipping": {
+          "label": "Requires shipping"
+        },
+        "weight": {
+          "label": "Weight",
+          "unit": "Weight unit"
+        },
+        "dimensions": {
+          "length": "Length",
+          "width": "Width",
+          "height": "Height",
+          "unit": "Dimension unit"
         }
       },
       "actions": {
@@ -1140,7 +1196,7 @@
     },
     "actions": {
       "submit": "Sign in",
-      "submitting": "Signing in\u2026",
+      "submitting": "Signing in…",
       "forgotPassword": "Forgot password?",
       "noAccount": "Don't have an account?",
       "createAccount": "Create one"
@@ -1178,7 +1234,7 @@
     },
     "actions": {
       "submit": "Create account",
-      "submitting": "Submitting registration\u2026",
+      "submitting": "Submitting registration…",
       "backToLogin": "Back to sign in"
     },
     "success": "Registration successful. You can now sign in.",
@@ -1199,7 +1255,7 @@
     },
     "actions": {
       "submit": "Send reset link",
-      "submitting": "Sending reset link\u2026",
+      "submitting": "Sending reset link…",
       "backToLogin": "Back to sign in"
     },
     "success": "Reset instructions sent. Check your inbox.",
@@ -1220,7 +1276,7 @@
     },
     "actions": {
       "submit": "Update password",
-      "submitting": "Updating password\u2026",
+      "submitting": "Updating password…",
       "backToLogin": "Back to sign in"
     },
     "success": "Password updated. You can now sign in.",
@@ -1231,7 +1287,7 @@
   },
   "emailVerify": {
     "title": "Verify email",
-    "loading": "Verifying your email\u2026",
+    "loading": "Verifying your email…",
     "success": "Email verified successfully.",
     "errors": {
       "generic": "We couldn't verify your email. Please request a new link."
@@ -1243,7 +1299,7 @@
     "actions": {
       "refresh": "Refresh"
     },
-    "loading": "Loading dashboard\u2026",
+    "loading": "Loading dashboard…",
     "cards": {
       "users": "Total customers",
       "usersHint": "Includes active and invited users.",

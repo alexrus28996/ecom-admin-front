@@ -25,6 +25,32 @@
       "edit": "Edit product",
       "delete": "Delete product"
     },
+    "permissions": {
+      "loading": "अनुमतियाँ जाँची जा रही हैं...",
+      "createDenied": "आपको उत्पाद बनाने की अनुमति नहीं है।",
+      "editDenied": "आपको उत्पाद अपडेट करने की अनुमति नहीं है।",
+      "deleteDenied": "आपको उत्पाद हटाने की अनुमति नहीं है।",
+      "variantsDenied": "आपको उत्पाद वैरिएंट प्रबंधित करने की अनुमति नहीं है।",
+      "importDenied": "आपको उत्पाद आयात करने की अनुमति नहीं है।",
+      "exportDenied": "आपको उत्पाद निर्यात करने की अनुमति नहीं है।"
+    },
+    "import": {
+      "title": "आयात",
+      "invalidFormat": "फ़ाइल फ़ॉर्मेट समर्थित नहीं है। कृपया CSV या JSON चुनें।",
+      "invalidJSON": "चुनी गई फ़ाइल मान्य JSON नहीं है।",
+      "csvNotSupported": "CSV आयात अभी उपलब्ध नहीं है। कृपया JSON निर्यात का उपयोग करें।",
+      "success": "{{ inserted }} उत्पाद आयात हुए, {{ failed }} असफल रहे।",
+      "error": "आयात विफल रहा। कृपया दोबारा प्रयास करें।"
+    },
+    "export": {
+      "title": "निर्यात",
+      "success": "निर्यात शुरू हो गया है। आपका डाउनलोड शीघ्र ही शुरू होना चाहिए।",
+      "error": "निर्यात विफल रहा। कृपया फिर से प्रयास करें।",
+      "options": {
+        "json": "JSON डाउनलोड करें",
+        "csv": "CSV डाउनलोड करें"
+      }
+    },
     "filters": {
       "search": {
         "label": "Search products",
@@ -59,7 +85,8 @@
       "errors": {
         "duplicateSku": "Another product already uses this SKU.",
         "validationFailed": "Product validation failed. Check required fields.",
-        "imageUpload": "Image upload failed. Please try again."
+        "imageUpload": "Image upload failed. Please try again.",
+        "brandsLoad": "Could not load brands."
       }
     },
     "errors": {
@@ -182,6 +209,44 @@
         "image": {
           "url": "Image URL",
           "alt": "Alt text"
+        },
+        "compareAtPrice": {
+          "label": "Compare-at price",
+          "hint": "Shown as the original price when this item is on sale"
+        },
+        "costPrice": {
+          "label": "Cost per item"
+        },
+        "brand": {
+          "label": "Brand",
+          "none": "No brand"
+        },
+        "vendor": {
+          "label": "Vendor"
+        },
+        "barcode": {
+          "label": "Barcode"
+        },
+        "taxClass": {
+          "label": "Tax class"
+        },
+        "tags": {
+          "label": "Tags",
+          "placeholder": "summer, linen, shirts",
+          "hint": "Separate tags with commas"
+        },
+        "requiresShipping": {
+          "label": "Requires shipping"
+        },
+        "weight": {
+          "label": "Weight",
+          "unit": "Weight unit"
+        },
+        "dimensions": {
+          "length": "Length",
+          "width": "Width",
+          "height": "Height",
+          "unit": "Dimension unit"
         }
       },
       "actions": {

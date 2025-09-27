@@ -22,23 +22,47 @@
         </div>
       </div>
       <div class="products-panel__actions">
+        <input
+          #importFileInput
+          type="file"
+          accept=".json,application/json,.csv,text/csv"
+          (change)="handleFileImport($event)"
+          hidden
+        />
         <button mat-stroked-button color="primary" type="button" (click)="onSubmit()" [disabled]="loading">
           <mat-icon>refresh</mat-icon>
           {{ 'products.actions.refresh' | translate }}
         </button>
-        <button mat-stroked-button color="accent" type="button" (click)="openImportDialog()" [disabled]="loading || !perms.create">
+        <button mat-stroked-button color="accent" type="button" (click)="onImportClick()" [disabled]="loading">
           <mat-icon>file_upload</mat-icon>
           {{ 'products.import.title' | translate }}
         </button>
-        <button mat-stroked-button color="accent" type="button" (click)="openExportDialog()" [disabled]="loading">
+        <button
+          mat-stroked-button
+          color="accent"
+          type="button"
+          [disabled]="loading"
+          [matMenuTriggerFor]="exportMenu"
+        >
           <mat-icon>file_download</mat-icon>
           {{ 'products.export.title' | translate }}
         </button>
+        <mat-menu #exportMenu="matMenu">
+          <button mat-menu-item type="button" (click)="startExport('json')">
+            <mat-icon>code</mat-icon>
+            {{ 'products.export.options.json' | translate }}
+          </button>
+          <button mat-menu-item type="button" (click)="startExport('csv')">
+            <mat-icon>table_chart</mat-icon>
+            {{ 'products.export.options.csv' | translate }}
+          </button>
+        </mat-menu>
         <button
           mat-raised-button
           color="primary"
-          routerLink="/admin/products/new"
-          [disabled]="loading || !perms.create"
+          type="button"
+          (click)="onAddProduct()"
+          [disabled]="loading"
         >
           <mat-icon>add</mat-icon>
           {{ 'products.add' | translate }}
@@ -210,8 +234,9 @@
               <button
                 mat-icon-button
                 color="primary"
-                [routerLink]="['/admin/products', product._id, 'edit']"
-                [disabled]="loading || !perms.update"
+                type="button"
+                (click)="onEditProduct(product)"
+                [disabled]="loading"
                 matTooltip="{{ 'products.edit' | translate }}"
               >
                 <mat-icon>edit</mat-icon>
@@ -221,7 +246,7 @@
                 color="accent"
                 type="button"
                 (click)="manageVariants(product)"
-                [disabled]="loading || !perms.variants"
+                [disabled]="loading"
                 matTooltip="{{ 'products.actions.manageVariants' | translate }}"
               >
                 <mat-icon>tune</mat-icon>
@@ -230,7 +255,7 @@
                 mat-icon-button
                 type="button"
                 (click)="duplicateProduct(product)"
-                [disabled]="loading || !perms.create"
+                [disabled]="loading"
                 matTooltip="{{ 'products.actions.duplicate' | translate }}"
               >
                 <mat-icon>content_copy</mat-icon>
@@ -238,8 +263,9 @@
               <button
                 mat-icon-button
                 color="warn"
+                type="button"
                 (click)="confirmDelete(product)"
-                [disabled]="loading || !perms.delete"
+                [disabled]="loading || bulkOperationInProgress"
                 matTooltip="{{ 'products.actions.delete' | translate }}"
               >
                 <mat-icon>delete</mat-icon>

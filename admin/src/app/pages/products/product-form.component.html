@@ -51,7 +51,12 @@
               <div class="product-form-grid">
                 <mat-form-field appearance="outline">
                   <mat-label>{{ 'products.form.fields.name.label' | translate }}</mat-label>
-                  <input matInput formControlName="name" [placeholder]="'products.form.fields.name.placeholder' | translate" />
+                  <input
+                    matInput
+                    formControlName="name"
+                    [placeholder]="'products.form.fields.name.placeholder' | translate"
+                    (input)="onNameChange($event)"
+                  />
                   <mat-error *ngIf="hasError('name', 'required')">
                     {{ 'products.form.fields.name.errors.required' | translate }}
                   </mat-error>
@@ -61,8 +66,41 @@
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
+                  <mat-label>{{ 'products.form.fields.slug.label' | translate }}</mat-label>
+                  <input
+                    matInput
+                    formControlName="slug"
+                    [placeholder]="'products.form.fields.slug.placeholder' | translate"
+                  />
+                  <button
+                    mat-icon-button
+                    matSuffix
+                    type="button"
+                    (click)="generateSlug()"
+                    [disabled]="!canModify(perms)"
+                    aria-label="{{ 'products.form.fields.slug.generate' | translate }}"
+                  >
+                    <mat-icon>autorenew</mat-icon>
+                  </button>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
                   <mat-label>{{ 'products.form.fields.sku.label' | translate }}</mat-label>
-                  <input matInput formControlName="sku" />
+                  <input
+                    matInput
+                    formControlName="sku"
+                    [placeholder]="'products.form.fields.sku.placeholder' | translate"
+                  />
+                  <button
+                    mat-icon-button
+                    matSuffix
+                    type="button"
+                    (click)="generateSku()"
+                    [disabled]="!canModify(perms)"
+                    aria-label="{{ 'products.form.fields.sku.generate' | translate }}"
+                  >
+                    <mat-icon>confirmation_number</mat-icon>
+                  </button>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
@@ -74,6 +112,17 @@
                   <mat-error *ngIf="hasError('price', 'min')">
                     {{ 'products.form.fields.price.errors.min' | translate }}
                   </mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>{{ 'products.form.fields.compareAtPrice.label' | translate }}</mat-label>
+                  <input matInput type="number" formControlName="compareAtPrice" min="0" step="0.01" />
+                  <mat-hint>{{ 'products.form.fields.compareAtPrice.hint' | translate }}</mat-hint>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>{{ 'products.form.fields.costPrice.label' | translate }}</mat-label>
+                  <input matInput type="number" formControlName="costPrice" min="0" step="0.01" />
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
@@ -100,6 +149,72 @@
                     <mat-option *ngFor="let category of categories" [value]="category.id">{{ category.name }}</mat-option>
                   </mat-select>
                 </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>{{ 'products.form.fields.brand.label' | translate }}</mat-label>
+                  <mat-select formControlName="brand">
+                    <mat-option value="">{{ 'products.form.fields.brand.none' | translate }}</mat-option>
+                    <mat-option *ngFor="let brand of brands" [value]="brand.id">{{ brand.name }}</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>{{ 'products.form.fields.vendor.label' | translate }}</mat-label>
+                  <input matInput formControlName="vendor" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>{{ 'products.form.fields.barcode.label' | translate }}</mat-label>
+                  <input matInput formControlName="barcode" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>{{ 'products.form.fields.taxClass.label' | translate }}</mat-label>
+                  <input matInput formControlName="taxClass" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>{{ 'products.form.fields.tags.label' | translate }}</mat-label>
+                  <input matInput formControlName="tags" [placeholder]="'products.form.fields.tags.placeholder' | translate" />
+                  <mat-hint>{{ 'products.form.fields.tags.hint' | translate }}</mat-hint>
+                </mat-form-field>
+
+                <mat-slide-toggle formControlName="requiresShipping">
+                  {{ 'products.form.fields.requiresShipping.label' | translate }}
+                </mat-slide-toggle>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>{{ 'products.form.fields.weight.label' | translate }}</mat-label>
+                  <input matInput type="number" formControlName="weight" min="0" step="0.01" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>{{ 'products.form.fields.weight.unit' | translate }}</mat-label>
+                  <mat-select formControlName="weightUnit">
+                    <mat-option *ngFor="let unit of weightUnits" [value]="unit">{{ unit }}</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <div class="dimensions-group" formGroupName="dimensions">
+                  <mat-form-field appearance="outline">
+                    <mat-label>{{ 'products.form.fields.dimensions.length' | translate }}</mat-label>
+                    <input matInput type="number" formControlName="length" min="0" step="0.01" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>{{ 'products.form.fields.dimensions.width' | translate }}</mat-label>
+                    <input matInput type="number" formControlName="width" min="0" step="0.01" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>{{ 'products.form.fields.dimensions.height' | translate }}</mat-label>
+                    <input matInput type="number" formControlName="height" min="0" step="0.01" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>{{ 'products.form.fields.dimensions.unit' | translate }}</mat-label>
+                    <mat-select formControlName="unit">
+                      <mat-option *ngFor="let unit of dimensionUnits" [value]="unit">{{ unit }}</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
 
                 <mat-slide-toggle formControlName="isActive">
                   {{ 'products.form.fields.isActive.label' | translate }}

@@ -25,6 +25,32 @@
       "edit": "Edit product",
       "delete": "Delete product"
     },
+    "permissions": {
+      "loading": "Vérification des autorisations...",
+      "createDenied": "Vous n'avez pas l'autorisation de créer des produits.",
+      "editDenied": "Vous n'avez pas l'autorisation de modifier des produits.",
+      "deleteDenied": "Vous n'avez pas l'autorisation de supprimer des produits.",
+      "variantsDenied": "Vous n'avez pas l'autorisation de gérer les variantes produit.",
+      "importDenied": "Vous n'avez pas l'autorisation d'importer des produits.",
+      "exportDenied": "Vous n'avez pas l'autorisation d'exporter des produits."
+    },
+    "import": {
+      "title": "Importer",
+      "invalidFormat": "Format de fichier non pris en charge. Veuillez choisir un fichier CSV ou JSON.",
+      "invalidJSON": "Le fichier sélectionné n'est pas un JSON valide.",
+      "csvNotSupported": "L'import CSV n'est pas encore disponible. Veuillez utiliser un export JSON.",
+      "success": "{{ inserted }} produits importés. {{ failed }} échecs.",
+      "error": "L'import a échoué. Veuillez réessayer."
+    },
+    "export": {
+      "title": "Exporter",
+      "success": "Export lancé. Votre téléchargement va démarrer.",
+      "error": "L'export a échoué. Réessayez.",
+      "options": {
+        "json": "Télécharger en JSON",
+        "csv": "Télécharger en CSV"
+      }
+    },
     "filters": {
       "search": {
         "label": "Search products",
@@ -59,7 +85,8 @@
       "errors": {
         "duplicateSku": "Another product already uses this SKU.",
         "validationFailed": "Product validation failed. Check required fields.",
-        "imageUpload": "Image upload failed. Please try again."
+        "imageUpload": "Image upload failed. Please try again.",
+        "brandsLoad": "Could not load brands."
       }
     },
     "errors": {
@@ -182,6 +209,44 @@
         "image": {
           "url": "Image URL",
           "alt": "Alt text"
+        },
+        "compareAtPrice": {
+          "label": "Compare-at price",
+          "hint": "Shown as the original price when this item is on sale"
+        },
+        "costPrice": {
+          "label": "Cost per item"
+        },
+        "brand": {
+          "label": "Brand",
+          "none": "No brand"
+        },
+        "vendor": {
+          "label": "Vendor"
+        },
+        "barcode": {
+          "label": "Barcode"
+        },
+        "taxClass": {
+          "label": "Tax class"
+        },
+        "tags": {
+          "label": "Tags",
+          "placeholder": "summer, linen, shirts",
+          "hint": "Separate tags with commas"
+        },
+        "requiresShipping": {
+          "label": "Requires shipping"
+        },
+        "weight": {
+          "label": "Weight",
+          "unit": "Weight unit"
+        },
+        "dimensions": {
+          "length": "Length",
+          "width": "Width",
+          "height": "Height",
+          "unit": "Dimension unit"
         }
       },
       "actions": {
@@ -934,7 +999,7 @@
         "quantityRequired": "Quantity is required.",
         "quantityPositive": "Enter a quantity greater than zero."
       },
-      "loadingVariants": "Loading variants\u2026"
+      "loadingVariants": "Loading variants…"
     }
   },
   "adminUsers": {
@@ -1088,7 +1153,7 @@
     },
     "actions": {
       "submit": "Sign in",
-      "submitting": "Signing in\u2026",
+      "submitting": "Signing in…",
       "forgotPassword": "Forgot password?",
       "noAccount": "Don't have an account?",
       "createAccount": "Create one"
@@ -1126,7 +1191,7 @@
     },
     "actions": {
       "submit": "Create account",
-      "submitting": "Submitting registration\u2026",
+      "submitting": "Submitting registration…",
       "backToLogin": "Back to sign in"
     },
     "success": "Registration successful. You can now sign in.",
@@ -1147,7 +1212,7 @@
     },
     "actions": {
       "submit": "Send reset link",
-      "submitting": "Sending reset link\u2026",
+      "submitting": "Sending reset link…",
       "backToLogin": "Back to sign in"
     },
     "success": "Reset instructions sent. Check your inbox.",
@@ -1168,7 +1233,7 @@
     },
     "actions": {
       "submit": "Update password",
-      "submitting": "Updating password\u2026",
+      "submitting": "Updating password…",
       "backToLogin": "Back to sign in"
     },
     "success": "Password updated. You can now sign in.",
@@ -1179,7 +1244,7 @@
   },
   "emailVerify": {
     "title": "Verify email",
-    "loading": "Verifying your email\u2026",
+    "loading": "Verifying your email…",
     "success": "Email verified successfully.",
     "errors": {
       "generic": "We couldn't verify your email. Please request a new link."
@@ -1191,7 +1256,7 @@
     "actions": {
       "refresh": "Refresh"
     },
-    "loading": "Loading dashboard\u2026",
+    "loading": "Loading dashboard…",
     "cards": {
       "users": "Total customers",
       "usersHint": "Includes active and invited users.",
@@ -1244,7 +1309,7 @@
       "UNAUTHORIZED": "You need to sign in to continue.",
       "FORBIDDEN": "You do not have permission to perform this action.",
       "NOT_FOUND": "The requested resource could not be found.",
-      "ROUTE_NOT_FOUND": "\u0905\u0928\u0941\u0930\u094b\u0927\u093f\u0924 \u092c\u0948\u0915\u090f\u0902\u0921 \u0930\u0942\u091f \u0909\u092a\u0932\u092c\u094d\u0927 \u0928\u0939\u0940\u0902 \u0939\u0948\u0964",
+      "ROUTE_NOT_FOUND": "अनुरोधित बैकएंड रूट उपलब्ध नहीं है।",
       "VALIDATION_ERROR": "Some fields have validation errors.",
       "CONFLICT": "The resource is in a conflicting state.",
       "RATE_LIMITED": "Too many requests. Please try again later.",

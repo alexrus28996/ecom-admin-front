@@ -1,9 +1,11 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { PageEvent } from '@angular/material/paginator';
+import { Router } from '@angular/router';
 import { Subject, combineLatest, takeUntil } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
+import { tap } from 'rxjs/operators';
 import { ProductsService, ProductSummary } from '../../services/products.service';
 import { ToastService } from '../../core/toast.service';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
@@ -15,6 +17,13 @@ import { environment } from '../../../environments/environment';
 interface CategoryOption {
   id: string;
   name: string;
+}
+
+interface ProductPermissionState {
+  create: boolean;
+  update: boolean;
+  delete: boolean;
+  variants: boolean;
 }
 
 @Component({
@@ -52,19 +61,26 @@ export class ProductsListComponent implements OnInit, OnDestroy {
   // Bulk operations
   selectedProducts = new Set<string>();
   bulkActionsVisible = false;
-  showImportDialog = false;
-  showExportDialog = false;
   bulkOperationInProgress = false;
   defaultProductImage = 'assets/images/product-placeholder.png';
+
+  @ViewChild('importFileInput') importFileInput?: ElementRef<HTMLInputElement>;
+  private currentPermissions: ProductPermissionState = { create: false, update: false, delete: false, variants: false };
+  private permissionsLoaded = false;
 
   private readonly destroy$ = new Subject<void>();
 
   readonly productPermissions$ = combineLatest({
-    create: this.permissions.can$('products.create'),
-    update: this.permissions.can$('products.update'),
-    delete: this.permissions.can$('products.delete'),
-    variants: this.permissions.can$('products.manageVariants')
-  });
+    create: this.permissions.can$('product:create'),
+    update: this.permissions.can$('product:edit'),
+    delete: this.permissions.can$('product:delete'),
+    variants: this.permissions.can$('product:edit')
+  }).pipe(
+    tap((perms) => {
+      this.currentPermissions = perms;
+      this.permissionsLoaded = true;
+    })
+  );
 
   constructor(
     private readonly products: ProductsService,
@@ -74,7 +90,8 @@ export class ProductsListComponent implements OnInit, OnDestroy {
     public readonly translate: TranslateService,
     private readonly adminService: AdminService,
     private readonly cdr: ChangeDetectorRef,
-    private readonly permissions: PermissionsService
+    private readonly permissions: PermissionsService,
+    private readonly router: Router
   ) {}
 
   ngOnInit(): void {
@@ -92,6 +109,13 @@ export class ProductsListComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  onAddProduct(): void {
+    if (!this.ensurePermission(this.currentPermissions.create, 'products.permissions.createDenied')) {
+      return;
+    }
+    this.router.navigate(['/admin/products/new']);
   }
 
   load(): void {
@@ -116,10 +140,28 @@ export class ProductsListComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (res) => {
-          this.dataSource = res.data || res.items || [];
-          this.total = res.pagination?.total || res.total || 0;
-          this.pageIndex = (res.pagination?.page || res.page || 1) - 1;
-          this.activeCount = this.dataSource.filter(p => p.isActive).length;
+          const items = Array.isArray(res?.data)
+            ? res.data
+            : Array.isArray((res as any)?.items)
+              ? (res as any).items
+              : Array.isArray((res as any)?.data?.items)
+                ? (res as any).data.items
+                : [];
+
+          this.dataSource = items;
+
+          const pagination = (res as any)?.pagination ?? (res as any)?.data?.pagination ?? null;
+          const resolvedTotal = pagination?.total ?? (res as any)?.total ?? (res as any)?.data?.total ?? items.length;
+          const resolvedPage = pagination?.page ?? (res as any)?.page ?? (res as any)?.data?.page ?? 1;
+          const resolvedLimit = pagination?.limit ?? (res as any)?.limit ?? (res as any)?.data?.limit;
+
+          if (typeof resolvedLimit === 'number' && resolvedLimit > 0) {
+            this.pageSize = resolvedLimit;
+          }
+
+          this.total = resolvedTotal;
+          this.pageIndex = Math.max(resolvedPage - 1, 0);
+          this.activeCount = items.filter((p: any) => p?.isActive).length;
           this.loading = false;
           this.cdr.markForCheck();
         },
@@ -154,13 +196,17 @@ export class ProductsListComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (!this.ensurePermission(this.currentPermissions.delete, 'products.permissions.deleteDenied')) {
+      return;
+    }
+
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '380px',
       data: {
-        titleKey: 'products.delete.title',
-        messageKey: 'products.delete.message',
+        titleKey: 'product:delete.title',
+        messageKey: 'product:delete.message',
         messageParams: { name: product.name },
-        confirmKey: 'products.delete.confirm'
+        confirmKey: 'product:delete.confirm'
       }
     });
 
@@ -171,8 +217,24 @@ export class ProductsListComponent implements OnInit, OnDestroy {
     });
   }
 
+  onEditProduct(product: ProductSummary): void {
+    if (!product?._id) {
+      return;
+    }
+
+    if (!this.ensurePermission(this.currentPermissions.update, 'products.permissions.editDenied')) {
+      return;
+    }
+
+    this.router.navigate(['/admin/products', product._id, 'edit']);
+  }
+
   manageVariants(product: ProductSummary): void {
     if (!product?._id) {
+      return;
+    }
+
+    if (!this.ensurePermission(this.currentPermissions.variants, 'products.permissions.variantsDenied')) {
       return;
     }
 
@@ -205,7 +267,7 @@ export class ProductsListComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.toast.success(this.translate.instant('products.deleteSuccess'));
+          this.toast.success(this.translate.instant('product:deleteSuccess'));
           this.load();
         },
         error: (err) => {
@@ -233,7 +295,14 @@ export class ProductsListComponent implements OnInit, OnDestroy {
   }
 
   brandName(product: ProductSummary): string {
-    return product?.brand?.name || this.translate.instant('common.empty');
+    const brand = (product as any)?.brand;
+    if (brand && typeof brand === 'object' && (brand as any).name) {
+      return (brand as any).name;
+    }
+    if (typeof brand === 'string' && brand.trim().length) {
+      return brand.trim();
+    }
+    return this.translate.instant('common.empty');
   }
 
   categoryNames(product: ProductSummary): string {
@@ -296,16 +365,26 @@ export class ProductsListComponent implements OnInit, OnDestroy {
 
   // Bulk Operations
   bulkActivate(): void {
+    if (!this.ensurePermission(this.currentPermissions.update, 'products.permissions.editDenied')) {
+      return;
+    }
     this.executeBulkStatusUpdate(true);
   }
 
   bulkDeactivate(): void {
+    if (!this.ensurePermission(this.currentPermissions.update, 'products.permissions.editDenied')) {
+      return;
+    }
     this.executeBulkStatusUpdate(false);
   }
 
   private executeBulkStatusUpdate(isActive: boolean): void {
     const productIds = Array.from(this.selectedProducts);
     if (productIds.length === 0) return;
+
+    if (!this.ensurePermission(this.currentPermissions.update, 'products.permissions.editDenied')) {
+      return;
+    }
 
     this.bulkOperationInProgress = true;
     this.cdr.markForCheck();
@@ -315,7 +394,8 @@ export class ProductsListComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (result) => {
           const statusKey = isActive ? 'products.bulk.activated' : 'products.bulk.deactivated';
-          this.toast.success(this.translate.instant(statusKey, { count: result.modified }));
+          const updatedCount = ((result as any)?.modified ?? (result as any)?.updated) ?? 0;
+          this.toast.success(this.translate.instant(statusKey, { count: updatedCount }));
           this.selectedProducts.clear();
           this.updateBulkActionsVisibility();
           this.load();
@@ -332,6 +412,10 @@ export class ProductsListComponent implements OnInit, OnDestroy {
   }
 
   bulkDelete(): void {
+    if (!this.ensurePermission(this.currentPermissions.delete, 'products.permissions.deleteDenied')) {
+      return;
+    }
+
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '380px',
       data: {
@@ -352,6 +436,10 @@ export class ProductsListComponent implements OnInit, OnDestroy {
   private executeBulkDelete(): void {
     const productIds = Array.from(this.selectedProducts);
     if (productIds.length === 0) return;
+
+    if (!this.ensurePermission(this.currentPermissions.delete, 'products.permissions.deleteDenied')) {
+      return;
+    }
 
     this.bulkOperationInProgress = true;
     this.cdr.markForCheck();
@@ -379,27 +467,37 @@ export class ProductsListComponent implements OnInit, OnDestroy {
   }
 
   // Import/Export Functions
-  openImportDialog(): void {
-    this.showImportDialog = true;
-  }
+  onImportClick(): void {
+    if (!this.ensurePermission(this.currentPermissions.create, 'products.permissions.importDenied')) {
+      return;
+    }
 
-  openExportDialog(): void {
-    this.showExportDialog = true;
-  }
+    const input = this.importFileInput?.nativeElement;
+    if (!input) {
+      return;
+    }
 
-  closeImportDialog(): void {
-    this.showImportDialog = false;
-  }
-
-  closeExportDialog(): void {
-    this.showExportDialog = false;
+    input.value = '';
+    input.click();
   }
 
   handleFileImport(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
+    const file = input?.files?.[0];
 
-    if (!file) return;
+    if (!this.ensurePermission(this.currentPermissions.create, 'products.permissions.importDenied')) {
+      if (input) {
+        input.value = '';
+      }
+      return;
+    }
+
+    if (!file) {
+      if (input) {
+        input.value = '';
+      }
+      return;
+    }
 
     if (file.type === 'application/json') {
       this.importFromJSON(file);
@@ -407,6 +505,10 @@ export class ProductsListComponent implements OnInit, OnDestroy {
       this.importFromCSV(file);
     } else {
       this.toast.error(this.translate.instant('products.import.invalidFormat'));
+    }
+
+    if (input) {
+      input.value = '';
     }
   }
 
@@ -426,10 +528,10 @@ export class ProductsListComponent implements OnInit, OnDestroy {
   private importFromCSV(file: File): void {
     // CSV parsing would be implemented here
     // For now, show a message that CSV is not yet supported
-    this.toast.info(this.translate.instant('products.import.csvNotSupported'));
+    this.toast.show(this.translate.instant('products.import.csvNotSupported'), "info");
   }
 
-  private executeImport(products: Partial<Product>[]): void {
+  private executeImport(products: Array<Record<string, any>>): void {
     this.loading = true;
     this.cdr.markForCheck();
 
@@ -442,7 +544,6 @@ export class ProductsListComponent implements OnInit, OnDestroy {
             failed: result.failed
           });
           this.toast.success(message);
-          this.closeImportDialog();
           this.load();
         },
         error: (err) => {
@@ -456,7 +557,14 @@ export class ProductsListComponent implements OnInit, OnDestroy {
       });
   }
 
-  exportProducts(format: 'json' | 'csv'): void {
+  startExport(format: 'json' | 'csv'): void {
+    if (!this.ensurePermission(this.currentPermissions.update, 'products.permissions.exportDenied')) {
+      return;
+    }
+    this.exportProducts(format);
+  }
+
+  private exportProducts(format: 'json' | 'csv'): void {
     this.loading = true;
     this.cdr.markForCheck();
 
@@ -472,7 +580,6 @@ export class ProductsListComponent implements OnInit, OnDestroy {
           window.URL.revokeObjectURL(url);
 
           this.toast.success(this.translate.instant('products.export.success'));
-          this.closeExportDialog();
         },
         error: (err) => {
           this.toast.error(this.translate.instant('products.export.error'));
@@ -532,6 +639,20 @@ export class ProductsListComponent implements OnInit, OnDestroy {
     }
   }
 
+  private ensurePermission(permission: boolean | undefined, translationKey: string): boolean {
+    if (!this.permissionsLoaded) {
+      this.toast.show(this.translate.instant('products.permissions.loading'), 'info');
+      return false;
+    }
+
+    if (permission) {
+      return true;
+    }
+
+    this.toast.show(this.translate.instant(translationKey), 'info');
+    return false;
+  }
+
   toggleAdvancedFilters(): void {
     this.showAdvancedFilters = !this.showAdvancedFilters;
     this.cdr.markForCheck();
@@ -586,6 +707,10 @@ export class ProductsListComponent implements OnInit, OnDestroy {
 
   duplicateProduct(product: any): void {
     if (!product?._id) {
+      return;
+    }
+
+    if (!this.ensurePermission(this.currentPermissions.create, 'products.permissions.createDenied')) {
       return;
     }
 
@@ -654,3 +779,4 @@ export class ProductsListComponent implements OnInit, OnDestroy {
       });
   }
 }
+

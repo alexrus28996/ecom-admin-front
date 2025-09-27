@@ -32,19 +32,26 @@ export interface Product extends BaseDocument {
   longDescription?: string;
   sku?: string;
   price: number | MoneyAmount;
+  compareAtPrice?: number | MoneyAmount;
+  costPrice?: number | MoneyAmount;
   category?: Category | string;
   categories?: Category[]; // For backward compatibility
   currency?: string; // For backward compatibility
-  brand?: Brand;
+  brand?: Brand | string;
+  vendor?: string;
   images?: ProductImage[];
   variants?: ProductVariant[];
-  attributes?: ProductAttribute[];
+  attributes?: ProductAttribute[] | Record<string, string>;
   stock: number;
   isActive: boolean;
+  requiresShipping?: boolean;
   metaTitle?: string;
   metaDescription?: string;
   tags?: string[];
+  barcode?: string;
+  taxClass?: string;
   weight?: number;
+  weightUnit?: string;
   dimensions?: {
     length?: number;
     width?: number;
@@ -54,7 +61,6 @@ export interface Product extends BaseDocument {
   seoKeywords?: string[];
   featured?: boolean;
   comparePrice?: number | MoneyAmount;
-  barcode?: string;
   trackInventory?: boolean;
   allowBackorder?: boolean;
   lowStockThreshold?: number;
@@ -81,7 +87,7 @@ export interface ProductVariant {
   priceDelta?: number;
   stock?: number;
   isActive?: boolean;
-  attributes?: ProductAttribute[];
+  attributes?: ProductAttribute[] | Record<string, string>;
   weight?: number;
   dimensions?: {
     length?: number;

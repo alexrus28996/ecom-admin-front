@@ -183,15 +183,7 @@ export class ProductsService {
       { categoryId, productIds }
     );
   }
-
-  bulkUpdateStatus(productIds: string[], isActive: boolean): Observable<{ matched: number; modified: number }> {
-    return this.http.post<{ matched: number; modified: number }>(
-      `${this.baseUrl}/admin/products/status-bulk`,
-      { productIds, isActive }
-    );
-  }
-
-  // Product References (for delete impact analysis)
+    // Product References (for delete impact analysis)
   getProductReferences(id: string): Observable<{ inventory: number; reviews: number; orders: number; shipments: number }> {
     return this.http.get<{ inventory: number; reviews: number; orders: number; shipments: number }>(
       `${this.baseUrl}/admin/products/${id}/references`

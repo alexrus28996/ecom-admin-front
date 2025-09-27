@@ -1,18 +1,24 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UntypedFormArray, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
-import { ProductsService, ProductDetail, ProductImage, ProductInput, ProductVariant, ProductAttribute } from '../../services/products.service';
+import { ProductsService, ProductDetail, ProductImage, ProductVariant, ProductAttribute } from '../../services/products.service';
 import { UploadService } from '../../services/upload.service';
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { ToastService } from '../../core/toast.service';
 import { TranslateService } from '@ngx-translate/core';
 import { AdminService } from '../../services/admin.service';
+import { BrandsService } from '../../services/brands.service';
 import { Subject, combineLatest, takeUntil } from 'rxjs';
-import { map, distinctUntilChanged } from 'rxjs/operators';
+import { map, distinctUntilChanged, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { PermissionsService } from '../../core/permissions.service';
 
 interface CategoryOption {
+  id: string;
+  name: string;
+}
+
+interface BrandOption {
   id: string;
   name: string;
 }
@@ -36,10 +42,26 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     description: [''],
     longDescription: [''],
     price: [0, [Validators.required, Validators.min(0)]],
+    compareAtPrice: [null, [Validators.min(0)]],
+    costPrice: [null, [Validators.min(0)]],
     currency: ['USD', Validators.required],
     stock: [0, [Validators.min(0)]],
     isActive: [true],
     category: [''],
+    brand: [''],
+    vendor: [''],
+    barcode: [''],
+    taxClass: [''],
+    tags: [''],
+    requiresShipping: [true],
+    weight: [null, [Validators.min(0)]],
+    weightUnit: ['kg'],
+    dimensions: this.fb.group({
+      length: [null, [Validators.min(0)]],
+      width: [null, [Validators.min(0)]],
+      height: [null, [Validators.min(0)]],
+      unit: ['cm']
+    }),
     metaTitle: [''],
     metaDescription: [''],
     images: this.fb.array([]),
@@ -55,14 +77,25 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
     { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' }
   ];
+  readonly weightUnits = ['kg', 'g', 'lb', 'oz'];
+  readonly dimensionUnits = ['cm', 'in'];
   defaultProductImage = 'assets/images/product-placeholder.png';
   categories: CategoryOption[] = [];
+  brands: BrandOption[] = [];
 
   readonly productFormPermissions$ = combineLatest({
-    create: this.permissions.can$('products.create'),
-    update: this.permissions.can$('products.update')
-  });
+    create: this.permissions.can$('product:create'),
+    update: this.permissions.can$('product:edit')
+  }).pipe(
+    tap((perms) => {
+      this.currentPermissions = perms;
+      this.permissionsLoaded = true;
+    })
+  );
   canEditProduct = true;
+  private currentPermissions: { create: boolean; update: boolean } = { create: false, update: false };
+  private permissionsLoaded = false;
+  private permissionNoticeShown = false;
 
   private readonly destroy$ = new Subject<void>();
 
@@ -74,6 +107,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     private readonly toast: ToastService,
     private readonly translate: TranslateService,
     private readonly adminService: AdminService,
+    private readonly brandsService: BrandsService,
     private readonly cdr: ChangeDetectorRef,
     private readonly uploads: UploadService,
     private readonly permissions: PermissionsService
@@ -90,6 +124,7 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       });
     this.watchPermissions();
     this.loadCategories();
+    this.loadBrands();
     if (this.id) {
       this.fetchProduct(this.id);
     } else {
@@ -114,6 +149,10 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
   get variants(): UntypedFormArray {
     return this.form.get('variants') as UntypedFormArray;
+  }
+
+  get dimensions(): UntypedFormGroup {
+    return this.form.get('dimensions') as UntypedFormGroup;
   }
 
   get variantSummary() {
@@ -152,8 +191,13 @@ export class ProductFormComponent implements OnInit, OnDestroy {
         this.canEditProduct = !!canEdit;
         if (this.canEditProduct) {
           this.form.enable({ emitEvent: false });
+          this.permissionNoticeShown = false;
         } else {
           this.form.disable({ emitEvent: false });
+          if (this.permissionsLoaded && !this.permissionNoticeShown) {
+            this.toast.show(this.translate.instant('products.permissions.editDenied'), 'info');
+            this.permissionNoticeShown = true;
+          }
         }
         this.cdr.markForCheck();
       });
@@ -315,6 +359,23 @@ export class ProductFormComponent implements OnInit, OnDestroy {
             fallbackCurrency
           );
           const priceAmount = priceAmountRaw ?? 0;
+          const compareAtPrice = this.parseNumber((product as any).compareAtPrice ?? (product as any).comparePrice);
+          const costPrice = this.parseNumber((product as any).costPrice);
+          const vendor = (product as any).vendor || '';
+          const barcode = (product as any).barcode || '';
+          const taxClass = (product as any).taxClass || '';
+          const requiresShipping = (product as any).requiresShipping;
+          const weight = this.parseNumber((product as any).weight);
+          const weightUnit = (product as any).weightUnit || 'kg';
+          const dimensionsRaw = (product as any).dimensions || {};
+          const dimensionLength = this.parseNumber((dimensionsRaw as any).length);
+          const dimensionWidth = this.parseNumber((dimensionsRaw as any).width);
+          const dimensionHeight = this.parseNumber((dimensionsRaw as any).height);
+          const dimensionUnit = (dimensionsRaw as any).unit || 'cm';
+          const tagsArray = Array.isArray((product as any).tags) ? (product as any).tags : [];
+          const brandId = typeof (product as any).brand === 'object'
+            ? (product as any).brand?._id || (product as any).brand?.id || ''
+            : (product as any).brand || '';
 
           this.form.patchValue({
             name: product.name,
@@ -322,10 +383,26 @@ export class ProductFormComponent implements OnInit, OnDestroy {
             description: product.description || '',
             longDescription: product.longDescription || '',
             price: priceAmount,
+            compareAtPrice,
+            costPrice,
             currency: priceCurrency,
             stock: product.stock ?? 0,
             isActive: product.isActive ?? true,
             category: typeof product.category === 'object' ? product.category?._id || '' : product.category || '',
+            brand: brandId,
+            vendor,
+            barcode,
+            taxClass,
+            tags: tagsArray.join(', '),
+            requiresShipping: requiresShipping !== null && requiresShipping !== undefined ? !!requiresShipping : true,
+            weight: weight ?? null,
+            weightUnit,
+            dimensions: {
+              length: dimensionLength ?? null,
+              width: dimensionWidth ?? null,
+              height: dimensionHeight ?? null,
+              unit: dimensionUnit
+            },
             sku: product.sku || '',
             metaTitle: product.metaTitle || '',
             metaDescription: product.metaDescription || ''
@@ -397,6 +474,21 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     const currency = raw.currency || 'USD';
     const priceAmount = this.parseNumber(raw.price) ?? 0;
     const stockAmount = this.parseNumber(raw.stock) ?? 0;
+    const compareAtPrice = this.parseNumber(raw.compareAtPrice);
+    const costPrice = this.parseNumber(raw.costPrice);
+    const tags = typeof raw.tags === 'string'
+      ? raw.tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => !!tag)
+      : Array.isArray(raw.tags)
+        ? raw.tags.filter((tag: string) => typeof tag === 'string' && tag.trim().length).map((tag: string) => tag.trim())
+        : [];
+    const requiresShipping = raw.requiresShipping !== null && raw.requiresShipping !== undefined ? !!raw.requiresShipping : true;
+    const weight = this.parseNumber(raw.weight);
+    const weightUnit = raw.weightUnit || 'kg';
+    const dimensionsRaw = raw.dimensions || {};
+    const dimensionLength = this.parseNumber(dimensionsRaw.length);
+    const dimensionWidth = this.parseNumber(dimensionsRaw.width);
+    const dimensionHeight = this.parseNumber(dimensionsRaw.height);
+    const dimensionUnit = dimensionsRaw.unit || 'cm';
 
     const images = (raw.images as Array<ProductImage>)
       .filter((img) => img?.url)
@@ -408,14 +500,22 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       .map((variant) => this.cleanVariantForSave(variant))
       .filter((variant) => this.variantHasContent(variant));
 
-    const payload: Partial<ProductInput> = {
+    const payload: Record<string, any> = {
       name: (raw.name || '').trim(),
       slug: (raw.slug || '').trim() || this.generateSlugFromName(raw.name),
       price: priceAmount,
       currency,
       stock: stockAmount,
-      isActive: raw.isActive ?? true
+      isActive: raw.isActive ?? true,
+      requiresShipping
     };
+
+    if (compareAtPrice !== undefined) {
+      payload.compareAtPrice = compareAtPrice;
+    }
+    if (costPrice !== undefined) {
+      payload.costPrice = costPrice;
+    }
 
     const sku = (raw.sku || '').trim();
     if (sku) {
@@ -430,6 +530,53 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     if (raw.category) {
       payload.category = raw.category as any;
     }
+
+    const brandIdValue = (raw.brand || '').trim();
+    if (brandIdValue) {
+      payload.brand = brandIdValue;
+    }
+
+    const vendorValue = (raw.vendor || '').trim();
+    if (vendorValue) {
+      payload.vendor = vendorValue;
+    }
+
+    const barcodeValue = (raw.barcode || '').trim();
+    if (barcodeValue) {
+      payload.barcode = barcodeValue;
+    }
+
+    const taxClassValue = (raw.taxClass || '').trim();
+    if (taxClassValue) {
+      payload.taxClass = taxClassValue;
+    }
+
+    if (tags.length) {
+      payload.tags = tags;
+    }
+
+    if (weight !== undefined) {
+      payload.weight = weight;
+    }
+    if (weightUnit) {
+      payload.weightUnit = weightUnit;
+    }
+
+    const dimensionPayload: Record<string, number | string> = {};
+    if (dimensionLength !== undefined) {
+      dimensionPayload.length = dimensionLength;
+    }
+    if (dimensionWidth !== undefined) {
+      dimensionPayload.width = dimensionWidth;
+    }
+    if (dimensionHeight !== undefined) {
+      dimensionPayload.height = dimensionHeight;
+    }
+    if (Object.keys(dimensionPayload).length) {
+      dimensionPayload.unit = dimensionUnit;
+      payload.dimensions = dimensionPayload;
+    }
+
     if (images.length) {
       payload.images = images;
     }
@@ -479,8 +626,8 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       });
   }
 
-  private buildVariantPayload(value: any): Partial<ProductVariant> {
-    const variant: Partial<ProductVariant> = {};
+  private buildVariantPayload(value: any): Record<string, any> {
+    const variant: Record<string, any> = {};
 
     if (value?._id) {
       variant._id = value._id;
@@ -500,9 +647,9 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       variant.isActive = !!value.isActive;
     }
 
-    const attrs = this.mapKeyValueArray(value?.attributes);
-    if (attrs.length) {
-      variant.attributes = attrs;
+    const attributeRecord = this.keyValueArrayToRecord(value?.attributes);
+    if (Object.keys(attributeRecord).length) {
+      variant.attributes = attributeRecord;
     }
 
     const priceAmount = this.parseNumber(value?.price);
@@ -586,17 +733,13 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       .filter((attr) => !!attr.key);
   }
 
-  private cleanVariantForSave(input: Partial<ProductVariant>): ProductVariant {
-    const attributes = this.normalizeAttributesInput(input.attributes as any).map((attr) => ({
-      key: attr.key,
-      value: attr.value
-    }));
+  private cleanVariantForSave(input: Partial<ProductVariant>): Record<string, any> {
     const stock = this.parseNumber(input.stock);
+    const attributeRecord = this.keyValueArrayToRecord((input as any).attributes);
 
-    const variant: ProductVariant = {
+    const variant: Record<string, any> = {
       stock: stock ?? 0,
-      isActive: typeof input.isActive === 'boolean' ? input.isActive : true,
-      attributes
+      isActive: typeof input.isActive === 'boolean' ? input.isActive : true
     };
 
     if (input._id) {
@@ -606,6 +749,10 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     const sku = typeof input.sku === 'string' ? input.sku.trim() : '';
     if (sku) {
       variant.sku = sku;
+    }
+
+    if (Object.keys(attributeRecord).length) {
+      variant.attributes = attributeRecord;
     }
 
     const priceAmount = this.extractPriceValue(input.price);
@@ -640,8 +787,18 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     if (typeof variant.stock === 'number' && variant.stock > 0) {
       return true;
     }
-    if (Array.isArray(variant.attributes) && variant.attributes.some((attr) => attr.key && attr.key.trim().length > 0)) {
-      return true;
+    if (variant.attributes) {
+      if (Array.isArray(variant.attributes)) {
+        if (variant.attributes.some((attr: any) => attr?.key && attr.key.toString().trim().length > 0)) {
+          return true;
+        }
+      } else if (typeof variant.attributes === 'object') {
+        const hasAttribute = Object.entries(variant.attributes as Record<string, any>)
+          .some(([key, value]) => key.trim().length > 0 && value !== undefined && value !== null && value.toString().trim().length > 0);
+        if (hasAttribute) {
+          return true;
+        }
+      }
     }
     if (variant.isActive === false) {
       return true;
@@ -659,6 +816,49 @@ export class ProductFormComponent implements OnInit, OnDestroy {
         value: (entry?.value ?? '').toString()
       }))
       .filter((entry) => !!entry.key);
+  }
+
+  private keyValueArrayToRecord(entries?: Array<{ key?: string; value?: string }> | Record<string, any>): Record<string, string> {
+    const record: Record<string, string> = {};
+    if (Array.isArray(entries)) {
+      this.mapKeyValueArray(entries).forEach((entry) => {
+        record[entry.key] = entry.value;
+      });
+    } else if (entries && typeof entries === 'object') {
+      Object.entries(entries).forEach(([key, value]) => {
+        const trimmedKey = key.trim();
+        if (trimmedKey) {
+          record[trimmedKey] = value === undefined || value === null ? '' : value.toString();
+        }
+      });
+    }
+    return record;
+  }
+
+  private loadBrands(): void {
+    this.brandsService
+      .getBrands({ limit: 1000 } as any)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          const rawItems = Array.isArray((res as any)?.items)
+            ? (res as any).items
+            : Array.isArray((res as any)?.data)
+              ? (res as any).data
+              : [];
+          this.brands = rawItems
+            .map((brand: any) => ({ id: brand?._id || brand?.id, name: brand?.name || '' }))
+            .filter((brand: BrandOption) => !!brand.id && !!brand.name)
+            .sort((a: BrandOption, b: BrandOption) => a.name.localeCompare(b.name));
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          this.toast.error(this.translate.instant('products.messages.errors.brandsLoad'));
+          if (!environment.production) {
+            console.error('Failed to load brands', err);
+          }
+        }
+      });
   }
 
   private loadCategories(): void {
@@ -685,15 +885,17 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       });
   }
 
-  private cleanProductPayload(payload: Partial<ProductInput>): Partial<ProductInput> {
-    const result: Partial<ProductInput> = { ...payload };
-    delete (result as any)._id;
-    delete (result as any).createdAt;
-    delete (result as any).updatedAt;
+  private cleanProductPayload(payload: Record<string, any>): Record<string, any> {
+    const result: Record<string, any> = { ...payload };
+    delete result._id;
+    delete result.createdAt;
+    delete result.updatedAt;
 
     const priceValue = this.extractPriceValue(result.price);
     if (priceValue !== undefined) {
       result.price = priceValue;
+    } else {
+      delete result.price;
     }
 
     if (typeof result.currency === 'string') {
@@ -703,39 +905,125 @@ export class ProductFormComponent implements OnInit, OnDestroy {
 
     if (Array.isArray(result.images)) {
       result.images = result.images
-        .filter((image) => !!image?.url)
-        .map((image) => ({ url: image.url, alt: image.alt || undefined }));
+        .filter((image: ProductImage) => !!image?.url)
+        .map((image: ProductImage) => ({ url: image.url, alt: image.alt || undefined }));
       if (!result.images.length) {
         delete result.images;
       }
     }
 
     if (Array.isArray(result.attributes)) {
-      result.attributes = result.attributes
-        .map((attr) => ({
-          key: (attr?.key ?? '').toString().trim(),
-          value: (attr?.value ?? '').toString()
-        }))
-        .filter((attr) => !!attr.key);
-      if (!result.attributes.length) {
+      const attributeRecord = this.keyValueArrayToRecord(result.attributes as Array<{ key?: string; value?: string }>);
+      if (Object.keys(attributeRecord).length) {
+        result.attributes = attributeRecord;
+      } else {
         delete result.attributes;
       }
     }
 
     if (Array.isArray(result.variants)) {
       result.variants = result.variants
-        .map((variant) => this.cleanVariantForSave(variant))
-        .filter((variant) => this.variantHasContent(variant));
+        .map((variant: any) => this.cleanVariantForSave(variant))
+        .filter((variant: any) => this.variantHasContent(variant));
       if (!result.variants.length) {
         delete result.variants;
       }
     }
 
-    if (!result.metaTitle) {
+    const compareAtNumber = this.parseNumber(result.compareAtPrice);
+    if (compareAtNumber !== undefined) {
+      result.compareAtPrice = compareAtNumber;
+    } else {
+      delete result.compareAtPrice;
+    }
+
+    const costPriceNumber = this.parseNumber(result.costPrice);
+    if (costPriceNumber !== undefined) {
+      result.costPrice = costPriceNumber;
+    } else {
+      delete result.costPrice;
+    }
+
+    const weightNumber = this.parseNumber(result.weight);
+    if (weightNumber !== undefined) {
+      result.weight = weightNumber;
+    } else {
+      delete result.weight;
+    }
+
+    if (typeof result.weightUnit === 'string') {
+      const trimmedUnit = result.weightUnit.trim();
+      if (trimmedUnit) {
+        result.weightUnit = trimmedUnit;
+      } else {
+        delete result.weightUnit;
+      }
+    }
+
+    if (result.dimensions && typeof result.dimensions === 'object') {
+      const dims = result.dimensions as Record<string, any>;
+      const cleaned: Record<string, number | string> = {};
+      const lengthValue = this.parseNumber(dims.length);
+      const widthValue = this.parseNumber(dims.width);
+      const heightValue = this.parseNumber(dims.height);
+      if (lengthValue !== undefined) cleaned.length = lengthValue;
+      if (widthValue !== undefined) cleaned.width = widthValue;
+      if (heightValue !== undefined) cleaned.height = heightValue;
+      const unitValue = typeof dims.unit === 'string' && dims.unit.trim().length ? dims.unit.trim() : undefined;
+      if (unitValue) {
+        cleaned.unit = unitValue;
+      }
+      if (Object.keys(cleaned).length) {
+        result.dimensions = cleaned;
+      } else {
+        delete result.dimensions;
+      }
+    }
+
+    if (typeof result.brand === 'string') {
+      result.brand = result.brand.trim();
+      if (!result.brand) {
+        delete result.brand;
+      }
+    }
+
+    if (typeof result.vendor === 'string') {
+      result.vendor = result.vendor.trim();
+      if (!result.vendor) {
+        delete result.vendor;
+      }
+    }
+
+    if (typeof result.barcode === 'string') {
+      result.barcode = result.barcode.trim();
+      if (!result.barcode) {
+        delete result.barcode;
+      }
+    }
+
+    if (typeof result.taxClass === 'string') {
+      result.taxClass = result.taxClass.trim();
+      if (!result.taxClass) {
+        delete result.taxClass;
+      }
+    }
+
+    if (Array.isArray(result.tags)) {
+      result.tags = result.tags
+        .map((tag: string) => (tag || '').toString().trim())
+        .filter((tag: string) => !!tag);
+      if (!result.tags.length) {
+        delete result.tags;
+      }
+    } else {
+      delete result.tags;
+    }
+
+    if (result.metaTitle === '') {
       delete result.metaTitle;
     }
 
-    if (!result.metaDescription) {
+    if (result.metaDescription === '') {
       delete result.metaDescription;
     }
 
@@ -747,9 +1035,14 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       delete result.description;
     }
 
-    if (!result.tags || !result.tags.length) {
-      delete result.tags;
+    if (typeof result.category === 'string') {
+      result.category = result.category.trim();
+      if (!result.category) {
+        delete result.category;
+      }
     }
+
+    result.requiresShipping = result.requiresShipping === undefined ? true : !!result.requiresShipping;
 
     return result;
   }

@@ -330,8 +330,25 @@ export class ProductVariantsDialogComponent implements OnInit, OnDestroy {
       .filter((entry) => !!entry.key);
   }
 
-  private buildVariantPayload(raw: any): Partial<ProductVariant> {
-    const variant: Partial<ProductVariant> = {};
+  private keyValueArrayToRecord(entries?: Array<{ key?: string; value?: string }> | Record<string, any>): Record<string, string> {
+    const record: Record<string, string> = {};
+    if (Array.isArray(entries)) {
+      this.mapKeyValueArray(entries).forEach((entry) => {
+        record[entry.key] = entry.value;
+      });
+    } else if (entries && typeof entries === 'object') {
+      Object.entries(entries).forEach(([key, value]) => {
+        const trimmedKey = key.trim();
+        if (trimmedKey) {
+          record[trimmedKey] = value === undefined || value === null ? '' : value.toString();
+        }
+      });
+    }
+    return record;
+  }
+
+  private buildVariantPayload(raw: any): Record<string, any> {
+    const variant: Record<string, any> = {};
 
     if (raw?._id) {
       variant._id = raw._id;
@@ -351,9 +368,9 @@ export class ProductVariantsDialogComponent implements OnInit, OnDestroy {
       variant.isActive = !!raw.isActive;
     }
 
-    const attributes = this.mapKeyValueArray(raw?.attributes);
-    if (attributes.length) {
-      variant.attributes = attributes;
+    const attributeRecord = this.keyValueArrayToRecord(raw?.attributes);
+    if (Object.keys(attributeRecord).length) {
+      variant.attributes = attributeRecord;
     }
 
     const priceAmount = this.parseNumber(raw?.price);
@@ -369,17 +386,13 @@ export class ProductVariantsDialogComponent implements OnInit, OnDestroy {
     return variant;
   }
 
-  private cleanVariantForSave(input: Partial<ProductVariant>): ProductVariant {
-    const attributes = this.normalizeAttributesInput(input.attributes as any).map((attr) => ({
-      key: attr.key,
-      value: attr.value
-    }));
+  private cleanVariantForSave(input: Partial<ProductVariant>): Record<string, any> {
+    const attributeRecord = this.keyValueArrayToRecord((input as any).attributes);
     const stock = this.parseNumber(input.stock);
 
-    const variant: ProductVariant = {
+    const variant: Record<string, any> = {
       stock: stock ?? 0,
-      isActive: typeof input.isActive === 'boolean' ? input.isActive : true,
-      attributes
+      isActive: typeof input.isActive === 'boolean' ? input.isActive : true
     };
 
     if (input._id) {
@@ -389,6 +402,10 @@ export class ProductVariantsDialogComponent implements OnInit, OnDestroy {
     const sku = typeof input.sku === 'string' ? input.sku.trim() : '';
     if (sku) {
       variant.sku = sku;
+    }
+
+    if (Object.keys(attributeRecord).length) {
+      variant.attributes = attributeRecord;
     }
 
     const priceAmount = this.extractPriceValue(input.price);
@@ -423,8 +440,18 @@ export class ProductVariantsDialogComponent implements OnInit, OnDestroy {
     if (typeof variant.stock === 'number' && variant.stock > 0) {
       return true;
     }
-    if (Array.isArray(variant.attributes) && variant.attributes.some((attr) => attr.key && attr.key.trim().length > 0)) {
-      return true;
+    if (variant.attributes) {
+      if (Array.isArray(variant.attributes)) {
+        if (variant.attributes.some((attr: any) => attr?.key && attr.key.toString().trim().length > 0)) {
+          return true;
+        }
+      } else if (typeof variant.attributes === 'object') {
+        const hasAttribute = Object.entries(variant.attributes as Record<string, any>)
+          .some(([key, value]) => key.trim().length > 0 && value !== undefined && value !== null && value.toString().trim().length > 0);
+        if (hasAttribute) {
+          return true;
+        }
+      }
     }
     if (variant.isActive === false) {
       return true;
