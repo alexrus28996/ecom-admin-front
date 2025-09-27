@@ -28,12 +28,26 @@
     "columns": {
       "actions": "Actions"
     },
+    "table": {
+      "name": "Name",
+      "sku": "SKU",
+      "price": "Price",
+      "brand": "Brand",
+      "categories": "Categories",
+      "stock": "Stock",
+      "actions": "Actions"
+    },
     "actions": {
       "refresh": "Refresh",
       "manageVariants": "Manage variants",
       "edit": "Edit product",
       "delete": "Delete product",
-      "duplicate": "Duplicate product"
+      "duplicate": "Duplicate product",
+      "disabled": {
+        "loading": "Action disabled while data is loading.",
+        "missingProduct": "Product information is still loading.",
+        "bulkOperation": "Finish the current bulk action before continuing."
+      }
     },
     "permissions": {
       "loading": "Checking permissions...",
@@ -95,6 +109,22 @@
     "stats": {
       "total": "Total",
       "active": "Active"
+    },
+    "bulk": {
+      "selected": "{{ count }} selected",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "delete": {
+        "action": "Delete",
+        "title": "Delete selected products",
+        "message": "Delete {{ count }} selected products? This cannot be undone.",
+        "confirm": "Delete"
+      },
+      "activated": "{{ count }} products activated.",
+      "deactivated": "{{ count }} products deactivated.",
+      "deleted": "Deleted {{ count }} products.",
+      "deleteError": "Failed to delete selected products.",
+      "error": "Bulk action failed. Please try again."
     },
     "empty": {
       "title": "No products found",

@@ -18,12 +18,19 @@
   "products": {
     "title": "Products",
     "subtitle": "Manage your entire catalog from one place.",
+    "add": "उत्पाद जोड़ें",
     "addButton": "Add Product",
     "actions": {
       "refresh": "Refresh",
       "manageVariants": "Manage variants",
       "edit": "Edit product",
-      "delete": "Delete product"
+      "delete": "Delete product",
+      "duplicate": "Duplicate product",
+      "disabled": {
+        "loading": "डेटा लोड होने तक यह क्रिया उपलब्ध नहीं है।",
+        "missingProduct": "उत्पाद जानकारी अभी उपलब्ध नहीं है।",
+        "bulkOperation": "कृपया चल रही बल्क क्रिया के पूर्ण होने की प्रतीक्षा करें।"
+      }
     },
     "permissions": {
       "loading": "अनुमतियाँ जाँची जा रही हैं...",
@@ -53,13 +60,25 @@
     },
     "filters": {
       "search": {
-        "label": "Search products",
-        "placeholder": "Filter by name, SKU, or description"
+        "label": "उत्पाद खोजें",
+        "placeholder": "नाम, SKU या विवरण से फ़िल्टर करें"
       },
       "category": {
-        "label": "Category",
-        "any": "All categories"
-      }
+        "label": "श्रेणी",
+        "any": "सभी श्रेणियाँ"
+      },
+      "price": {
+        "min": "न्यूनतम मूल्य",
+        "max": "अधिकतम मूल्य"
+      },
+      "status": {
+        "label": "स्थिति",
+        "any": "कोई भी स्थिति",
+        "active": "सक्रिय",
+        "inactive": "निष्क्रिय"
+      },
+      "advanced": "उन्नत फ़िल्टर",
+      "clear": "फ़िल्टर साफ़ करें"
     },
     "table": {
       "name": "Name",
@@ -67,10 +86,44 @@
       "price": "Price",
       "brand": "Brand",
       "categories": "Categories",
+      "stock": "Stock",
       "createdAt": "Created",
       "actions": "Actions"
     },
-    "empty": "No products found. Try refining your filters.",
+    "stock": {
+      "inStock": "स्टॉक में",
+      "lowStock": "कम स्टॉक",
+      "outOfStock": "स्टॉक समाप्त"
+    },
+    "status": {
+      "active": "सक्रिय",
+      "inactive": "निष्क्रिय"
+    },
+    "stats": {
+      "total": "कुल",
+      "active": "सक्रिय"
+    },
+    "empty": {
+      "title": "कोई उत्पाद नहीं मिला",
+      "subtitle": "अपने फ़िल्टर बदलें या पहला उत्पाद बनाएँ",
+      "action": "उत्पाद जोड़ें"
+    },
+    "bulk": {
+      "selected": "{{ count }} चयनित",
+      "activate": "सक्रिय करें",
+      "deactivate": "निष्क्रिय करें",
+      "delete": {
+        "action": "हटाएँ",
+        "title": "चयनित उत्पाद हटाएँ",
+        "message": "{{ count }} चयनित उत्पाद हटाएँ? यह क्रिया वापस नहीं की जा सकती।",
+        "confirm": "हटाएँ"
+      },
+      "activated": "{{ count }} उत्पाद सक्रिय किए गए।",
+      "deactivated": "{{ count }} उत्पाद निष्क्रिय किए गए।",
+      "deleted": "{{ count }} उत्पाद हटाए गए।",
+      "deleteError": "चयनित उत्पाद हटाए नहीं जा सके।",
+      "error": "बल्क क्रिया विफल हुई। कृपया फिर से प्रयास करें।"
+    },
     "delete": {
       "title": "Delete product",
       "message": "Delete product \"{{ name }}\"? This action cannot be undone.",

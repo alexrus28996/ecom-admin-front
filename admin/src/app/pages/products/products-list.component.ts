@@ -26,6 +26,16 @@ interface ProductPermissionState {
   variants: boolean;
 }
 
+type ProductAction =
+  | 'refresh'
+  | 'import'
+  | 'export'
+  | 'create'
+  | 'edit'
+  | 'variants'
+  | 'duplicate'
+  | 'delete';
+
 @Component({
   selector: 'app-products-list',
   templateUrl: './products-list.component.html',
@@ -322,6 +332,105 @@ export class ProductsListComponent implements OnInit, OnDestroy {
     }
 
     return labels.length ? labels.join(', ') : this.translate.instant('common.empty');
+  }
+
+  actionTooltipKey(
+    action: ProductAction,
+    perms: ProductPermissionState,
+    product?: ProductSummary | null
+  ): string | null {
+    return this.resolveActionState(action, perms, product ?? undefined).reasonKey;
+  }
+
+  isActionDisabled(
+    action: ProductAction,
+    perms: ProductPermissionState,
+    product?: ProductSummary | null
+  ): boolean {
+    return this.resolveActionState(action, perms, product ?? undefined).disabled;
+  }
+
+  onDisabledAction(
+    event: Event,
+    action: ProductAction,
+    perms: ProductPermissionState,
+    product?: ProductSummary | null
+  ): void {
+    const state = this.resolveActionState(action, perms, product ?? undefined);
+    if (!state.disabled || !state.reasonKey) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    this.toast.show(this.translate.instant(state.reasonKey), 'info');
+  }
+
+  private resolveActionState(
+    action: ProductAction,
+    perms: ProductPermissionState,
+    product?: ProductSummary
+  ): { disabled: boolean; reasonKey: string | null } {
+    if (action === 'refresh') {
+      return this.loading
+        ? { disabled: true, reasonKey: 'products.actions.disabled.loading' }
+        : { disabled: false, reasonKey: null };
+    }
+
+    if (!this.permissionsLoaded) {
+      return { disabled: true, reasonKey: 'products.permissions.loading' };
+    }
+
+    if (this.loading) {
+      return { disabled: true, reasonKey: 'products.actions.disabled.loading' };
+    }
+
+    if (!product?._id && ['edit', 'variants', 'duplicate', 'delete'].includes(action)) {
+      return { disabled: true, reasonKey: 'products.actions.disabled.missingProduct' };
+    }
+
+    switch (action) {
+      case 'create':
+        if (!perms.create) {
+          return { disabled: true, reasonKey: 'products.permissions.createDenied' };
+        }
+        break;
+      case 'import':
+        if (!perms.create) {
+          return { disabled: true, reasonKey: 'products.permissions.importDenied' };
+        }
+        break;
+      case 'export':
+        if (!perms.update) {
+          return { disabled: true, reasonKey: 'products.permissions.exportDenied' };
+        }
+        break;
+      case 'edit':
+        if (!perms.update) {
+          return { disabled: true, reasonKey: 'products.permissions.editDenied' };
+        }
+        break;
+      case 'variants':
+        if (!perms.variants) {
+          return { disabled: true, reasonKey: 'products.permissions.variantsDenied' };
+        }
+        break;
+      case 'duplicate':
+        if (!perms.create) {
+          return { disabled: true, reasonKey: 'products.permissions.createDenied' };
+        }
+        break;
+      case 'delete':
+        if (this.bulkOperationInProgress) {
+          return { disabled: true, reasonKey: 'products.actions.disabled.bulkOperation' };
+        }
+        if (!perms.delete) {
+          return { disabled: true, reasonKey: 'products.permissions.deleteDenied' };
+        }
+        break;
+    }
+
+    return { disabled: false, reasonKey: null };
   }
 
   // Bulk Selection Methods

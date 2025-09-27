@@ -29,24 +29,48 @@
           (change)="handleFileImport($event)"
           hidden
         />
-        <button mat-stroked-button color="primary" type="button" (click)="onSubmit()" [disabled]="loading">
-          <mat-icon>refresh</mat-icon>
-          {{ 'products.actions.refresh' | translate }}
-        </button>
-        <button mat-stroked-button color="accent" type="button" (click)="onImportClick()" [disabled]="loading">
-          <mat-icon>file_upload</mat-icon>
-          {{ 'products.import.title' | translate }}
-        </button>
-        <button
-          mat-stroked-button
-          color="accent"
-          type="button"
-          [disabled]="loading"
-          [matMenuTriggerFor]="exportMenu"
+        <span
+          class="action-tooltip-wrapper"
+          [matTooltip]="actionTooltipKey('refresh', perms) | translate"
+          [matTooltipDisabled]="!actionTooltipKey('refresh', perms)"
+          [class.is-disabled]="isActionDisabled('refresh', perms)"
+          (click)="onDisabledAction($event, 'refresh', perms)"
         >
-          <mat-icon>file_download</mat-icon>
-          {{ 'products.export.title' | translate }}
-        </button>
+          <button mat-stroked-button color="primary" type="button" (click)="onSubmit()" [disabled]="isActionDisabled('refresh', perms)">
+            <mat-icon>refresh</mat-icon>
+            {{ 'products.actions.refresh' | translate }}
+          </button>
+        </span>
+        <span
+          class="action-tooltip-wrapper"
+          [matTooltip]="actionTooltipKey('import', perms) | translate"
+          [matTooltipDisabled]="!actionTooltipKey('import', perms)"
+          [class.is-disabled]="isActionDisabled('import', perms)"
+          (click)="onDisabledAction($event, 'import', perms)"
+        >
+          <button mat-stroked-button color="accent" type="button" (click)="onImportClick()" [disabled]="isActionDisabled('import', perms)">
+            <mat-icon>file_upload</mat-icon>
+            {{ 'products.import.title' | translate }}
+          </button>
+        </span>
+        <span
+          class="action-tooltip-wrapper"
+          [matTooltip]="actionTooltipKey('export', perms) | translate"
+          [matTooltipDisabled]="!actionTooltipKey('export', perms)"
+          [class.is-disabled]="isActionDisabled('export', perms)"
+          (click)="onDisabledAction($event, 'export', perms)"
+        >
+          <button
+            mat-stroked-button
+            color="accent"
+            type="button"
+            [disabled]="isActionDisabled('export', perms)"
+            [matMenuTriggerFor]="exportMenu"
+          >
+            <mat-icon>file_download</mat-icon>
+            {{ 'products.export.title' | translate }}
+          </button>
+        </span>
         <mat-menu #exportMenu="matMenu">
           <button mat-menu-item type="button" (click)="startExport('json')">
             <mat-icon>code</mat-icon>
@@ -57,16 +81,24 @@
             {{ 'products.export.options.csv' | translate }}
           </button>
         </mat-menu>
-        <button
-          mat-raised-button
-          color="primary"
-          type="button"
-          (click)="onAddProduct()"
-          [disabled]="loading"
+        <span
+          class="action-tooltip-wrapper"
+          [matTooltip]="actionTooltipKey('create', perms) | translate"
+          [matTooltipDisabled]="!actionTooltipKey('create', perms)"
+          [class.is-disabled]="isActionDisabled('create', perms)"
+          (click)="onDisabledAction($event, 'create', perms)"
         >
-          <mat-icon>add</mat-icon>
-          {{ 'products.add' | translate }}
-        </button>
+          <button
+            mat-raised-button
+            color="primary"
+            type="button"
+            (click)="onAddProduct()"
+            [disabled]="isActionDisabled('create', perms)"
+          >
+            <mat-icon>add</mat-icon>
+            {{ 'products.add' | translate }}
+          </button>
+        </span>
       </div>
     </div>
   </header>
@@ -216,7 +248,7 @@
         </ng-container>
 
         <ng-container matColumnDef="stock">
-          <th mat-header-cell *matHeaderCellDef>{{ 'products.stock' | translate }}</th>
+          <th mat-header-cell *matHeaderCellDef>{{ 'products.table.stock' | translate }}</th>
           <td mat-cell *matCellDef="let product">
             <div class="stock-cell">
               <span class="stock-cell__value">{{ product.stock || 0 }}</span>
@@ -231,45 +263,73 @@
           <th mat-header-cell *matHeaderCellDef class="actions-header">{{ 'products.columns.actions' | translate }}</th>
           <td mat-cell *matCellDef="let product">
             <div class="row-actions">
-              <button
-                mat-icon-button
-                color="primary"
-                type="button"
-                (click)="onEditProduct(product)"
-                [disabled]="loading"
-                matTooltip="{{ 'products.edit' | translate }}"
+              <span
+                class="action-tooltip-wrapper"
+                [matTooltip]="actionTooltipKey('edit', perms, product) | translate"
+                [matTooltipDisabled]="!actionTooltipKey('edit', perms, product)"
+                [class.is-disabled]="isActionDisabled('edit', perms, product)"
+                (click)="onDisabledAction($event, 'edit', perms, product)"
               >
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button
-                mat-icon-button
-                color="accent"
-                type="button"
-                (click)="manageVariants(product)"
-                [disabled]="loading"
-                matTooltip="{{ 'products.actions.manageVariants' | translate }}"
+                <button
+                  mat-icon-button
+                  color="primary"
+                  type="button"
+                  (click)="onEditProduct(product)"
+                  [disabled]="isActionDisabled('edit', perms, product)"
+                >
+                  <mat-icon>edit</mat-icon>
+                </button>
+              </span>
+              <span
+                class="action-tooltip-wrapper"
+                [matTooltip]="actionTooltipKey('variants', perms, product) | translate"
+                [matTooltipDisabled]="!actionTooltipKey('variants', perms, product)"
+                [class.is-disabled]="isActionDisabled('variants', perms, product)"
+                (click)="onDisabledAction($event, 'variants', perms, product)"
               >
-                <mat-icon>tune</mat-icon>
-              </button>
-              <button
-                mat-icon-button
-                type="button"
-                (click)="duplicateProduct(product)"
-                [disabled]="loading"
-                matTooltip="{{ 'products.actions.duplicate' | translate }}"
+                <button
+                  mat-icon-button
+                  color="accent"
+                  type="button"
+                  (click)="manageVariants(product)"
+                  [disabled]="isActionDisabled('variants', perms, product)"
+                >
+                  <mat-icon>tune</mat-icon>
+                </button>
+              </span>
+              <span
+                class="action-tooltip-wrapper"
+                [matTooltip]="actionTooltipKey('duplicate', perms, product) | translate"
+                [matTooltipDisabled]="!actionTooltipKey('duplicate', perms, product)"
+                [class.is-disabled]="isActionDisabled('duplicate', perms, product)"
+                (click)="onDisabledAction($event, 'duplicate', perms, product)"
               >
-                <mat-icon>content_copy</mat-icon>
-              </button>
-              <button
-                mat-icon-button
-                color="warn"
-                type="button"
-                (click)="confirmDelete(product)"
-                [disabled]="loading || bulkOperationInProgress"
-                matTooltip="{{ 'products.actions.delete' | translate }}"
+                <button
+                  mat-icon-button
+                  type="button"
+                  (click)="duplicateProduct(product)"
+                  [disabled]="isActionDisabled('duplicate', perms, product)"
+                >
+                  <mat-icon>content_copy</mat-icon>
+                </button>
+              </span>
+              <span
+                class="action-tooltip-wrapper"
+                [matTooltip]="actionTooltipKey('delete', perms, product) | translate"
+                [matTooltipDisabled]="!actionTooltipKey('delete', perms, product)"
+                [class.is-disabled]="isActionDisabled('delete', perms, product)"
+                (click)="onDisabledAction($event, 'delete', perms, product)"
               >
-                <mat-icon>delete</mat-icon>
-              </button>
+                <button
+                  mat-icon-button
+                  color="warn"
+                  type="button"
+                  (click)="confirmDelete(product)"
+                  [disabled]="isActionDisabled('delete', perms, product)"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </span>
             </div>
           </td>
         </ng-container>
