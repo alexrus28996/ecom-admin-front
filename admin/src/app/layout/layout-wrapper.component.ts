@@ -133,6 +133,7 @@ export class LayoutWrapperComponent implements OnInit {
       { label: this.translate.instant('shell.nav.products'), icon: 'inventory_2', route: '/admin/products', roles: ['admin'] },
       { label: this.translate.instant('shell.nav.admin.orders'), icon: 'receipt_long', route: '/admin/orders', roles: ['admin'] },
       { label: this.translate.instant('shell.nav.admin.users'), icon: 'group', route: '/admin/users', roles: ['admin'] },
+      { label: this.translate.instant('shell.nav.admin.permissions'), icon: 'lock', route: '/admin/permissions', roles: ['admin'] },
       { label: this.translate.instant('shell.nav.admin.categories'), icon: 'category', route: '/admin/categories', roles: ['admin'] },
       { label: this.translate.instant('shell.nav.admin.inventory'), icon: 'warehouse', route: '/admin/inventory', roles: ['admin'] },
       { label: this.translate.instant('shell.nav.admin.returns'), icon: 'assignment_return', route: '/admin/returns', roles: ['admin'] },

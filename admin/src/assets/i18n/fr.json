@@ -943,7 +943,8 @@
         "reviews": "Avis (Admin)",
         "shipments": "Expeditions (Admin)",
         "coupons": "Coupons (Admin)",
-        "settings": "Parametres Admin"
+        "settings": "Parametres Admin",
+        "permissions": "Autorisations (Admin)"
       }
     },
     "navSections": {
@@ -989,6 +990,27 @@
         "email": "admin@example.com"
       }
     }
+  },
+  "breadcrumb": {
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "cart": "Cart",
+    "addresses": "Addresses",
+    "orders": "Orders",
+    "orderDetail": "Order Detail",
+    "products": "Products",
+    "createProduct": "Create Product",
+    "editProduct": "Edit Product",
+    "users": "Users",
+    "roles": "Roles",
+    "returns": "Returns",
+    "inventory": "Inventory",
+    "coupons": "Coupons",
+    "reviews": "Reviews",
+    "shipments": "Shipments",
+    "settings": "Settings",
+    "categories": "Categories",
+    "permissions": "Permissions"
   },
   "inventory": {
     "title": "Inventory",
@@ -1245,6 +1267,54 @@
         "userSuspend": "Suspendre des utilisateurs",
         "settingsUpdate": "Mettre à jour les paramètres"
       }
+    }
+  },
+  "permissionsSettings": {
+    "title": "Gestion des autorisations",
+    "subtitle": "Accordez ou révoquez l'accès aux fonctionnalités pour chaque utilisateur.",
+    "search": {
+      "label": "Rechercher des utilisateurs",
+      "placeholder": "Recherche par nom ou e-mail",
+      "clear": "Effacer la recherche"
+    },
+    "loadingUsers": "Chargement des utilisateurs...",
+    "usersEmpty": "Aucun utilisateur pour cette recherche.",
+    "noRoles": "Aucun rôle attribué",
+    "actions": {
+      "promote": "Promouvoir administrateur",
+      "demote": "Retirer le rôle administrateur",
+      "selectAll": "Tout sélectionner",
+      "clearAll": "Tout effacer",
+      "grantGroup": "Accorder le groupe",
+      "revokeGroup": "Retirer le groupe",
+      "reset": "Réinitialiser",
+      "save": "Enregistrer les modifications"
+    },
+    "summary": {
+      "granted": "autorisations accordées"
+    },
+    "loadingPermissions": "Chargement des autorisations...",
+    "placeholder": "Choisissez un utilisateur pour examiner et ajuster ses autorisations.",
+    "lastAdminWarning": "Retirer cet administrateur laissera l'espace de travail sans administrateurs.",
+    "tooltips": {
+      "productCreate": "Autorise la création de nouveaux produits et leur publication dans le catalogue.",
+      "productEdit": "Autorise la modification des informations, prix et variantes des produits.",
+      "productDelete": "Autorise la suppression de produits du catalogue.",
+      "categoryCreate": "Autorise la création de nouvelles catégories de produits.",
+      "categoryEdit": "Autorise la modification des noms et de la hiérarchie des catégories.",
+      "categoryDelete": "Autorise la suppression de catégories.",
+      "orderView": "Autorise la consultation de toutes les commandes clients et de leur historique.",
+      "orderEdit": "Autorise la mise à jour des statuts, assignations et notes des commandes.",
+      "refundApprove": "Autorise l'approbation des demandes de remboursement.",
+      "refundReject": "Autorise le refus des demandes de remboursement.",
+      "inventoryView": "Autorise la consultation des stocks et emplacements.",
+      "inventoryAdjust": "Autorise l'ajustement manuel des niveaux de stock.",
+      "inventoryAudit": "Autorise l'enregistrement des audits et corrections de stock.",
+      "reportsView": "Autorise l'accès aux tableaux de bord et rapports.",
+      "reportsExport": "Autorise l'export des rapports et extractions de données.",
+      "userInvite": "Autorise l'invitation de nouveaux utilisateurs dans l'espace de travail.",
+      "userSuspend": "Autorise la suspension ou réactivation des comptes utilisateurs.",
+      "settingsUpdate": "Autorise la modification des paramètres globaux du système."
     }
   },
   "adminUsersRoles": {

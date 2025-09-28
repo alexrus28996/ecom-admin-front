@@ -51,6 +51,7 @@ import { CouponsListComponent } from './pages/admin/coupons/coupons-list.compone
 import { CouponFormComponent } from './pages/admin/coupons/coupon-form.component';
 import { ReviewsListComponent } from './pages/admin/reviews/reviews-list.component';
 import { DebugUserComponent } from './shared/debug-user.component';
+import { PermissionsSettingsComponent } from './pages/admin/permissions/permissions-settings.component';
 
 import { MaterialModule } from './shared/material.module';
 import { AuthInterceptor } from './core/auth.interceptor';
@@ -103,6 +104,7 @@ export function translateHttpLoaderFactory(http: HttpClient) {
     AdminSettingsPlaceholderComponent,
     CouponsListComponent,
     CouponFormComponent,
+    PermissionsSettingsComponent,
     DebugUserComponent
   ],
   imports: [

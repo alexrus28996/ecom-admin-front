@@ -27,6 +27,7 @@ import { LayoutWrapperComponent } from './layout/layout-wrapper.component';
 import { ReviewsListComponent } from './pages/admin/reviews/reviews-list.component';
 import { ShipmentsListComponent } from './pages/admin/shipments/shipments-list.component';
 import { AdminSettingsPlaceholderComponent } from './pages/admin/placeholders/admin-settings-placeholder.component';
+import { PermissionsSettingsComponent } from './pages/admin/permissions/permissions-settings.component';
 import { CouponsListComponent } from './pages/admin/coupons/coupons-list.component';
 
 const routes: Routes = [
@@ -112,6 +113,12 @@ const routes: Routes = [
         component: CouponsListComponent,
         canActivate: [AdminGuard],
         data: { roles: ['admin'], breadcrumb: 'coupons' }
+      },
+      {
+        path: 'admin/permissions',
+        component: PermissionsSettingsComponent,
+        canActivate: [AdminGuard],
+        data: { roles: ['admin'], breadcrumb: 'permissions' }
       },
       {
         path: 'admin/reviews',

@@ -994,7 +994,8 @@
         "reviews": "Reviews (Admin)",
         "shipments": "Shipments (Admin)",
         "coupons": "Coupons (Admin)",
-        "settings": "Admin settings"
+        "settings": "Admin settings",
+        "permissions": "Permissions Settings"
       }
     },
     "navSections": {
@@ -1063,7 +1064,8 @@
     "reviews": "Reviews",
     "shipments": "Shipments",
     "settings": "Settings",
-    "categories": "Categories"
+    "categories": "Categories",
+    "permissions": "Permissions"
   },
   "inventory": {
     "title": "Inventory",
@@ -1318,6 +1320,54 @@
         "userSuspend": "Suspend users",
         "settingsUpdate": "Update settings"
       }
+    }
+  },
+  "permissionsSettings": {
+    "title": "Permissions Management",
+    "subtitle": "Grant or revoke feature-level access for each user.",
+    "search": {
+      "label": "Search users",
+      "placeholder": "Search by name or email",
+      "clear": "Clear search"
+    },
+    "loadingUsers": "Loading users...",
+    "usersEmpty": "No users found for this search.",
+    "noRoles": "No roles assigned",
+    "actions": {
+      "promote": "Promote to Admin",
+      "demote": "Remove Admin Role",
+      "selectAll": "Select All",
+      "clearAll": "Clear All",
+      "grantGroup": "Grant Group",
+      "revokeGroup": "Revoke Group",
+      "reset": "Reset",
+      "save": "Save Changes"
+    },
+    "summary": {
+      "granted": "permissions granted"
+    },
+    "loadingPermissions": "Loading permissions...",
+    "placeholder": "Choose a user to review and adjust permissions.",
+    "lastAdminWarning": "Removing this admin will leave your workspace without administrators.",
+    "tooltips": {
+      "productCreate": "Allows creating new products and publishing them to the catalog.",
+      "productEdit": "Allows editing product information, pricing, and variants.",
+      "productDelete": "Allows deleting products from the catalog.",
+      "categoryCreate": "Allows creating new product categories.",
+      "categoryEdit": "Allows editing category names and hierarchy.",
+      "categoryDelete": "Allows deleting product categories.",
+      "orderView": "Allows viewing all customer orders and timelines.",
+      "orderEdit": "Allows updating order statuses, assignments, and notes.",
+      "refundApprove": "Allows approving customer refund requests.",
+      "refundReject": "Allows rejecting refund requests.",
+      "inventoryView": "Allows viewing inventory counts and locations.",
+      "inventoryAdjust": "Allows adjusting stock levels manually.",
+      "inventoryAudit": "Allows recording inventory audits and stock corrections.",
+      "reportsView": "Allows accessing analytics dashboards and reports.",
+      "reportsExport": "Allows exporting reports and data extracts.",
+      "userInvite": "Allows inviting new users to the workspace.",
+      "userSuspend": "Allows suspending or reactivating user accounts.",
+      "settingsUpdate": "Allows changing global system settings."
     }
   },
   "adminUsersRoles": {
