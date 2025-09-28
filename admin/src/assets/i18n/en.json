@@ -1226,6 +1226,98 @@
       "errors": {
         "loadFailed": "Unable to load users."
       }
+    },
+    "permissions": {
+      "title": "Manage permissions",
+      "noRoles": "No roles assigned",
+      "lastAdminWarning": "Demoting the final admin will leave the workspace without administrators.",
+      "search": {
+        "label": "Search permissions",
+        "placeholder": "Filter by name or code"
+      },
+      "summary": {
+        "granted": "granted",
+        "toAdd": "to grant",
+        "toRemove": "to revoke"
+      },
+      "status": {
+        "adding": "Granting",
+        "removing": "Revoking",
+        "granted": "Granted",
+        "notGranted": "Available"
+      },
+      "actions": {
+        "promote": "Promote to admin",
+        "demote": "Remove admin role",
+        "selectAll": "Grant all",
+        "clearAll": "Revoke all",
+        "grantGroup": "Grant group",
+        "revokeGroup": "Revoke group",
+        "applyAdds": "Apply grants",
+        "applyRemovals": "Apply revocations",
+        "saveAll": "Replace permissions"
+      },
+      "empty": "No permissions match your search.",
+      "confirm": {
+        "clearAll": {
+          "title": "Revoke all permissions?",
+          "message": "This will remove every permission from the user.",
+          "confirm": "Revoke all"
+        },
+        "demoteLastAdmin": {
+          "title": "Demote last admin?",
+          "message": "This user is the last admin. Removing their admin role will leave your workspace without administrators.",
+          "confirm": "Demote anyway"
+        },
+        "demote": {
+          "title": "Remove admin role?",
+          "message": "The user will lose access to admin-only tools.",
+          "confirm": "Demote"
+        },
+        "remove": {
+          "title": "Revoke selected permissions?",
+          "message": "The selected permissions will be removed immediately.",
+          "confirm": "Revoke"
+        }
+      },
+      "toasts": {
+        "promoted": "User promoted to admin",
+        "demoted": "Admin role removed",
+        "replaced": "Permissions replaced",
+        "added": "Permissions granted",
+        "removed": "Permissions revoked"
+      },
+      "errors": {
+        "loadFailed": "Unable to load permissions.",
+        "actionFailed": "Permission update failed."
+      },
+      "groups": {
+        "catalog": "Catalog management",
+        "orders": "Orders & returns",
+        "inventory": "Inventory",
+        "reports": "Reports & analytics",
+        "system": "System administration"
+      },
+      "items": {
+        "productCreate": "Create products",
+        "productEdit": "Edit products",
+        "productDelete": "Delete products",
+        "categoryCreate": "Create categories",
+        "categoryEdit": "Edit categories",
+        "categoryDelete": "Delete categories",
+        "orderView": "View orders",
+        "orderEdit": "Modify orders",
+        "refundApprove": "Approve refunds",
+        "refundReject": "Reject refunds",
+        "inventoryView": "View inventory",
+        "inventoryAdjust": "Adjust stock",
+        "inventoryAudit": "Audit inventory",
+        "reportsView": "View reports",
+        "reportsExport": "Export reports",
+        "userInvite": "Invite users",
+        "userSuspend": "Suspend users",
+        "settingsUpdate": "Update settings"
+      }
     }
   },
   "adminUsersRoles": {

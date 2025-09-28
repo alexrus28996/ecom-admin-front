@@ -46,10 +46,10 @@ export class CategoriesComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
 
   readonly categoryPermissions$ = combineLatest({
-    create: this.permissions.can$('categories.create'),
-    update: this.permissions.can$('categories.update'),
-    delete: this.permissions.can$('categories.delete'),
-    reorder: this.permissions.can$('categories.reorder')
+    create: this.permissions.can$('category:create'),
+    update: this.permissions.can$('category:edit'),
+    delete: this.permissions.can$('category:delete'),
+    reorder: this.permissions.can$('category:edit')
   });
 
   constructor(
@@ -119,7 +119,7 @@ export class CategoriesComponent implements OnInit, OnDestroy {
   }
 
   openCreate(): void {
-    if (!this.permissions.can('categories.create')) {
+    if (!this.permissions.can('category:create')) {
       return;
     }
     this.dialog
@@ -136,7 +136,7 @@ export class CategoriesComponent implements OnInit, OnDestroy {
   }
 
   openEdit(category: Category): void {
-    if (!this.permissions.can('categories.update')) {
+    if (!this.permissions.can('category:edit')) {
       return;
     }
     this.dialog
@@ -154,7 +154,7 @@ export class CategoriesComponent implements OnInit, OnDestroy {
   }
 
   openReorder(category: Category): void {
-    if (!this.permissions.can('categories.reorder')) {
+    if (!this.permissions.can('category:edit')) {
       return;
     }
     this.dialog
@@ -171,7 +171,7 @@ export class CategoriesComponent implements OnInit, OnDestroy {
   }
 
   confirmDelete(category: Category): void {
-    if (!this.permissions.can('categories.delete')) {
+    if (!this.permissions.can('category:delete')) {
       return;
     }
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
@@ -196,7 +196,7 @@ export class CategoriesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.permissions.can('categories.delete')) {
+    if (!this.permissions.can('category:delete')) {
       return;
     }
 

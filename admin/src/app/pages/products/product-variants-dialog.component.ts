@@ -34,7 +34,7 @@ export class ProductVariantsDialogComponent implements OnInit, OnDestroy {
   canEditVariants = true;
   private productCurrency = 'USD';
 
-  readonly canManageVariants$ = this.permissions.can$('products.manageVariants');
+  readonly canManageVariants$ = this.permissions.can$('product:edit');
   private readonly destroy$ = new Subject<void>();
 
   constructor(

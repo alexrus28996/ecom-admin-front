@@ -44,8 +44,8 @@ export class AdminOrderDetailComponent implements OnInit, OnDestroy {
   });
 
   readonly orderPermissions$ = combineLatest({
-    update: this.permissions.can$('orders.update'),
-    shipment: this.permissions.can$('orders.shipments.create')
+    update: this.permissions.can$('order:edit'),
+    shipment: this.permissions.can$('order:edit')
   });
   canUpdateOrder = true;
   private readonly destroy$ = new Subject<void>();
@@ -247,7 +247,7 @@ export class AdminOrderDetailComponent implements OnInit, OnDestroy {
   }
 
   createShipment(): void {
-    if (!this.permissions.can('orders.shipments.create') || !this.order) {
+    if (!this.permissions.can('order:edit') || !this.order) {
       return;
     }
 

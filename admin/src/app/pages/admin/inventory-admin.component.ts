@@ -79,7 +79,7 @@ export class AdminInventoryComponent implements OnInit {
   inventoryTabIndex = 0;
 
   readonly inventoryPermissions$ = combineLatest({
-    adjust: this.permissions.can$('inventory.adjust')
+    adjust: this.permissions.can$('inventory:adjust')
   });
 
   constructor(
@@ -207,7 +207,7 @@ export class AdminInventoryComponent implements OnInit {
   }
 
   openAdjustmentDialog(context?: InventoryViewModel): void {
-    if (!this.permissions.can('inventory.adjust')) {
+    if (!this.permissions.can('inventory:adjust')) {
       return;
     }
     const data: InventoryAdjustmentDialogData = context ? {

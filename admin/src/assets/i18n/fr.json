@@ -1153,6 +1153,98 @@
       "errors": {
         "loadFailed": "Unable to load users."
       }
+    },
+    "permissions": {
+      "title": "Gérer les permissions",
+      "noRoles": "Aucun rôle attribué",
+      "lastAdminWarning": "Rétrograder le dernier administrateur laissera l'espace de travail sans administrateurs.",
+      "search": {
+        "label": "Rechercher des permissions",
+        "placeholder": "Filtrer par nom ou code"
+      },
+      "summary": {
+        "granted": "attribuées",
+        "toAdd": "à attribuer",
+        "toRemove": "à retirer"
+      },
+      "status": {
+        "adding": "Attribution",
+        "removing": "Retrait",
+        "granted": "Attribuée",
+        "notGranted": "Disponible"
+      },
+      "actions": {
+        "promote": "Promouvoir administrateur",
+        "demote": "Retirer le rôle d'administrateur",
+        "selectAll": "Tout attribuer",
+        "clearAll": "Tout retirer",
+        "grantGroup": "Attribuer le groupe",
+        "revokeGroup": "Retirer le groupe",
+        "applyAdds": "Appliquer les attributions",
+        "applyRemovals": "Appliquer les retraits",
+        "saveAll": "Remplacer les permissions"
+      },
+      "empty": "Aucune permission ne correspond à votre recherche.",
+      "confirm": {
+        "clearAll": {
+          "title": "Retirer toutes les permissions ?",
+          "message": "Toutes les permissions seront supprimées de cet utilisateur.",
+          "confirm": "Tout retirer"
+        },
+        "demoteLastAdmin": {
+          "title": "Rétrograder le dernier administrateur ?",
+          "message": "Cet utilisateur est le dernier administrateur. Le rétrograder laissera votre espace de travail sans administrateurs.",
+          "confirm": "Rétrograder quand même"
+        },
+        "demote": {
+          "title": "Retirer le rôle d'administrateur ?",
+          "message": "L'utilisateur perdra l'accès aux outils réservés aux administrateurs.",
+          "confirm": "Rétrograder"
+        },
+        "remove": {
+          "title": "Retirer les permissions sélectionnées ?",
+          "message": "Les permissions sélectionnées seront retirées immédiatement.",
+          "confirm": "Retirer"
+        }
+      },
+      "toasts": {
+        "promoted": "Utilisateur promu administrateur",
+        "demoted": "Rôle d'administrateur retiré",
+        "replaced": "Permissions remplacées",
+        "added": "Permissions attribuées",
+        "removed": "Permissions retirées"
+      },
+      "errors": {
+        "loadFailed": "Impossible de charger les permissions.",
+        "actionFailed": "Échec de la mise à jour des permissions."
+      },
+      "groups": {
+        "catalog": "Gestion du catalogue",
+        "orders": "Commandes et retours",
+        "inventory": "Inventaire",
+        "reports": "Rapports et analyses",
+        "system": "Administration du système"
+      },
+      "items": {
+        "productCreate": "Créer des produits",
+        "productEdit": "Modifier des produits",
+        "productDelete": "Supprimer des produits",
+        "categoryCreate": "Créer des catégories",
+        "categoryEdit": "Modifier des catégories",
+        "categoryDelete": "Supprimer des catégories",
+        "orderView": "Consulter les commandes",
+        "orderEdit": "Modifier les commandes",
+        "refundApprove": "Approuver les remboursements",
+        "refundReject": "Refuser les remboursements",
+        "inventoryView": "Consulter l'inventaire",
+        "inventoryAdjust": "Ajuster le stock",
+        "inventoryAudit": "Auditer l'inventaire",
+        "reportsView": "Consulter les rapports",
+        "reportsExport": "Exporter les rapports",
+        "userInvite": "Inviter des utilisateurs",
+        "userSuspend": "Suspendre des utilisateurs",
+        "settingsUpdate": "Mettre à jour les paramètres"
+      }
     }
   },
   "adminUsersRoles": {
