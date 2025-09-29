@@ -15,21 +15,29 @@
     },
     "empty": "—"
   },
+  "product:restore": {
+    "title": "उत्पाद पुनर्स्थापित करें",
+    "message": "क्या आप उत्पाद \"{{ name }}\" को पुनर्स्थापित करना चाहते हैं? पुनर्स्थापित उत्पाद फिर से सक्रिय हो जाएगा।",
+    "confirm": "पुनर्स्थापित करें"
+  },
+  "product:restoreSuccess": "उत्पाद सफलतापूर्वक पुनर्स्थापित हुआ",
   "products": {
     "title": "Products",
     "subtitle": "Manage your entire catalog from one place.",
     "add": "उत्पाद जोड़ें",
     "addButton": "Add Product",
     "actions": {
-      "refresh": "Refresh",
-      "manageVariants": "Manage variants",
-      "edit": "Edit product",
-      "delete": "Delete product",
-      "duplicate": "Duplicate product",
+      "refresh": "रिफ्रेश",
+      "manageVariants": "वैरिएंट प्रबंधित करें",
+      "edit": "उत्पाद संपादित करें",
+      "delete": "उत्पाद हटाएँ",
+      "restore": "उत्पाद पुनर्स्थापित करें",
       "disabled": {
         "loading": "डेटा लोड होने तक यह क्रिया उपलब्ध नहीं है।",
         "missingProduct": "उत्पाद जानकारी अभी उपलब्ध नहीं है।",
-        "bulkOperation": "कृपया चल रही बल्क क्रिया के पूर्ण होने की प्रतीक्षा करें।"
+        "bulkOperation": "कृपया चल रही बल्क क्रिया के पूर्ण होने की प्रतीक्षा करें।",
+        "alreadyDeleted": "उत्पाद पहले से ही हटाया जा चुका है।",
+        "notDeleted": "उत्पाद हटाया नहीं गया है।"
       }
     },
     "permissions": {
@@ -44,9 +52,8 @@
     "import": {
       "title": "आयात",
       "invalidFormat": "फ़ाइल फ़ॉर्मेट समर्थित नहीं है। कृपया CSV या JSON चुनें।",
-      "invalidJSON": "चुनी गई फ़ाइल मान्य JSON नहीं है।",
-      "csvNotSupported": "CSV आयात अभी उपलब्ध नहीं है। कृपया JSON निर्यात का उपयोग करें।",
       "success": "{{ inserted }} उत्पाद आयात हुए, {{ failed }} असफल रहे।",
+      "partialFailure": "{{ count }} उत्पाद आयात नहीं हो सके।",
       "error": "आयात विफल रहा। कृपया दोबारा प्रयास करें।"
     },
     "export": {
@@ -122,6 +129,7 @@
       "deactivated": "{{ count }} उत्पाद निष्क्रिय किए गए।",
       "deleted": "{{ count }} उत्पाद हटाए गए।",
       "deleteError": "चयनित उत्पाद हटाए नहीं जा सके।",
+      "partialFailure": "{{ count }} उत्पादों को संसाधित नहीं किया जा सका।",
       "error": "बल्क क्रिया विफल हुई। कृपया फिर से प्रयास करें।"
     },
     "delete": {
@@ -130,16 +138,18 @@
       "confirm": "Delete"
     },
     "messages": {
-      "saveSuccess": "Product saved successfully.",
-      "updateSuccess": "Product updated successfully.",
-      "deleteSuccess": "Deleted {{ name }}.",
-      "deleteError": "Failed to delete the product.",
-      "saveError": "Failed to save the product.",
+      "saveSuccess": "उत्पाद सफलतापूर्वक सहेजा गया।",
+      "updateSuccess": "उत्पाद सफलतापूर्वक अपडेट हुआ।",
+      "deleteSuccess": "{{ name }} हटाया गया।",
+      "deleteError": "उत्पाद को हटाना विफल रहा।",
+      "restoreError": "उत्पाद को पुनर्स्थापित करना विफल रहा।",
+      "saveError": "उत्पाद को सहेजना विफल रहा।",
       "errors": {
-        "duplicateSku": "Another product already uses this SKU.",
-        "validationFailed": "Product validation failed. Check required fields.",
-        "imageUpload": "Image upload failed. Please try again.",
-        "brandsLoad": "Could not load brands."
+        "duplicateSku": "यह SKU पहले से किसी अन्य उत्पाद द्वारा उपयोग किया जा रहा है।",
+        "validationFailed": "उत्पाद सत्यापन विफल रहा। आवश्यक फ़ील्ड जाँचें।",
+        "imageUpload": "छवि अपलोड विफल रहा। कृपया पुनः प्रयास करें।",
+        "brandsLoad": "ब्रांड लोड नहीं हो सके।",
+        "notDeleted": "उत्पाद हटाया हुआ स्थिति में नहीं है।"
       }
     },
     "errors": {
@@ -1316,13 +1326,23 @@
       "name": "Name",
       "slug": "Slug",
       "parent": "Parent",
+      "status": "Status",
+      "createdAt": "Created",
       "actions": "Actions",
       "root": "Top level"
     },
     "actions": {
       "edit": "Edit",
       "reorder": "Reorder children",
-      "delete": "Delete"
+      "delete": "Delete",
+      "restore": "Restore"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "permissions": {
+      "deleteDenied": "आपको श्रेणियाँ संशोधित करने की अनुमति नहीं है।"
     },
     "empty": "No categories found. Try adjusting your filters.",
     "messages": {
@@ -1330,19 +1350,23 @@
       "updateSuccess": "Category updated successfully.",
       "deleteSuccess": "Deleted {{ name }}.",
       "deleteError": "Failed to delete category.",
+      "restoreSuccess": "Category restored successfully.",
+      "restoreError": "Failed to restore category.",
       "saveError": "Failed to save category.",
       "reorderSuccess": "Category order saved.",
       "reorderError": "Failed to save category order.",
       "errors": {
         "duplicateSlug": "Another category already uses this slug.",
         "validationFailed": "Category validation failed. Check required fields.",
-        "inUse": "This category is assigned to products and cannot be deleted."
+        "inUse": "This category is assigned to products and cannot be deleted.",
+        "notDeleted": "Category is not currently deleted."
       }
     },
     "errors": {
       "load": "Failed to load categories.",
       "save": "Failed to save category.",
       "delete": "Failed to delete category.",
+      "restore": "Failed to restore category.",
       "reorder": "Failed to load category order.",
       "children": "Failed to load category children."
     },
@@ -1350,6 +1374,11 @@
       "title": "Delete category",
       "message": "Delete category \"{{ name }}\"? This action cannot be undone.",
       "confirm": "Delete"
+    },
+    "restore": {
+      "title": "Restore category",
+      "message": "Restore category \"{{ name }}\"?",
+      "confirm": "Restore"
     },
     "dialog": {
       "createTitle": "Create category",

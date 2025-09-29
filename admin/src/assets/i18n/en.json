@@ -14,6 +14,12 @@
     },
     "empty": "Nothing to display yet."
   },
+  "product:restore": {
+    "title": "Restore product",
+    "message": "Restore product \"{{ name }}\"? Restored products become active again.",
+    "confirm": "Restore"
+  },
+  "product:restoreSuccess": "Product restored successfully",
   "products": {
     "title": "Products",
     "subtitle": "Manage your entire catalog from one place.",
@@ -42,11 +48,13 @@
       "manageVariants": "Manage variants",
       "edit": "Edit product",
       "delete": "Delete product",
-      "duplicate": "Duplicate product",
+      "restore": "Restore product",
       "disabled": {
         "loading": "Action disabled while data is loading.",
         "missingProduct": "Product information is still loading.",
-        "bulkOperation": "Finish the current bulk action before continuing."
+        "bulkOperation": "Finish the current bulk action before continuing.",
+        "alreadyDeleted": "Product is already deleted.",
+        "notDeleted": "Product isn't deleted."
       }
     },
     "permissions": {
@@ -61,9 +69,8 @@
     "import": {
       "title": "Import",
       "invalidFormat": "Unsupported file format. Please choose CSV or JSON.",
-      "invalidJSON": "The selected file is not valid JSON.",
-      "csvNotSupported": "CSV import isn't available yet. Please use a JSON export.",
       "success": "{{ inserted }} products imported. {{ failed }} failed.",
+      "partialFailure": "{{ count }} products could not be imported.",
       "error": "Import failed. Please try again."
     },
     "export": {
@@ -124,6 +131,7 @@
       "deactivated": "{{ count }} products deactivated.",
       "deleted": "Deleted {{ count }} products.",
       "deleteError": "Failed to delete selected products.",
+      "partialFailure": "{{ count }} products could not be updated.",
       "error": "Bulk action failed. Please try again."
     },
     "empty": {
@@ -156,13 +164,15 @@
       "updateSuccess": "Product updated successfully.",
       "deleteSuccess": "Deleted {{ name }}.",
       "deleteError": "Failed to delete the product.",
+      "restoreError": "Failed to restore the product.",
       "saveError": "Failed to save the product.",
       "errors": {
         "duplicateSku": "Another product already uses this SKU.",
         "duplicateSlug": "Another product already uses this slug.",
         "validationFailed": "Product validation failed. Check required fields.",
         "imageUpload": "Image upload failed. Please try again.",
-        "brandsLoad": "Could not load brands."
+        "brandsLoad": "Could not load brands.",
+        "notDeleted": "Product is not in a deleted state."
       }
     },
     "variants": {
@@ -1464,13 +1474,23 @@
       "name": "Name",
       "slug": "Slug",
       "parent": "Parent",
+      "status": "Status",
+      "createdAt": "Created",
       "actions": "Actions",
       "root": "Top level"
     },
     "actions": {
       "edit": "Edit",
       "reorder": "Reorder children",
-      "delete": "Delete"
+      "delete": "Delete",
+      "restore": "Restore"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "permissions": {
+      "deleteDenied": "You don't have permission to modify categories."
     },
     "empty": "No categories found. Try adjusting your filters.",
     "messages": {
@@ -1478,19 +1498,23 @@
       "updateSuccess": "Category updated successfully.",
       "deleteSuccess": "Category deleted successfully.",
       "deleteError": "Failed to delete category.",
+      "restoreSuccess": "Category restored successfully.",
+      "restoreError": "Failed to restore category.",
       "saveError": "Failed to save category.",
       "reorderSuccess": "Category order saved.",
       "reorderError": "Failed to save category order.",
       "errors": {
         "duplicateSlug": "Another category already uses this slug.",
         "validationFailed": "Category validation failed. Check required fields.",
-        "inUse": "This category is assigned to products and cannot be deleted."
+        "inUse": "This category is assigned to products and cannot be deleted.",
+        "notDeleted": "Category is not currently deleted."
       }
     },
     "errors": {
       "load": "Failed to load categories.",
       "save": "Failed to save category.",
       "delete": "Failed to delete category.",
+      "restore": "Failed to restore category.",
       "reorder": "Failed to load category order.",
       "children": "Failed to load category children."
     },
@@ -1498,6 +1522,11 @@
       "title": "Delete category",
       "message": "Delete category \"{{ name }}\"? This action cannot be undone.",
       "confirm": "Delete"
+    },
+    "restore": {
+      "title": "Restore category",
+      "message": "Restore category \"{{ name }}\"?",
+      "confirm": "Restore"
     },
     "dialog": {
       "createTitle": "Create category",

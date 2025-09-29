@@ -15,15 +15,29 @@
     },
     "empty": "Aucune donnee pour le moment."
   },
+  "product:restore": {
+    "title": "Restaurer le produit",
+    "message": "Restaurer le produit \"{{ name }}\" ? Le produit redeviendra actif.",
+    "confirm": "Restaurer"
+  },
+  "product:restoreSuccess": "Produit restauré avec succès",
   "products": {
     "title": "Products",
     "subtitle": "Manage your entire catalog from one place.",
     "addButton": "Add Product",
     "actions": {
-      "refresh": "Refresh",
-      "manageVariants": "Manage variants",
-      "edit": "Edit product",
-      "delete": "Delete product"
+      "refresh": "Actualiser",
+      "manageVariants": "Gérer les variantes",
+      "edit": "Modifier le produit",
+      "delete": "Supprimer le produit",
+      "restore": "Restaurer le produit",
+      "disabled": {
+        "loading": "Action indisponible pendant le chargement.",
+        "missingProduct": "Les informations du produit se chargent encore.",
+        "bulkOperation": "Terminez l'action groupée en cours avant de continuer.",
+        "alreadyDeleted": "Le produit est déjà supprimé.",
+        "notDeleted": "Le produit n'est pas supprimé."
+      }
     },
     "permissions": {
       "loading": "Vérification des autorisations...",
@@ -37,9 +51,8 @@
     "import": {
       "title": "Importer",
       "invalidFormat": "Format de fichier non pris en charge. Veuillez choisir un fichier CSV ou JSON.",
-      "invalidJSON": "Le fichier sélectionné n'est pas un JSON valide.",
-      "csvNotSupported": "L'import CSV n'est pas encore disponible. Veuillez utiliser un export JSON.",
-      "success": "{{ inserted }} produits importés. {{ failed }} échecs.",
+      "success": "{{ inserted }} produits importés. {{ failed }} en échec.",
+      "partialFailure": "{{ count }} produits n'ont pas pu être importés.",
       "error": "L'import a échoué. Veuillez réessayer."
     },
     "export": {
@@ -70,6 +83,21 @@
       "createdAt": "Created",
       "actions": "Actions"
     },
+    "bulk": {
+      "selected": "{{ count }} sélectionnés",
+      "activate": "Activer",
+      "deactivate": "Désactiver",
+      "delete": {
+        "action": "Supprimer",
+        "title": "Supprimer les produits sélectionnés",
+        "message": "Supprimer {{ count }} produits sélectionnés ? Cette action est irréversible.",
+        "confirm": "Supprimer"
+      },
+      "deleted": "{{ count }} produits supprimés.",
+      "deleteError": "Échec de la suppression des produits sélectionnés.",
+      "partialFailure": "{{ count }} produits n'ont pas pu être traités.",
+      "error": "Échec de l'action groupée. Réessayez."
+    },
     "empty": "No products found. Try refining your filters.",
     "delete": {
       "title": "Delete product",
@@ -77,16 +105,18 @@
       "confirm": "Delete"
     },
     "messages": {
-      "saveSuccess": "Product saved successfully.",
-      "updateSuccess": "Product updated successfully.",
-      "deleteSuccess": "Deleted {{ name }}.",
-      "deleteError": "Failed to delete the product.",
-      "saveError": "Failed to save the product.",
+      "saveSuccess": "Produit enregistré avec succès.",
+      "updateSuccess": "Produit mis à jour avec succès.",
+      "deleteSuccess": "{{ name }} supprimé.",
+      "deleteError": "Échec de la suppression du produit.",
+      "restoreError": "Échec de la restauration du produit.",
+      "saveError": "Échec de l'enregistrement du produit.",
       "errors": {
-        "duplicateSku": "Another product already uses this SKU.",
-        "validationFailed": "Product validation failed. Check required fields.",
-        "imageUpload": "Image upload failed. Please try again.",
-        "brandsLoad": "Could not load brands."
+        "duplicateSku": "Un autre produit utilise déjà ce SKU.",
+        "validationFailed": "La validation du produit a échoué. Vérifiez les champs obligatoires.",
+        "imageUpload": "Échec de l'envoi de l'image. Veuillez réessayer.",
+        "brandsLoad": "Impossible de charger les marques.",
+        "notDeleted": "Le produit n'est pas marqué comme supprimé."
       }
     },
     "errors": {
@@ -1357,13 +1387,23 @@
       "name": "Name",
       "slug": "Slug",
       "parent": "Parent",
+      "status": "Status",
+      "createdAt": "Created",
       "actions": "Actions",
       "root": "Top level"
     },
     "actions": {
       "edit": "Edit",
       "reorder": "Reorder children",
-      "delete": "Delete"
+      "delete": "Delete",
+      "restore": "Restore"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "permissions": {
+      "deleteDenied": "Vous n'avez pas l'autorisation de modifier les catégories."
     },
     "empty": "No categories found. Try adjusting your filters.",
     "messages": {
@@ -1371,19 +1411,23 @@
       "updateSuccess": "Category updated successfully.",
       "deleteSuccess": "Deleted {{ name }}.",
       "deleteError": "Failed to delete category.",
+      "restoreSuccess": "Category restored successfully.",
+      "restoreError": "Failed to restore category.",
       "saveError": "Failed to save category.",
       "reorderSuccess": "Category order saved.",
       "reorderError": "Failed to save category order.",
       "errors": {
         "duplicateSlug": "Another category already uses this slug.",
         "validationFailed": "Category validation failed. Check required fields.",
-        "inUse": "This category is assigned to products and cannot be deleted."
+        "inUse": "This category is assigned to products and cannot be deleted.",
+        "notDeleted": "Category is not currently deleted."
       }
     },
     "errors": {
       "load": "Failed to load categories.",
       "save": "Failed to save category.",
       "delete": "Failed to delete category.",
+      "restore": "Failed to restore category.",
       "reorder": "Failed to load category order.",
       "children": "Failed to load category children."
     },
@@ -1391,6 +1435,11 @@
       "title": "Delete category",
       "message": "Delete category \"{{ name }}\"? This action cannot be undone.",
       "confirm": "Delete"
+    },
+    "restore": {
+      "title": "Restore category",
+      "message": "Restore category \"{{ name }}\"?",
+      "confirm": "Restore"
     },
     "dialog": {
       "createTitle": "Create category",

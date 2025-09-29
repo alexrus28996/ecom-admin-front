@@ -299,18 +299,20 @@
               </span>
               <span
                 class="action-tooltip-wrapper"
-                [matTooltip]="actionTooltipKey('duplicate', perms, product) | translate"
-                [matTooltipDisabled]="!actionTooltipKey('duplicate', perms, product)"
-                [class.is-disabled]="isActionDisabled('duplicate', perms, product)"
-                (click)="onDisabledAction($event, 'duplicate', perms, product)"
+                [matTooltip]="actionTooltipKey('restore', perms, product) | translate"
+                [matTooltipDisabled]="!actionTooltipKey('restore', perms, product)"
+                [class.is-disabled]="isActionDisabled('restore', perms, product)"
+                (click)="onDisabledAction($event, 'restore', perms, product)"
+                *ngIf="isProductDeleted(product)"
               >
                 <button
                   mat-icon-button
+                  color="accent"
                   type="button"
-                  (click)="duplicateProduct(product)"
-                  [disabled]="isActionDisabled('duplicate', perms, product)"
+                  (click)="confirmRestore(product)"
+                  [disabled]="isActionDisabled('restore', perms, product)"
                 >
-                  <mat-icon>content_copy</mat-icon>
+                  <mat-icon>restore</mat-icon>
                 </button>
               </span>
               <span
@@ -319,6 +321,7 @@
                 [matTooltipDisabled]="!actionTooltipKey('delete', perms, product)"
                 [class.is-disabled]="isActionDisabled('delete', perms, product)"
                 (click)="onDisabledAction($event, 'delete', perms, product)"
+                *ngIf="!isProductDeleted(product)"
               >
                 <button
                   mat-icon-button

@@ -29,7 +29,7 @@ export class CategoriesComponent implements OnInit, OnDestroy {
     parent: ['']
   });
 
-  displayedColumns: string[] = ['name', 'slug', 'parent', 'actions'];
+  displayedColumns: string[] = ['name', 'slug', 'parent', 'status', 'createdAt', 'actions'];
 
   dataSource: Category[] = [];
   total = 0;
@@ -191,6 +191,32 @@ export class CategoriesComponent implements OnInit, OnDestroy {
     });
   }
 
+  confirmRestore(category: Category): void {
+    if (!category?._id) {
+      return;
+    }
+
+    if (!this.permissions.can('category:edit')) {
+      return;
+    }
+
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '360px',
+      data: {
+        titleKey: 'categories.restore.title',
+        messageKey: 'categories.restore.message',
+        messageParams: { name: category.name },
+        confirmKey: 'categories.restore.confirm'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((confirmed) => {
+      if (confirmed) {
+        this.restore(category);
+      }
+    });
+  }
+
   delete(category: Category): void {
     if (!category?._id) {
       return;
@@ -221,6 +247,43 @@ export class CategoriesComponent implements OnInit, OnDestroy {
           this.loading = false;
           const messageKey = this.mapDeleteError(code);
           this.toast.error(this.translate.instant(messageKey));
+          if (err?.status === 403) {
+            this.toast.error(this.translate.instant('categories.permissions.deleteDenied'));
+          }
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  private restore(category: Category): void {
+    if (!category?._id) {
+      return;
+    }
+
+    this.loading = true;
+    this.errorKey = null;
+    this.lastError = null;
+    this.cdr.markForCheck();
+
+    this.categories
+      .restore(category._id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.toast.success(this.translate.instant('categories.messages.restoreSuccess'));
+          this.loadParents();
+          this.load();
+        },
+        error: (err) => {
+          const code = err?.error?.error?.code;
+          this.errorKey = code ? `errors.backend.${code}` : 'categories.errors.restore';
+          this.lastError = err;
+          this.loading = false;
+          const messageKey = this.mapRestoreError(code);
+          this.toast.error(this.translate.instant(messageKey));
+          if (err?.status === 403) {
+            this.toast.error(this.translate.instant('categories.permissions.deleteDenied'));
+          }
           this.cdr.markForCheck();
         }
       });
@@ -239,6 +302,26 @@ export class CategoriesComponent implements OnInit, OnDestroy {
     }
     const match = this.parents.find((option) => option.id === id);
     return match ? match.name : this.translate.instant('categories.table.root');
+  }
+
+  categoryStatus(category: Category): string {
+    if (this.isCategoryDeleted(category)) {
+      return this.translate.instant('categories.status.inactive');
+    }
+    if (category?.isActive === false) {
+      return this.translate.instant('categories.status.inactive');
+    }
+    return this.translate.instant('categories.status.active');
+  }
+
+  isCategoryDeleted(category: Category | null | undefined): boolean {
+    if (!category) {
+      return false;
+    }
+    if (category.deletedAt) {
+      return true;
+    }
+    return category.isActive === false;
   }
 
   trackById(_: number, category: Category): string {
@@ -269,6 +352,18 @@ export class CategoriesComponent implements OnInit, OnDestroy {
         return 'categories.messages.errors.inUse';
       default:
         return 'categories.messages.deleteError';
+    }
+  }
+
+  private mapRestoreError(code: string | undefined): string {
+    if (!code) {
+      return 'categories.messages.restoreError';
+    }
+    switch (code) {
+      case 'CATEGORY_NOT_DELETED':
+        return 'categories.messages.errors.notDeleted';
+      default:
+        return 'categories.messages.restoreError';
     }
   }
 }

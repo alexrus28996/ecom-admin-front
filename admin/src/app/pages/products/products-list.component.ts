@@ -33,8 +33,8 @@ type ProductAction =
   | 'create'
   | 'edit'
   | 'variants'
-  | 'duplicate'
-  | 'delete';
+  | 'delete'
+  | 'restore';
 
 @Component({
   selector: 'app-products-list',
@@ -227,6 +227,32 @@ export class ProductsListComponent implements OnInit, OnDestroy {
     });
   }
 
+  confirmRestore(product: ProductSummary): void {
+    if (!product?._id) {
+      return;
+    }
+
+    if (!this.ensurePermission(this.currentPermissions.delete, 'products.permissions.deleteDenied')) {
+      return;
+    }
+
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '380px',
+      data: {
+        titleKey: 'product:restore.title',
+        messageKey: 'product:restore.message',
+        messageParams: { name: product.name },
+        confirmKey: 'product:restore.confirm'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((confirmed) => {
+      if (confirmed) {
+        this.restore(product);
+      }
+    });
+  }
+
   onEditProduct(product: ProductSummary): void {
     if (!product?._id) {
       return;
@@ -287,6 +313,44 @@ export class ProductsListComponent implements OnInit, OnDestroy {
           this.loading = false;
           const messageKey = this.mapProductError(code, 'products.messages.deleteError');
           this.toast.error(this.translate.instant(messageKey));
+          if (err?.status === 403) {
+            this.disablePermission('delete');
+            this.toast.error(this.translate.instant('products.permissions.deleteDenied'));
+          }
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  private restore(product: ProductSummary): void {
+    if (!product?._id) {
+      return;
+    }
+
+    this.loading = true;
+    this.errorKey = null;
+    this.lastError = null;
+    this.cdr.markForCheck();
+
+    this.products
+      .restoreProduct(product._id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.toast.success(this.translate.instant('product:restoreSuccess'));
+          this.load();
+        },
+        error: (err) => {
+          const code = err?.error?.error?.code;
+          this.errorKey = code ? `errors.backend.${code}` : 'products.errors.restore';
+          this.lastError = err;
+          this.loading = false;
+          const messageKey = this.mapProductError(code, 'products.messages.restoreError');
+          this.toast.error(this.translate.instant(messageKey));
+          if (err?.status === 403) {
+            this.disablePermission('delete');
+            this.toast.error(this.translate.instant('products.permissions.deleteDenied'));
+          }
           this.cdr.markForCheck();
         }
       });
@@ -385,7 +449,7 @@ export class ProductsListComponent implements OnInit, OnDestroy {
       return { disabled: true, reasonKey: 'products.actions.disabled.loading' };
     }
 
-    if (!product?._id && ['edit', 'variants', 'duplicate', 'delete'].includes(action)) {
+    if (!product?._id && ['edit', 'variants', 'delete', 'restore'].includes(action)) {
       return { disabled: true, reasonKey: 'products.actions.disabled.missingProduct' };
     }
 
@@ -415,14 +479,20 @@ export class ProductsListComponent implements OnInit, OnDestroy {
           return { disabled: true, reasonKey: 'products.permissions.variantsDenied' };
         }
         break;
-      case 'duplicate':
-        if (!perms.create) {
-          return { disabled: true, reasonKey: 'products.permissions.createDenied' };
-        }
-        break;
       case 'delete':
+        if (this.isProductDeleted(product)) {
+          return { disabled: true, reasonKey: 'products.actions.disabled.alreadyDeleted' };
+        }
         if (this.bulkOperationInProgress) {
           return { disabled: true, reasonKey: 'products.actions.disabled.bulkOperation' };
+        }
+        if (!perms.delete) {
+          return { disabled: true, reasonKey: 'products.permissions.deleteDenied' };
+        }
+        break;
+      case 'restore':
+        if (!this.isProductDeleted(product)) {
+          return { disabled: true, reasonKey: 'products.actions.disabled.notDeleted' };
         }
         if (!perms.delete) {
           return { disabled: true, reasonKey: 'products.permissions.deleteDenied' };
@@ -503,15 +573,22 @@ export class ProductsListComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (result) => {
           const statusKey = isActive ? 'products.bulk.activated' : 'products.bulk.deactivated';
-          const updatedCount = ((result as any)?.modified ?? (result as any)?.updated) ?? 0;
-          this.toast.success(this.translate.instant(statusKey, { count: updatedCount }));
+          if (result.updated > 0) {
+            this.toast.success(this.translate.instant(statusKey, { count: result.updated }));
+          }
+          if (result.failures.length > 0) {
+            this.toast.error(this.translate.instant('products.bulk.partialFailure', { count: result.failures.length }));
+          }
           this.selectedProducts.clear();
           this.updateBulkActionsVisibility();
           this.load();
         },
         error: (err) => {
           this.toast.error(this.translate.instant('products.bulk.error'));
-          console.error('Bulk status update failed:', err);
+          if (err?.status === 403) {
+            this.disablePermission('update');
+            this.toast.error(this.translate.instant('products.permissions.editDenied'));
+          }
         },
         complete: () => {
           this.bulkOperationInProgress = false;
@@ -553,20 +630,27 @@ export class ProductsListComponent implements OnInit, OnDestroy {
     this.bulkOperationInProgress = true;
     this.cdr.markForCheck();
 
-    const deleteRequests = productIds.map(id => this.products.deleteProduct(id));
-
-    combineLatest(deleteRequests)
+    this.products
+      .bulkDelete(productIds)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: () => {
-          this.toast.success(this.translate.instant('products.bulk.deleted', { count: productIds.length }));
+        next: (result) => {
+          if (result.deleted > 0) {
+            this.toast.success(this.translate.instant('products.bulk.deleted', { count: result.deleted }));
+          }
+          if (result.failures.length > 0) {
+            this.toast.error(this.translate.instant('products.bulk.partialFailure', { count: result.failures.length }));
+          }
           this.selectedProducts.clear();
           this.updateBulkActionsVisibility();
           this.load();
         },
         error: (err) => {
           this.toast.error(this.translate.instant('products.bulk.deleteError'));
-          console.error('Bulk delete failed:', err);
+          if (err?.status === 403) {
+            this.disablePermission('delete');
+            this.toast.error(this.translate.instant('products.permissions.deleteDenied'));
+          }
         },
         complete: () => {
           this.bulkOperationInProgress = false;
@@ -608,62 +692,54 @@ export class ProductsListComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (file.type === 'application/json') {
-      this.importFromJSON(file);
-    } else if (file.type === 'text/csv') {
-      this.importFromCSV(file);
-    } else {
+    const extension = file.name?.split('.').pop()?.toLowerCase();
+    if (extension && !['json', 'csv'].includes(extension)) {
       this.toast.error(this.translate.instant('products.import.invalidFormat'));
-    }
-
-    if (input) {
-      input.value = '';
-    }
-  }
-
-  private importFromJSON(file: File): void {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const products = JSON.parse(e.target?.result as string);
-        this.executeImport(products);
-      } catch (error) {
-        this.toast.error(this.translate.instant('products.import.invalidJSON'));
+      if (input) {
+        input.value = '';
       }
-    };
-    reader.readAsText(file);
-  }
+      return;
+    }
 
-  private importFromCSV(file: File): void {
-    // CSV parsing would be implemented here
-    // For now, show a message that CSV is not yet supported
-    this.toast.show(this.translate.instant('products.import.csvNotSupported'), "info");
-  }
-
-  private executeImport(products: Array<Record<string, any>>): void {
     this.loading = true;
     this.cdr.markForCheck();
 
-    this.products.importProducts(products)
+    this.products
+      .importProductsFile(file)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (result) => {
-          const message = this.translate.instant('products.import.success', {
-            inserted: result.inserted,
-            failed: result.failed
-          });
-          this.toast.success(message);
+          if (result.inserted > 0) {
+            const message = this.translate.instant('products.import.success', {
+              inserted: result.inserted,
+              failed: result.failed
+            });
+            this.toast.success(message);
+          }
+          if (result.failed > 0) {
+            this.toast.error(this.translate.instant('products.import.partialFailure', { count: result.failed }));
+          }
           this.load();
         },
         error: (err) => {
-          this.toast.error(this.translate.instant('products.import.error'));
-          console.error('Import failed:', err);
+          if (err?.status === 403) {
+            this.disablePermission('create');
+            this.toast.error(this.translate.instant('products.permissions.importDenied'));
+          } else {
+            this.toast.error(this.translate.instant('products.import.error'));
+          }
+          this.loading = false;
+          this.cdr.markForCheck();
         },
         complete: () => {
           this.loading = false;
           this.cdr.markForCheck();
         }
       });
+
+    if (input) {
+      input.value = '';
+    }
   }
 
   startExport(format: 'json' | 'csv'): void {
@@ -691,8 +767,12 @@ export class ProductsListComponent implements OnInit, OnDestroy {
           this.toast.success(this.translate.instant('products.export.success'));
         },
         error: (err) => {
-          this.toast.error(this.translate.instant('products.export.error'));
-          console.error('Export failed:', err);
+          if (err?.status === 403) {
+            this.disablePermission('update');
+            this.toast.error(this.translate.instant('products.permissions.exportDenied'));
+          } else {
+            this.toast.error(this.translate.instant('products.export.error'));
+          }
         },
         complete: () => {
           this.loading = false;
@@ -743,6 +823,9 @@ export class ProductsListComponent implements OnInit, OnDestroy {
         return 'products.messages.errors.duplicateSku';
       case 'PRODUCT_VALIDATION_FAILED':
         return 'products.messages.errors.validationFailed';
+      case 'PRODUCT_NOT_DELETED':
+      case 'PRODUCT_NOT_SOFT_DELETED':
+        return 'products.messages.errors.notDeleted';
       default:
         return fallback;
     }
@@ -760,6 +843,14 @@ export class ProductsListComponent implements OnInit, OnDestroy {
 
     this.toast.show(this.translate.instant(translationKey), 'info');
     return false;
+  }
+
+  private disablePermission(key: keyof ProductPermissionState): void {
+    this.currentPermissions = {
+      ...this.currentPermissions,
+      [key]: false
+    };
+    this.cdr.markForCheck();
   }
 
   toggleAdvancedFilters(): void {
@@ -804,6 +895,27 @@ export class ProductsListComponent implements OnInit, OnDestroy {
     return stock <= 0;
   }
 
+  isProductDeleted(product: ProductSummary | null | undefined): boolean {
+    if (!product) {
+      return false;
+    }
+    const deletedAt = (product as any)?.deletedAt;
+    if (deletedAt) {
+      return true;
+    }
+    if ((product as any)?.isDeleted === true) {
+      return true;
+    }
+    const status = (product as any)?.status;
+    if (typeof status === 'string') {
+      const normalized = status.toLowerCase();
+      if (normalized === 'deleted' || normalized === 'archived') {
+        return true;
+      }
+    }
+    return false;
+  }
+
   getStockStatus(product: any): string {
     if (this.isOutOfStock(product)) {
       return 'products.stock.outOfStock';
@@ -812,56 +924,6 @@ export class ProductsListComponent implements OnInit, OnDestroy {
       return 'products.stock.lowStock';
     }
     return 'products.stock.inStock';
-  }
-
-  duplicateProduct(product: any): void {
-    if (!product?._id) {
-      return;
-    }
-
-    if (!this.ensurePermission(this.currentPermissions.create, 'products.permissions.createDenied')) {
-      return;
-    }
-
-    this.loading = true;
-    this.cdr.markForCheck();
-
-    this.products
-      .getById(product._id)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: ({ product: fullProduct }) => {
-          const duplicateData: any = {
-            ...fullProduct,
-            name: `${fullProduct.name} (Copy)`,
-            sku: fullProduct.sku ? `${fullProduct.sku}-copy` : '',
-            isActive: false
-          };
-          delete duplicateData._id;
-          delete duplicateData.createdAt;
-          delete duplicateData.updatedAt;
-
-          this.products
-            .create(duplicateData)
-            .pipe(takeUntil(this.destroy$))
-            .subscribe({
-              next: () => {
-                this.toast.success(this.translate.instant('products.duplicate.success'));
-                this.load();
-              },
-              error: (err) => {
-                this.loading = false;
-                this.toast.error(this.translate.instant('products.duplicate.error'));
-                this.cdr.markForCheck();
-              }
-            });
-        },
-        error: (err) => {
-          this.loading = false;
-          this.toast.error(this.translate.instant('products.duplicate.error'));
-          this.cdr.markForCheck();
-        }
-      });
   }
 
   private loadCategories(): void {

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { Paginated } from './api.types';
 
@@ -47,13 +48,15 @@ export class CategoryService {
 
   list(params: { q?: string; parent?: string | null; page?: number; limit?: number } = {}): Observable<Paginated<Category>> {
     let httpParams = new HttpParams();
-    if (params.q) httpParams = httpParams.set('search', params.q);
+    if (params.q) httpParams = httpParams.set('q', params.q);
     if (params.parent !== undefined) {
       httpParams = httpParams.set('parent', params.parent === null ? '' : String(params.parent));
     }
     if (params.page) httpParams = httpParams.set('page', String(params.page));
     if (params.limit) httpParams = httpParams.set('limit', String(params.limit));
-    return this.http.get<Paginated<Category>>(this.base, { params: httpParams });
+    return this.http
+      .get<any>(this.base, { params: httpParams })
+      .pipe(map(response => this.mapPaginatedResponse<Category>(response)));
   }
 
   get(id: string): Observable<{ category: Category }> {
@@ -64,19 +67,27 @@ export class CategoryService {
     let httpParams = new HttpParams();
     if (params.page) httpParams = httpParams.set('page', String(params.page));
     if (params.limit) httpParams = httpParams.set('limit', String(params.limit));
-    return this.http.get<Paginated<Category>>(`${this.base}/${id}/children`, { params: httpParams });
+    return this.http
+      .get<any>(`${this.base}/${id}/children`, { params: httpParams })
+      .pipe(map(response => this.mapPaginatedResponse<Category>(response)));
   }
 
   create(payload: CategoryInput): Observable<{ category: Category }> {
-    return this.http.post<{ category: Category }>(this.adminBase, payload);
+    return this.http
+      .post<{ category: Category }>(this.base, payload);
   }
 
   update(id: string, payload: CategoryInput): Observable<{ category: Category }> {
-    return this.http.patch<{ category: Category }>(`${this.adminBase}/${id}`, payload);
+    return this.http
+      .put<{ category: Category }>(`${this.base}/${id}`, payload);
   }
 
   delete(id: string): Observable<{ success: boolean }> {
-    return this.http.delete<{ success: boolean }>(`${this.adminBase}/${id}`);
+    return this.http.delete<{ success: boolean }>(`${this.base}/${id}`);
+  }
+
+  restore(id: string): Observable<{ category: Category }> {
+    return this.http.post<{ category: Category }>(`${this.adminBase}/${id}/restore`, {});
   }
 
   reorderChildren(id: string, ids: string[]): Observable<{ items: Category[] }> {
@@ -113,5 +124,43 @@ export class CategoryService {
 
   listTags(): Observable<{ items: string[] }> {
     return this.http.get<{ items: string[] }>(this.adminTagBase);
+  }
+
+  private mapPaginatedResponse<T>(response: any): Paginated<T> {
+    const items = Array.isArray(response?.items)
+      ? response.items
+      : Array.isArray(response?.data)
+        ? response.data
+        : [];
+
+    const total = typeof response?.total === 'number'
+      ? response.total
+      : typeof response?.pagination?.total === 'number'
+        ? response.pagination.total
+        : items.length;
+    const page = typeof response?.page === 'number'
+      ? response.page
+      : typeof response?.pagination?.page === 'number'
+        ? response.pagination.page
+        : 1;
+    const pages = typeof response?.pages === 'number'
+      ? response.pages
+      : typeof response?.pagination?.pages === 'number'
+        ? response.pagination.pages
+        : 1;
+    const limit = typeof response?.limit === 'number'
+      ? response.limit
+      : typeof response?.pagination?.limit === 'number'
+        ? response.pagination.limit
+        : undefined;
+
+    return {
+      data: items,
+      items,
+      total,
+      page,
+      pages,
+      pagination: limit !== undefined ? { page, limit, total, pages } : undefined
+    };
   }
 }

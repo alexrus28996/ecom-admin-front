@@ -22,6 +22,7 @@ export interface BaseDocument {
   _id: string;
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string | null;
 }
 
 // Product interfaces
@@ -122,6 +123,8 @@ export interface Category extends BaseDocument {
   parent?: string | Category;
   children?: Category[];
   displayOrder?: number;
+  isActive?: boolean;
+  productCount?: number;
 }
 
 // Brand interfaces

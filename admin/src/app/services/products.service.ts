@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, from, of } from 'rxjs';
+import { catchError, map, mergeMap, reduce } from 'rxjs/operators';
 
 import { environment } from '../../environments/environment';
 import {
@@ -10,8 +10,7 @@ import {
   ProductVariant,
   ProductAttribute,
   ProductFilters,
-  Paginated,
-  ApiResponse
+  Paginated
 } from './api.types';
 
 // Export types for backward compatibility
@@ -27,6 +26,8 @@ export {
 @Injectable({ providedIn: 'root' })
 export class ProductsService {
   private readonly baseUrl = `${environment.apiBaseUrl}`;
+  private readonly productsBaseUrl = `${environment.apiBaseUrl}/products`;
+  private readonly adminProductsBaseUrl = `${environment.apiBaseUrl}/admin/products`;
 
   constructor(private readonly http: HttpClient) {}
 
@@ -45,12 +46,15 @@ export class ProductsService {
     if (filters.sort) params = params.set('sort', filters.sort);
     if (filters.order) params = params.set('order', filters.order);
 
-    return this.http.get<Paginated<Product>>(`${this.baseUrl}/products`, { params });
+    return this.http
+      .get<any>(this.productsBaseUrl, { params })
+      .pipe(map(response => this.mapPaginatedResponse<Product>(response)));
   }
 
   getProduct(id: string): Observable<Product> {
-    return this.http.get<ApiResponse<{ product: Product }>>(`${this.baseUrl}/products/${id}`)
-      .pipe(map(response => response.data!.product));
+    return this.http
+      .get<{ product: Product }>(`${this.productsBaseUrl}/${id}`)
+      .pipe(map(response => response.product));
   }
 
   // Admin endpoints
@@ -68,29 +72,37 @@ export class ProductsService {
     if (filters.sort) params = params.set('sort', filters.sort);
     if (filters.order) params = params.set('order', filters.order);
 
-    return this.http.get<Paginated<Product>>(`${this.baseUrl}/admin/products`, { params });
+    return this.http
+      .get<any>(this.adminProductsBaseUrl, { params })
+      .pipe(map(response => this.mapPaginatedResponse<Product>(response)));
   }
 
   createProduct(productData: Partial<Product>): Observable<Product> {
-    // Strip read-only fields
     const cleanData = this.cleanProductForSave(productData);
 
-    return this.http.post<ApiResponse<{ product: Product }>>(`${this.baseUrl}/admin/products`, cleanData, {
-      headers: { 'Idempotency-Key': this.generateIdempotencyKey() }
-    }).pipe(map(response => response.data!.product));
+    return this.http
+      .post<{ product: Product }>(this.adminProductsBaseUrl, cleanData, {
+        headers: { 'Idempotency-Key': this.generateIdempotencyKey() }
+      })
+      .pipe(map(response => response.product));
   }
 
   updateProduct(id: string, productData: Partial<Product>): Observable<Product> {
-    // Strip read-only fields
     const cleanData = this.cleanProductForSave(productData);
 
-    return this.http.patch<ApiResponse<{ product: Product }>>(`${this.baseUrl}/admin/products/${id}`, cleanData)
-      .pipe(map(response => response.data!.product));
+    return this.http
+      .put<{ product: Product }>(`${this.adminProductsBaseUrl}/${id}`, cleanData)
+      .pipe(map(response => response.product));
   }
 
   deleteProduct(id: string): Observable<{ success: boolean }> {
-    return this.http.delete<ApiResponse<any>>(`${this.baseUrl}/admin/products/${id}`)
-      .pipe(map(response => ({ success: true })));
+    return this.http.delete<{ success: boolean }>(`${this.adminProductsBaseUrl}/${id}`);
+  }
+
+  restoreProduct(id: string): Observable<Product> {
+    return this.http
+      .post<{ product: Product }>(`${this.adminProductsBaseUrl}/${id}/restore`, {})
+      .pipe(map(response => response.product));
   }
 
   // Helper methods for backward compatibility
@@ -148,21 +160,37 @@ export class ProductsService {
   }
 
   // Product Import/Export Functions
-  importProducts(products: Partial<Product>[]): Observable<{ inserted: number; failed: number; errors: any[] }> {
+  importProducts(products: Partial<Product>[] | File | Blob): Observable<{ inserted: number; failed: number; errors: any[] }> {
+    if (products instanceof Blob) {
+      return this.importProductsFile(products);
+    }
+
     const importData = {
       items: products.map(product => this.cleanProductForSave(product))
     };
+
     return this.http.post<{ inserted: number; failed: number; errors: any[] }>(
-      `${this.baseUrl}/admin/products/import`,
+      `${this.adminProductsBaseUrl}/import`,
       importData
     );
   }
 
+  importProductsFile(file: File | Blob): Observable<{ inserted: number; failed: number; errors: any[] }> {
+    const formData = new FormData();
+    formData.append('file', file, file instanceof File ? file.name : 'products-import');
+    return this.http.post<{ inserted: number; failed: number; errors: any[] }>(
+      `${this.adminProductsBaseUrl}/import`,
+      formData
+    );
+  }
+
   exportProducts(format: 'json' | 'csv' = 'json'): Observable<Blob> {
-    return this.http.get(`${this.baseUrl}/admin/products/export`, {
-      params: { format },
-      responseType: 'blob'
-    });
+    return this.http
+      .get(`${this.adminProductsBaseUrl}/export`, {
+        params: { format },
+        responseType: 'blob' as 'json'
+      })
+      .pipe(map(response => response as unknown as Blob));
   }
 
   // Bulk Operations
@@ -172,14 +200,14 @@ export class ProductsService {
       ...(filter && { filter })
     };
     return this.http.post<{ matched: number; modified: number; factor: number }>(
-      `${this.baseUrl}/admin/products/price-bulk`,
+      `${this.adminProductsBaseUrl}/price-bulk`,
       body
     );
   }
 
   bulkUpdateCategory(categoryId: string, productIds: string[]): Observable<{ matched: number; modified: number }> {
     return this.http.post<{ matched: number; modified: number }>(
-      `${this.baseUrl}/admin/products/category-bulk`,
+      `${this.adminProductsBaseUrl}/category-bulk`,
       { categoryId, productIds }
     );
   }
@@ -276,24 +304,73 @@ export class ProductsService {
   }
 
   // Bulk operations
-  bulkUpdateStatus(productIds: string[], isActive: boolean): Observable<{ success: boolean; updated: number }> {
-    return this.http.patch<ApiResponse<{ updated: number }>>(`${this.baseUrl}/admin/products/bulk/status`, {
-      productIds,
-      isActive
-    }).pipe(map(response => ({ success: true, updated: response.data!.updated })));
+  bulkUpdateStatus(
+    productIds: string[],
+    isActive: boolean
+  ): Observable<{ success: boolean; updated: number; failures: string[] }> {
+    if (!productIds.length) {
+      return of({ success: true, updated: 0, failures: [] });
+    }
+
+    return from(productIds).pipe(
+      mergeMap(
+        (id) =>
+          this.updateProduct(id, { isActive }).pipe(
+            map(() => ({ id, success: true as const })),
+            catchError(() => of({ id, success: false as const }))
+          ),
+        4
+      ),
+      reduce(
+        (acc, result) => {
+          if (result.success) {
+            acc.updated += 1;
+          } else {
+            acc.failures.push(result.id);
+          }
+          return acc;
+        },
+        { updated: 0, failures: [] as string[] }
+      ),
+      map((summary) => ({
+        success: summary.failures.length === 0,
+        updated: summary.updated,
+        failures: summary.failures
+      }))
+    );
   }
 
-  bulkDelete(productIds: string[]): Observable<{ success: boolean; deleted: number }> {
-    return this.http.delete<ApiResponse<{ deleted: number }>>(`${this.baseUrl}/admin/products/bulk`, {
-      body: { productIds }
-    }).pipe(map(response => ({ success: true, deleted: response.data!.deleted })));
-  }
+  bulkDelete(productIds: string[]): Observable<{ success: boolean; deleted: number; failures: string[] }> {
+    if (!productIds.length) {
+      return of({ success: true, deleted: 0, failures: [] });
+    }
 
-  // Duplicate product
-  duplicate(productId: string, newName?: string): Observable<Product> {
-    return this.http.post<ApiResponse<{ product: Product }>>(`${this.baseUrl}/admin/products/${productId}/duplicate`, {
-      name: newName
-    }).pipe(map(response => response.data!.product));
+    return from(productIds).pipe(
+      mergeMap(
+        (id) =>
+          this.deleteProduct(id).pipe(
+            map(() => ({ id, success: true as const })),
+            catchError(() => of({ id, success: false as const }))
+          ),
+        4
+      ),
+      reduce(
+        (acc, result) => {
+          if (result.success) {
+            acc.deleted += 1;
+          } else {
+            acc.failures.push(result.id);
+          }
+          return acc;
+        },
+        { deleted: 0, failures: [] as string[] }
+      ),
+      map((summary) => ({
+        success: summary.failures.length === 0,
+        deleted: summary.deleted,
+        failures: summary.failures
+      }))
+    );
   }
 
   // Validate SKU uniqueness
@@ -302,8 +379,7 @@ export class ProductsService {
     if (excludeProductId) {
       params = params.set('exclude', excludeProductId);
     }
-    return this.http.get<ApiResponse<{ isUnique: boolean }>>(`${this.baseUrl}/admin/products/validate-sku`, { params })
-      .pipe(map(response => response.data!));
+    return this.http.get<{ isUnique: boolean }>(`${this.adminProductsBaseUrl}/validate-sku`, { params });
   }
 
   // Validate slug uniqueness
@@ -312,8 +388,7 @@ export class ProductsService {
     if (excludeProductId) {
       params = params.set('exclude', excludeProductId);
     }
-    return this.http.get<ApiResponse<{ isUnique: boolean }>>(`${this.baseUrl}/admin/products/validate-slug`, { params })
-      .pipe(map(response => response.data!));
+    return this.http.get<{ isUnique: boolean }>(`${this.adminProductsBaseUrl}/validate-slug`, { params });
   }
 
   get(id: string): Observable<{ product: Product }> {
@@ -373,6 +448,47 @@ export class ProductsService {
       createdBefore: params.createdBefore,
       updatedAfter: params.updatedAfter,
       updatedBefore: params.updatedBefore
+    };
+  }
+
+  private mapPaginatedResponse<T>(response: any): Paginated<T> {
+    const items = Array.isArray(response?.items)
+      ? response.items
+      : Array.isArray(response?.data)
+        ? response.data
+        : [];
+
+    const pagination = response?.pagination ?? null;
+    const total = typeof response?.total === 'number'
+      ? response.total
+      : typeof pagination?.total === 'number'
+        ? pagination.total
+        : items.length;
+    const page = typeof response?.page === 'number'
+      ? response.page
+      : typeof pagination?.page === 'number'
+        ? pagination.page
+        : 1;
+    const pages = typeof response?.pages === 'number'
+      ? response.pages
+      : typeof pagination?.pages === 'number'
+        ? pagination.pages
+        : 1;
+    const limit = typeof response?.limit === 'number'
+      ? response.limit
+      : typeof pagination?.limit === 'number'
+        ? pagination.limit
+        : undefined;
+
+    return {
+      data: items,
+      items,
+      total,
+      page,
+      pages,
+      pagination: limit !== undefined
+        ? { page, limit, total, pages }
+        : undefined
     };
   }
 
