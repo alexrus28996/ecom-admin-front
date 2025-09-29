@@ -18,6 +18,7 @@ import { ProductVariantsDialogComponent } from './pages/products/product-variant
 import { AdminUsersComponent } from './pages/admin/admin-users.component';
 import { AdminUsersListComponent } from './pages/admin/users-list.component';
 import { UserPermissionsDialogComponent } from './pages/admin/user-permissions-dialog.component';
+import { AdminUserDetailComponent } from './pages/admin/user-detail.component';
 import { AdminOrdersListComponent } from './pages/admin/orders-admin-list.component';
 import { AdminOrderDetailComponent } from './pages/admin/order-admin-detail.component';
 import { AdminReturnsListComponent } from './pages/admin/returns-admin-list.component';
@@ -78,6 +79,7 @@ export function translateHttpLoaderFactory(http: HttpClient) {
     EmailVerifyComponent,
     ToastsComponent,
     AdminUsersListComponent,
+    AdminUserDetailComponent,
     AdminOrdersListComponent,
     AdminOrderDetailComponent,
     CategoriesComponent,

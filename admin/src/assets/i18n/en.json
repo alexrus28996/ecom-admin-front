@@ -1210,29 +1210,57 @@
       "actions": {
         "refresh": "Refresh",
         "manageRoles": "Manage roles",
-        "viewDetail": "View details"
+        "viewDetail": "View details",
+        "export": "Export users",
+        "view": "View",
+        "promote": "Promote",
+        "demote": "Demote",
+        "demoteDisabled": "Cannot demote last admin"
       },
       "table": {
         "name": "Name",
         "email": "Email",
         "roles": "Roles",
-        "active": "Active",
+        "status": "Status",
+        "createdAt": "Created",
         "actions": "Actions",
-        "unknown": "Unnamed user"
+        "unknown": "Unnamed user",
+        "selectAll": "Select all users",
+        "selectUser": "Select {{ name }}"
       },
       "status": {
         "active": "Active",
         "inactive": "Inactive"
       },
+      "bulk": {
+        "selected": "{{ count }} selected",
+        "activate": "Activate",
+        "deactivate": "Deactivate"
+      },
       "empty": "No users found.",
       "errors": {
-        "loadFailed": "Unable to load users."
+        "loadFailed": "Unable to load users.",
+        "updateStatus": "Unable to update user status.",
+        "promoteFailed": "Unable to promote user.",
+        "demoteFailed": "Unable to demote user."
+      },
+      "toasts": {
+        "activated": "User activated",
+        "deactivated": "User deactivated",
+        "bulkActivated": "Selected users activated",
+        "bulkDeactivated": "Selected users deactivated",
+        "promoted": "User promoted to admin",
+        "demoted": "Admin role removed"
       }
     },
     "permissions": {
       "title": "Manage permissions",
       "noRoles": "No roles assigned",
       "lastAdminWarning": "Demoting the final admin will leave the workspace without administrators.",
+      "instructions": {
+        "title": "Enable or disable access",
+        "body": "Enable/disable permissions by toggling checkboxes. Save to apply changes."
+      },
       "search": {
         "label": "Search permissions",
         "placeholder": "Filter by name or code"
@@ -1319,6 +1347,32 @@
         "userInvite": "Invite users",
         "userSuspend": "Suspend users",
         "settingsUpdate": "Update settings"
+      }
+    },
+    "detail": {
+      "actions": {
+        "back": "Back to users"
+      },
+      "sections": {
+        "profile": "Profile",
+        "activity": "Activity"
+      },
+      "fields": {
+        "name": "Name",
+        "email": "Email",
+        "roles": "Roles",
+        "status": "Status",
+        "createdAt": "Created",
+        "updatedAt": "Updated",
+        "lastLogin": "Last login",
+        "verification": "Email verification"
+      },
+      "status": {
+        "verified": "Verified",
+        "unverified": "Unverified"
+      },
+      "errors": {
+        "loadFailed": "Unable to load user details."
       }
     }
   },

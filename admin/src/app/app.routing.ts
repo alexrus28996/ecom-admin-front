@@ -6,6 +6,7 @@ import { ProductsListComponent } from './pages/products/products-list.component'
 import { ProductFormComponent } from './pages/products/product-form.component';
 import { AdminUsersComponent } from './pages/admin/admin-users.component';
 import { AdminUsersListComponent } from './pages/admin/users-list.component';
+import { AdminUserDetailComponent } from './pages/admin/user-detail.component';
 import { AdminOrdersListComponent } from './pages/admin/orders-admin-list.component';
 import { AdminOrderDetailComponent } from './pages/admin/order-admin-detail.component';
 import { CategoriesComponent } from './pages/categories/categories.component';
@@ -77,6 +78,12 @@ const routes: Routes = [
         component: AdminUsersListComponent,
         canActivate: [RoleGuard],
         data: { roles: ['admin'], breadcrumb: 'users' }
+      },
+      {
+        path: 'admin/users/:id',
+        component: AdminUserDetailComponent,
+        canActivate: [RoleGuard],
+        data: { roles: ['admin'], breadcrumb: 'userDetail' }
       },
       {
         path: 'admin/roles',

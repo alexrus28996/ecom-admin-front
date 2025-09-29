@@ -20,56 +20,6 @@ export class AdminService {
     return this.http.get<HealthStatus>(`${environment.apiBaseUrl.replace(/\/api$/, '')}/health`);
   }
 
-  promoteUser(userId: string): Observable<{ user: any }> {
-    return this.http.post<{ user: any }>(`${this.base}/users/${userId}/promote`, {});
-  }
-
-  demoteUser(userId: string): Observable<{ user: any }> {
-    return this.http.post<{ user: any }>(`${this.base}/users/${userId}/demote`, {});
-  }
-
-  getUserPermissions(userId: string): Observable<string[]> {
-    return this.http
-      .get<{ permissions?: string[]; data?: string[] }>(`${this.base}/users/${userId}/permissions`)
-      .pipe(map((response) => response.permissions || response.data || []));
-  }
-
-  replaceUserPermissions(userId: string, permissions: string[]): Observable<{ permissions: string[] }> {
-    return this.http.post<{ permissions: string[] }>(`${this.base}/users/${userId}/permissions`, { permissions });
-  }
-
-  addUserPermissions(userId: string, permissions: string[]): Observable<{ permissions: string[] }> {
-    return this.http.patch<{ permissions: string[] }>(`${this.base}/users/${userId}/permissions/add`, { permissions });
-  }
-
-  removeUserPermissions(userId: string, permissions: string[]): Observable<{ permissions: string[] }> {
-    return this.http.patch<{ permissions: string[] }>(`${this.base}/users/${userId}/permissions/remove`, { permissions });
-  }
-
-  listUsers(params: { q?: string; page?: number; limit?: number } = {}): Observable<{ items: any[]; total: number; page: number; pages: number; }> {
-    let query = new URLSearchParams();
-    if (params.q) query.set('search', params.q);
-    if (params.page) query.set('page', String(params.page));
-    if (params.limit) query.set('limit', String(params.limit));
-    const qs = query.toString();
-    return this.http.get<any>(`${this.base}/users${qs ? ('?' + qs) : ''}`).pipe(
-      map(response => ({
-        items: response.users || response.data || response.items || [],
-        total: response.pagination?.total || response.total || 0,
-        page: response.pagination?.page || response.page || 1,
-        pages: response.pagination?.pages || response.pages || 1
-      }))
-    );
-  }
-
-  getUser(id: string): Observable<{ user: any }> {
-    return this.http.get<{ user: any }>(`${this.base}/users/${id}`);
-  }
-
-  updateUserActive(id: string, isActive: boolean): Observable<{ user: any }> {
-    return this.http.patch<{ user: any }>(`${this.base}/users/${id}`, { isActive });
-  }
-
   listOrders(params: {
     page?: number;
     limit?: number;

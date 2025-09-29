@@ -148,7 +148,7 @@
           <mat-expansion-panel-header>
             <mat-panel-title>
               <mat-icon>{{ group.icon }}</mat-icon>
-              <span>{{ group.labelKey | translate }}</span>
+              <span>{{ group.label }}</span>
             </mat-panel-title>
             <mat-panel-description>
               {{ groupGrantedCount(group) }}/{{ group.permissions.length }}
@@ -172,10 +172,10 @@
                 [checked]="isGranted(permission.id)"
                 (change)="togglePermission(permission.id, $event.checked)"
                 [disabled]="permissionsLoading || savingPermissions"
-                [matTooltip]="permission.descriptionKey ? (permission.descriptionKey | translate) : ''"
-                [matTooltipDisabled]="!permission.descriptionKey"
+                [matTooltip]="permission.description || ''"
+                [matTooltipDisabled]="!permission.description"
               >
-                {{ permission.labelKey | translate }}
+                {{ permission.label }}
               </mat-checkbox>
             </label>
           </div>

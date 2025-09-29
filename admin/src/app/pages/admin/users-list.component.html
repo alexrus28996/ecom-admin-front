@@ -11,6 +11,10 @@
           <mat-icon>refresh</mat-icon>
           {{ 'adminUsers.list.actions.refresh' | translate }}
         </button>
+        <button mat-stroked-button type="button" (click)="exportCsv()" [disabled]="loading || !rows.length">
+          <mat-icon>file_download</mat-icon>
+          {{ 'adminUsers.list.actions.export' | translate }}
+        </button>
         <button mat-raised-button color="accent" type="button" (click)="documentation.toggle = !documentation.toggle">
           <mat-icon>menu_book</mat-icon>
           {{ 'adminUsers.permissions.doc.cta' | translate }}
@@ -66,10 +70,51 @@
     </mat-expansion-panel>
   </section>
 
+  <section class="bulk-actions" *ngIf="selectionCount()">
+    <div class="bulk-actions__summary">
+      <mat-icon>select_check_box</mat-icon>
+      <span>
+        {{ 'adminUsers.list.bulk.selected' | translate:{ count: selectionCount() } }}
+      </span>
+    </div>
+    <div class="bulk-actions__buttons">
+      <button mat-stroked-button color="primary" type="button" (click)="bulkActivate()" [disabled]="bulkLoading">
+        <mat-progress-spinner *ngIf="bulkLoading" diameter="16" mode="indeterminate"></mat-progress-spinner>
+        <mat-icon *ngIf="!bulkLoading">toggle_on</mat-icon>
+        {{ 'adminUsers.list.bulk.activate' | translate }}
+      </button>
+      <button mat-stroked-button color="warn" type="button" (click)="bulkDeactivate()" [disabled]="bulkLoading">
+        <mat-progress-spinner *ngIf="bulkLoading" diameter="16" mode="indeterminate"></mat-progress-spinner>
+        <mat-icon *ngIf="!bulkLoading">toggle_off</mat-icon>
+        {{ 'adminUsers.list.bulk.deactivate' | translate }}
+      </button>
+    </div>
+  </section>
+
   <section class="page__body">
     <app-loading [show]="loading" labelKey="common.loading"></app-loading>
     <div class="data-table" *ngIf="rows.length; else emptyState">
       <table mat-table [dataSource]="rows" class="data-table__table">
+        <ng-container matColumnDef="select">
+          <th mat-header-cell *matHeaderCellDef>
+            <mat-checkbox
+              (change)="toggleAll($event.checked)"
+              [checked]="isAllSelected()"
+              [indeterminate]="selectionCount() && !isAllSelected()"
+              [disabled]="loading"
+              aria-label="{{ 'adminUsers.list.table.selectAll' | translate }}"
+            ></mat-checkbox>
+          </th>
+          <td mat-cell *matCellDef="let u">
+            <mat-checkbox
+              [checked]="selection.isSelected(u.id)"
+              (change)="toggleSelection(u, $event.checked)"
+              [disabled]="loading"
+              aria-label="{{ 'adminUsers.list.table.selectUser' | translate:{ name: u.name || u.email } }}"
+            ></mat-checkbox>
+          </td>
+        </ng-container>
+
         <ng-container matColumnDef="name">
           <th mat-header-cell *matHeaderCellDef>{{ 'adminUsers.list.table.name' | translate }}</th>
           <td mat-cell *matCellDef="let u">
@@ -79,30 +124,77 @@
             </div>
           </td>
         </ng-container>
+
         <ng-container matColumnDef="email">
           <th mat-header-cell *matHeaderCellDef>{{ 'adminUsers.list.table.email' | translate }}</th>
           <td mat-cell *matCellDef="let u">{{ u.email }}</td>
         </ng-container>
+
         <ng-container matColumnDef="roles">
           <th mat-header-cell *matHeaderCellDef>{{ 'adminUsers.list.table.roles' | translate }}</th>
           <td mat-cell *matCellDef="let u">
             <mat-chip-set aria-label="Roles">
-              <mat-chip *ngFor="let role of u.roles">{{ role }}</mat-chip>
+              <mat-chip *ngFor="let role of u.roles" [color]="role === 'admin' ? 'primary' : undefined" [selected]="role === 'admin'">
+                {{ role }}
+              </mat-chip>
             </mat-chip-set>
           </td>
         </ng-container>
-        <ng-container matColumnDef="active">
-          <th mat-header-cell *matHeaderCellDef>{{ 'adminUsers.list.table.active' | translate }}</th>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>{{ 'adminUsers.list.table.status' | translate }}</th>
           <td mat-cell *matCellDef="let u">
-            <mat-slide-toggle [checked]="u.isActive" (change)="toggle(u)">
-              {{ u.isActive ? ('adminUsers.list.status.active' | translate) : ('adminUsers.list.status.inactive' | translate) }}
-            </mat-slide-toggle>
+            <div class="status-toggle">
+              <mat-slide-toggle
+                [checked]="u.isActive"
+                (change)="toggle(u)"
+                [disabled]="statusLoading.has(u.id)"
+                color="primary"
+              >
+                {{ u.isActive ? ('adminUsers.list.status.active' | translate) : ('adminUsers.list.status.inactive' | translate) }}
+              </mat-slide-toggle>
+              <mat-progress-spinner *ngIf="statusLoading.has(u.id)" diameter="20" mode="indeterminate"></mat-progress-spinner>
+            </div>
           </td>
         </ng-container>
+
+        <ng-container matColumnDef="createdAt">
+          <th mat-header-cell *matHeaderCellDef>{{ 'adminUsers.list.table.createdAt' | translate }}</th>
+          <td mat-cell *matCellDef="let u">{{ u.createdAt | date: 'medium' }}</td>
+        </ng-container>
+
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef>{{ 'adminUsers.list.table.actions' | translate }}</th>
           <td mat-cell *matCellDef="let u">
             <div class="table-actions">
+              <button mat-button type="button" (click)="navigateTo(u)" matTooltip="{{ 'adminUsers.list.actions.view' | translate }}">
+                <mat-icon>visibility</mat-icon>
+                <span>{{ 'adminUsers.list.actions.view' | translate }}</span>
+              </button>
+              <button
+                mat-button
+                color="primary"
+                type="button"
+                (click)="promote(u)"
+                [disabled]="roleLoading.has(u.id) || u.roles?.includes('admin')"
+                matTooltip="{{ 'adminUsers.list.actions.promote' | translate }}"
+              >
+                <mat-progress-spinner *ngIf="roleLoading.has(u.id)" diameter="16" mode="indeterminate"></mat-progress-spinner>
+                <mat-icon *ngIf="!roleLoading.has(u.id)">upgrade</mat-icon>
+                <span>{{ 'adminUsers.list.actions.promote' | translate }}</span>
+              </button>
+              <button
+                mat-button
+                color="warn"
+                type="button"
+                (click)="demote(u)"
+                [disabled]="roleLoading.has(u.id) || !u.roles?.includes('admin') || isLastAdmin(u)"
+                matTooltip="{{ isLastAdmin(u) ? ('adminUsers.list.actions.demoteDisabled' | translate) : ('adminUsers.list.actions.demote' | translate) }}"
+              >
+                <mat-progress-spinner *ngIf="roleLoading.has(u.id)" diameter="16" mode="indeterminate"></mat-progress-spinner>
+                <mat-icon *ngIf="!roleLoading.has(u.id)">download</mat-icon>
+                <span>{{ 'adminUsers.list.actions.demote' | translate }}</span>
+              </button>
               <button
                 mat-raised-button
                 color="primary"
@@ -119,7 +211,7 @@
         </ng-container>
 
         <tr mat-header-row *matHeaderRowDef="displayed; sticky: true"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayed"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayed" [class.row--selected]="selection.isSelected(row.id)"></tr>
       </table>
     </div>
     <ng-template #emptyState>

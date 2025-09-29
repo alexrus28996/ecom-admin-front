@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/
 import { UntypedFormControl, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { TranslateService } from '@ngx-translate/core';
-import { AdminService } from '../../services/admin.service';
+import { UserManagementService } from '../../services/user-management.service';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
 import { ToastService } from '../../core/toast.service';
 
@@ -14,7 +14,7 @@ export class AdminUsersComponent {
   lastError: any = null;
 
   constructor(
-    private readonly admin: AdminService,
+    private readonly users: UserManagementService,
     private readonly dialog: MatDialog,
     private readonly toast: ToastService,
     private readonly i18n: TranslateService,
@@ -22,7 +22,7 @@ export class AdminUsersComponent {
   ) {}
 
   promote(): void {
-    this.exec('adminUsers.roles.toasts.promoted', () => this.admin.promoteUser(this.userId.value));
+    this.exec('adminUsers.roles.toasts.promoted', () => this.users.promoteUser(this.userId.value));
   }
 
   demote(): void {
@@ -36,7 +36,7 @@ export class AdminUsersComponent {
     });
     ref.afterClosed().subscribe((ok) => {
       if (ok) {
-        this.exec('adminUsers.roles.toasts.demoted', () => this.admin.demoteUser(this.userId.value));
+        this.exec('adminUsers.roles.toasts.demoted', () => this.users.demoteUser(this.userId.value));
       }
     });
   }

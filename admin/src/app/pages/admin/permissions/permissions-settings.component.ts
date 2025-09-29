@@ -5,19 +5,35 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslateService } from '@ngx-translate/core';
 
-import { AdminService } from '../../../services/admin.service';
-import { PERMISSION_GROUPS, PermissionGroupDefinition } from '../../../services/permissions.constants';
+import {
+  PermissionCatalogEntry,
+  UserManagementService,
+  UserPermissionsResponse,
+} from '../../../services/user-management.service';
 import { ToastService } from '../../../core/toast.service';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog.component';
+
+interface PermissionItemView {
+  id: string;
+  label: string;
+  description?: string;
+  groupKey: string;
+}
+
+interface PermissionGroupView {
+  key: string;
+  label: string;
+  icon: string;
+  permissions: PermissionItemView[];
+}
 
 @Component({
   selector: 'app-permissions-settings',
   templateUrl: './permissions-settings.component.html',
   styleUrls: ['./permissions-settings.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PermissionsSettingsComponent implements OnInit {
-  readonly groups = PERMISSION_GROUPS;
   readonly searchControl = new FormControl('');
 
   users: any[] = [];
@@ -30,12 +46,13 @@ export class PermissionsSettingsComponent implements OnInit {
   originalPermissions = new Set<string>();
   permissionsLoading = false;
   permissionsErrorKey: string | null = null;
+  groups: PermissionGroupView[] = [];
 
   savingPermissions = false;
   roleActionLoading = false;
 
   constructor(
-    private readonly admin: AdminService,
+    private readonly usersService: UserManagementService,
     private readonly cdr: ChangeDetectorRef,
     private readonly toast: ToastService,
     private readonly dialog: MatDialog,
@@ -62,15 +79,17 @@ export class PermissionsSettingsComponent implements OnInit {
   }
 
   selectUser(user: any): void {
-    if (!user || (this.selectedUser && this.selectedUser.id === user.id && !this.permissionsErrorKey)) {
-      this.selectedUser = user;
+    if (!user) {
       return;
     }
-
+    if (this.selectedUser && this.selectedUser.id === user.id && !this.permissionsErrorKey) {
+      return;
+    }
     this.selectedUser = user;
     this.permissions = new Set<string>();
     this.originalPermissions = new Set<string>();
     this.permissionsErrorKey = null;
+    this.groups = [];
 
     this.loadPermissions();
     this.cdr.markForCheck();
@@ -94,19 +113,19 @@ export class PermissionsSettingsComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  toggleGroup(group: PermissionGroupDefinition, checked: boolean): void {
+  toggleGroup(group: PermissionGroupView, checked: boolean): void {
     group.permissions.forEach((permission) => this.togglePermission(permission.id, checked));
   }
 
-  groupGrantedCount(group: PermissionGroupDefinition): number {
+  groupGrantedCount(group: PermissionGroupView): number {
     return group.permissions.reduce((count, permission) => count + (this.permissions.has(permission.id) ? 1 : 0), 0);
   }
 
-  groupFullyGranted(group: PermissionGroupDefinition): boolean {
+  groupFullyGranted(group: PermissionGroupView): boolean {
     return group.permissions.every((permission) => this.permissions.has(permission.id));
   }
 
-  groupPartiallyGranted(group: PermissionGroupDefinition): boolean {
+  groupPartiallyGranted(group: PermissionGroupView): boolean {
     const granted = this.groupGrantedCount(group);
     return granted > 0 && granted < group.permissions.length;
   }
@@ -129,8 +148,8 @@ export class PermissionsSettingsComponent implements OnInit {
       data: {
         titleKey: 'adminUsers.permissions.confirm.clearAll.title',
         messageKey: 'adminUsers.permissions.confirm.clearAll.message',
-        confirmKey: 'adminUsers.permissions.confirm.clearAll.confirm'
-      }
+        confirmKey: 'adminUsers.permissions.confirm.clearAll.confirm',
+      },
     });
 
     ref.afterClosed().subscribe((ok) => {
@@ -168,7 +187,7 @@ export class PermissionsSettingsComponent implements OnInit {
     }
     this.savingPermissions = true;
     this.cdr.markForCheck();
-    this.admin.replaceUserPermissions(this.selectedUser.id, Array.from(this.permissions)).subscribe({
+    this.usersService.replaceUserPermissions(this.selectedUser.id, Array.from(this.permissions)).subscribe({
       next: () => {
         this.originalPermissions = new Set(this.permissions);
         this.savingPermissions = false;
@@ -181,7 +200,7 @@ export class PermissionsSettingsComponent implements OnInit {
         const key = code ? `errors.backend.${code}` : 'adminUsers.permissions.errors.actionFailed';
         this.toast.error(this.translate.instant(key));
         this.cdr.markForCheck();
-      }
+      },
     });
   }
 
@@ -191,8 +210,8 @@ export class PermissionsSettingsComponent implements OnInit {
     }
     this.roleActionLoading = true;
     this.cdr.markForCheck();
-    this.admin.promoteUser(this.selectedUser.id).subscribe({
-      next: ({ user }) => {
+    this.usersService.promoteUser(this.selectedUser.id).subscribe({
+      next: (user) => {
         const roles = user?.roles || [...(this.selectedUser?.roles || []), 'admin'];
         this.updateUserRoles(roles);
         this.roleActionLoading = false;
@@ -201,11 +220,9 @@ export class PermissionsSettingsComponent implements OnInit {
       },
       error: (error) => {
         this.roleActionLoading = false;
-        const code = error?.error?.error?.code;
-        const key = code ? `errors.backend.${code}` : 'adminUsers.permissions.errors.actionFailed';
-        this.toast.error(this.translate.instant(key));
+        this.handleError(error);
         this.cdr.markForCheck();
-      }
+      },
     });
   }
 
@@ -213,20 +230,20 @@ export class PermissionsSettingsComponent implements OnInit {
     if (!this.selectedUser || this.roleActionLoading || !this.selectedUser.roles?.includes('admin')) {
       return;
     }
-
-    const dialogData = this.isLastAdmin()
-      ? {
-          titleKey: 'adminUsers.permissions.confirm.demoteLastAdmin.title',
-          messageKey: 'adminUsers.permissions.confirm.demoteLastAdmin.message',
-          confirmKey: 'adminUsers.permissions.confirm.demoteLastAdmin.confirm'
-        }
-      : {
-          titleKey: 'adminUsers.permissions.confirm.demote.title',
-          messageKey: 'adminUsers.permissions.confirm.demote.message',
-          confirmKey: 'adminUsers.permissions.confirm.demote.confirm'
-        };
-
-    const ref = this.dialog.open(ConfirmDialogComponent, { width: '360px', data: dialogData });
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      width: '360px',
+      data: this.isLastAdmin()
+        ? {
+            titleKey: 'adminUsers.permissions.confirm.demoteLastAdmin.title',
+            messageKey: 'adminUsers.permissions.confirm.demoteLastAdmin.message',
+            confirmKey: 'adminUsers.permissions.confirm.demoteLastAdmin.confirm',
+          }
+        : {
+            titleKey: 'adminUsers.permissions.confirm.demote.title',
+            messageKey: 'adminUsers.permissions.confirm.demote.message',
+            confirmKey: 'adminUsers.permissions.actions.demote',
+          },
+    });
 
     ref.afterClosed().subscribe((ok) => {
       if (!ok) {
@@ -234,11 +251,9 @@ export class PermissionsSettingsComponent implements OnInit {
       }
       this.roleActionLoading = true;
       this.cdr.markForCheck();
-      this.admin.demoteUser(this.selectedUser!.id).subscribe({
-        next: ({ user }) => {
-          const roles = Array.isArray(user?.roles)
-            ? user.roles
-            : (this.selectedUser?.roles || []).filter((role: string) => role !== 'admin');
+      this.usersService.demoteUser(this.selectedUser!.id).subscribe({
+        next: (user) => {
+          const roles = user?.roles || this.selectedUser?.roles?.filter((role: string) => role !== 'admin') || [];
           this.updateUserRoles(roles);
           this.roleActionLoading = false;
           this.toast.success(this.translate.instant('adminUsers.permissions.toasts.demoted'));
@@ -246,11 +261,9 @@ export class PermissionsSettingsComponent implements OnInit {
         },
         error: (error) => {
           this.roleActionLoading = false;
-          const code = error?.error?.error?.code;
-          const key = code ? `errors.backend.${code}` : 'adminUsers.permissions.errors.actionFailed';
-          this.toast.error(this.translate.instant(key));
+          this.handleError(error);
           this.cdr.markForCheck();
-        }
+        },
       });
     });
   }
@@ -263,39 +276,22 @@ export class PermissionsSettingsComponent implements OnInit {
     return totalAdmins <= 1;
   }
 
-  private loadUsers(search: string): void {
+  private loadUsers(term: string): void {
     this.usersLoading = true;
     this.usersErrorKey = null;
     this.cdr.markForCheck();
-
-    this.admin.listUsers({ q: search || undefined, limit: 200 }).subscribe({
+    this.usersService.listUsers({ q: term || undefined }).subscribe({
       next: (response) => {
         this.users = response.items || [];
         this.usersLoading = false;
-        const currentId = this.selectedUser?.id;
-        if (currentId) {
-          const existing = this.users.find((user) => user.id === currentId) || null;
-          this.selectedUser = existing;
-          if (existing) {
-            this.cdr.markForCheck();
-            return;
-          }
-        }
-        if (this.users.length) {
-          this.selectUser(this.users[0]);
-        } else {
-          this.selectedUser = null;
-          this.permissions = new Set<string>();
-          this.originalPermissions = new Set<string>();
-          this.cdr.markForCheck();
-        }
+        this.cdr.markForCheck();
       },
       error: (error) => {
-        this.usersLoading = false;
         const code = error?.error?.error?.code;
         this.usersErrorKey = code ? `errors.backend.${code}` : 'adminUsers.list.errors.loadFailed';
+        this.usersLoading = false;
         this.cdr.markForCheck();
-      }
+      },
     });
   }
 
@@ -306,20 +302,18 @@ export class PermissionsSettingsComponent implements OnInit {
     this.permissionsLoading = true;
     this.permissionsErrorKey = null;
     this.cdr.markForCheck();
-
-    this.admin.getUserPermissions(this.selectedUser.id).subscribe({
-      next: (permissions) => {
-        this.permissions = new Set(permissions || []);
-        this.originalPermissions = new Set(this.permissions);
+    this.usersService.getUserPermissions(this.selectedUser.id).subscribe({
+      next: (response) => {
+        this.applyPermissions(response);
         this.permissionsLoading = false;
         this.cdr.markForCheck();
       },
       error: (error) => {
-        this.permissionsLoading = false;
         const code = error?.error?.error?.code;
         this.permissionsErrorKey = code ? `errors.backend.${code}` : 'adminUsers.permissions.errors.loadFailed';
+        this.permissionsLoading = false;
         this.cdr.markForCheck();
-      }
+      },
     });
   }
 
@@ -327,11 +321,106 @@ export class PermissionsSettingsComponent implements OnInit {
     if (!this.selectedUser) {
       return;
     }
-    this.selectedUser.roles = roles;
-    const listUser = this.users.find((user) => user.id === this.selectedUser!.id);
-    if (listUser) {
-      listUser.roles = roles;
+    const idx = this.users.findIndex((user) => user.id === this.selectedUser!.id);
+    if (idx >= 0) {
+      this.users[idx] = { ...this.users[idx], roles };
     }
-    this.cdr.markForCheck();
+    this.selectedUser = { ...this.selectedUser, roles };
+  }
+
+  private handleError(error: any): void {
+    const code = error?.error?.error?.code;
+    const key = code ? `errors.backend.${code}` : 'adminUsers.permissions.errors.actionFailed';
+    this.toast.error(this.translate.instant(key));
+  }
+
+  private applyPermissions(response: UserPermissionsResponse): void {
+    this.permissions = new Set(response.permissions || []);
+    this.originalPermissions = new Set(this.permissions);
+    this.groups = this.buildGroups(response);
+  }
+
+  private buildGroups(response: UserPermissionsResponse): PermissionGroupView[] {
+    const catalog: PermissionCatalogEntry[] = [...(response.available || [])];
+    const known = new Set<string>(catalog.map((entry) => entry.id));
+    (response.permissions || []).forEach((id) => {
+      if (!known.has(id)) {
+        catalog.push({ id });
+      }
+    });
+    const items = catalog.map((entry) => this.toView(entry));
+    const groups = new Map<string, PermissionGroupView>();
+    items.forEach((item) => {
+      const key = item.groupKey || 'general';
+      if (!groups.has(key)) {
+        groups.set(key, {
+          key,
+          label: this.groupLabel(key),
+          icon: this.groupIcon(key),
+          permissions: [],
+        });
+      }
+      groups.get(key)!.permissions.push(item);
+    });
+    return Array.from(groups.values()).map((group) => ({
+      ...group,
+      permissions: group.permissions.sort((a, b) => a.label.localeCompare(b.label)),
+    }));
+  }
+
+  private toView(entry: PermissionCatalogEntry): PermissionItemView {
+    const id = entry.id;
+    const camelKey = this.toCamelKey(id);
+    const labelKey = `adminUsers.permissions.items.${camelKey}`;
+    const tooltipKey = `permissionsSettings.tooltips.${camelKey}`;
+    const labelTranslation = this.translate.instant(labelKey);
+    const tooltipTranslation = this.translate.instant(tooltipKey);
+    const label = entry.label || (labelTranslation !== labelKey ? labelTranslation : this.prettyLabel(id));
+    const description = entry.description || (tooltipTranslation !== tooltipKey ? tooltipTranslation : undefined);
+    const groupKey = (entry.group || entry.category || 'general').toString();
+    return {
+      id,
+      label,
+      description,
+      groupKey,
+    };
+  }
+
+  private groupLabel(key: string): string {
+    const translationKey = `adminUsers.permissions.groups.${key}`;
+    const translated = this.translate.instant(translationKey);
+    return translated !== translationKey ? translated : this.prettyLabel(key);
+  }
+
+  private groupIcon(key: string): string {
+    switch (key) {
+      case 'catalog':
+        return 'storefront';
+      case 'orders':
+        return 'shopping_cart_checkout';
+      case 'inventory':
+        return 'inventory_2';
+      case 'reports':
+        return 'insights';
+      case 'system':
+        return 'admin_panel_settings';
+      default:
+        return 'folder';
+    }
+  }
+
+  private prettyLabel(value: string): string {
+    return value
+      .replace(/[:._-]/g, ' ')
+      .split(' ')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+  }
+
+  private toCamelKey(value: string): string {
+    return value
+      .split(/[:._-]/)
+      .map((chunk, index) => (index === 0 ? chunk : chunk.charAt(0).toUpperCase() + chunk.slice(1)))
+      .join('');
   }
 }
