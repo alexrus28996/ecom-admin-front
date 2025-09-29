@@ -172,7 +172,7 @@ export class AdminUsersListComponent implements OnInit {
   }
 
   isAllSelected(): boolean {
-    return this.selection.selected.length && this.selection.selected.length === this.rows.length;
+    return this.selection.selected.length > 0 && this.selection.selected.length === this.rows.length;
   }
 
   bulkActivate(): void {

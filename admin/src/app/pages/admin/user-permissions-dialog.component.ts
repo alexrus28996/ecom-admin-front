@@ -112,6 +112,13 @@ export class UserPermissionsDialogComponent implements OnInit, OnDestroy {
     return this.toggling.has(permission);
   }
 
+  grantedCount(group: PermissionGroupView): number {
+    if (!group?.items?.length) {
+      return 0;
+    }
+    return group.items.reduce((count, item) => (this.isGranted(item.id) ? count + 1 : count), 0);
+  }
+
   togglePermission(permission: PermissionItemView, checked: boolean): void {
     if (!permission || this.isToggling(permission.id)) {
       return;

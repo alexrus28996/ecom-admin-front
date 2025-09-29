@@ -84,13 +84,19 @@
     <mat-form-field appearance="outline" class="adjust-dialog__field">
       <mat-label>{{ 'inventory.adjustDialog.fields.reason' | translate }}</mat-label>
       <mat-select formControlName="reason">
-        <mat-option *ngFor="let reason of reasons" [value]="reason.value">{{ reason.labelKey | translate }}</mat-option>
+        <mat-option *ngFor="let reason of reasons" [value]="reason.value">{{ reason.label }}</mat-option>
       </mat-select>
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="adjust-dialog__field">
       <mat-label>{{ 'inventory.adjustDialog.fields.location' | translate }}</mat-label>
-      <input matInput formControlName="location" />
+      <mat-select formControlName="locationId" [disabled]="loadingLocations">
+        <mat-option value="">{{ anyLocationLabel }}</mat-option>
+        <mat-option *ngFor="let location of locations" [value]="location._id">
+          {{ location.code }} • {{ location.name }}
+        </mat-option>
+      </mat-select>
+      <mat-hint *ngIf="loadingLocations">{{ loadingLocationsLabel }}</mat-hint>
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="adjust-dialog__field">

@@ -97,7 +97,7 @@
               {{ group.label }}
             </mat-panel-title>
             <mat-panel-description>
-              {{ group.items.filter((item) => isGranted(item.id)).length }}/{{ group.items.length }}
+              {{ grantedCount(group) }}/{{ group.items.length }}
             </mat-panel-description>
           </mat-expansion-panel-header>
           <div class="group-actions">

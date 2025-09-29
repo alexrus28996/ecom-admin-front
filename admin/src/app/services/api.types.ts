@@ -288,7 +288,101 @@ export interface InventoryAdjustment extends BaseDocument {
   user?: string;
 }
 
-export type InventoryAdjustmentReason = 'manual' | 'restock' | 'damage' | 'correction' | 'other';
+export type InventoryAdjustmentReason =
+  | 'ORDER'
+  | 'ADJUSTMENT'
+  | 'RETURN'
+  | 'TRANSFER'
+  | 'RESERVATION'
+  | 'STOCKTAKE'
+  | 'CORRECTION'
+  | 'DAMAGED'
+  | 'OTHER'
+  | 'MANUAL'
+  | 'RESTOCK';
+
+export interface StockItem extends BaseDocument {
+  product: string | Product;
+  variant?: string | ProductVariant;
+  location?: string | InventoryLocation;
+  onHand: number;
+  reserved: number;
+  available: number;
+  updatedAt: string;
+  reorderPoint?: number | null;
+}
+
+export interface InventoryReservation extends BaseDocument {
+  orderId?: string;
+  product: string | Product;
+  variant?: string | ProductVariant;
+  location?: string | InventoryLocation;
+  reservedQty: number;
+  status: ReservationStatus;
+  expiresAt?: string | null;
+}
+
+export type ReservationStatus = 'ACTIVE' | 'RELEASED' | 'EXPIRED';
+
+export interface InventoryLocation extends BaseDocument {
+  code: string;
+  name: string;
+  type?: LocationType;
+  geo?: {
+    address1?: string;
+    address2?: string;
+    city?: string;
+    region?: string;
+    postalCode?: string;
+    country?: string;
+    latitude?: number;
+    longitude?: number;
+  } | null;
+  priority?: number | null;
+  active: boolean;
+}
+
+export type LocationType = 'WAREHOUSE' | 'STORE' | 'DISTRIBUTION' | 'FULFILLMENT' | 'VENDOR' | 'OTHER';
+
+export interface TransferOrder extends BaseDocument {
+  fromLocation: string | InventoryLocation;
+  toLocation: string | InventoryLocation;
+  status: TransferStatus;
+  lines: TransferOrderLine[];
+  metadata?: Record<string, unknown> | null;
+  timeline?: TransferTimelineEvent[];
+}
+
+export interface TransferOrderLine {
+  product: string | Product;
+  variant?: string | ProductVariant;
+  quantity: number;
+}
+
+export type TransferStatus = 'DRAFT' | 'REQUESTED' | 'IN_TRANSIT' | 'RECEIVED' | 'CANCELLED';
+
+export interface TransferTimelineEvent {
+  status: TransferStatus;
+  occurredAt: string;
+  actor?: string | User;
+  note?: string;
+}
+
+export interface StockLedgerEntry extends BaseDocument {
+  product: string | Product;
+  variant?: string | ProductVariant;
+  location?: string | InventoryLocation;
+  quantity: number;
+  direction: InventoryDirection;
+  reason?: InventoryAdjustmentReason;
+  refType?: string;
+  refId?: string;
+  occurredAt: string;
+  actor?: string | User;
+  metadata?: Record<string, unknown> | null;
+}
+
+export type InventoryDirection = 'IN' | 'OUT';
 
 // Coupon interfaces
 export interface Coupon extends BaseDocument {

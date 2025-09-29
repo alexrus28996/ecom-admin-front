@@ -4,9 +4,12 @@ import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Observable, Subject, debounceTime, distinctUntilChanged, map, startWith, switchMap, takeUntil, tap } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
-import { AdminService } from '../../services/admin.service';
 import { ProductsService, ProductSummary } from '../../services/products.service';
 import { ToastService } from '../../core/toast.service';
+import { InventoryService, CreateAdjustmentRequest } from '../../services/inventory.service';
+import { InventoryLocation, InventoryAdjustmentReason } from '../../services/api.types';
+import { LocationService } from '../../services/location.service';
+import { AuditService } from '../../services/audit.service';
 
 export interface InventoryAdjustmentDialogData {
   productId?: string;
@@ -17,7 +20,7 @@ export interface InventoryAdjustmentDialogData {
   defaultQuantity?: number;
   defaultReason?: string;
   defaultNote?: string;
-  defaultLocation?: string;
+  defaultLocationId?: string;
 }
 
 export interface InventoryAdjustmentDialogResult {
@@ -30,9 +33,9 @@ interface AdjustmentFormValue {
   variantId: string;
   direction: 'increase' | 'decrease';
   quantity: number;
-  reason: string;
+  reason: InventoryAdjustmentReason;
   note: string;
-  location: string;
+  locationId: string;
 }
 
 interface ProductOption {
@@ -59,18 +62,25 @@ export class InventoryAdjustmentDialogComponent implements OnInit, OnDestroy {
     variantId: [''],
     direction: [this.mapInitialDirection(this.data?.defaultDirection) ?? 'increase', Validators.required],
     quantity: [this.data?.defaultQuantity ?? 1, [Validators.required, Validators.min(1)]],
-    reason: [this.data?.defaultReason ?? 'manual'],
+    reason: [this.mapInitialReason(this.data?.defaultReason) ?? 'ADJUSTMENT'],
     note: [this.data?.defaultNote ?? '', Validators.maxLength(240)],
-    location: [this.data?.defaultLocation ?? '', Validators.maxLength(120)]
+    locationId: [this.data?.defaultLocationId ?? '', Validators.maxLength(120)]
   });
 
-  readonly reasons = [
-    { value: 'manual', labelKey: 'inventory.adjustments.reasons.manual' },
-    { value: 'restock', labelKey: 'inventory.adjustments.reasons.restock' },
-    { value: 'damage', labelKey: 'inventory.adjustments.reasons.damage' },
-    { value: 'correction', labelKey: 'inventory.adjustments.reasons.correction' },
-    { value: 'other', labelKey: 'inventory.adjustments.reasons.other' }
+  readonly reasons: { value: InventoryAdjustmentReason; label: string }[] = [
+    { value: 'ORDER', label: this.i18n.instant('inventory.adjustments.reasons.order') || 'Order fulfilment' },
+    { value: 'ADJUSTMENT', label: this.i18n.instant('inventory.adjustments.reasons.adjustment') || 'Manual adjustment' },
+    { value: 'RETURN', label: this.i18n.instant('inventory.adjustments.reasons.return') || 'Return' },
+    { value: 'TRANSFER', label: this.i18n.instant('inventory.adjustments.reasons.transfer') || 'Transfer' },
+    { value: 'RESERVATION', label: this.i18n.instant('inventory.adjustments.reasons.reservation') || 'Reservation change' },
+    { value: 'STOCKTAKE', label: this.i18n.instant('inventory.adjustments.reasons.stocktake') || 'Stocktake' },
+    { value: 'DAMAGED', label: this.i18n.instant('inventory.adjustments.reasons.damaged') || 'Damaged' },
+    { value: 'CORRECTION', label: this.i18n.instant('inventory.adjustments.reasons.correction') || 'Correction' },
+    { value: 'OTHER', label: this.i18n.instant('inventory.adjustments.reasons.other') || 'Other' }
   ];
+
+  readonly anyLocationLabel = this.i18n.instant('inventory.adjustDialog.labels.anyLocation') || 'Any location';
+  readonly loadingLocationsLabel = this.i18n.instant('inventory.adjustDialog.loadingLocations') || 'Loading locations…';
 
   productOptions: ProductOption[] = [];
   variantOptions: VariantOption[] = [];
@@ -78,6 +88,8 @@ export class InventoryAdjustmentDialogComponent implements OnInit, OnDestroy {
   loadingProducts = false;
   loadingVariants = false;
   saving = false;
+  locations: InventoryLocation[] = [];
+  loadingLocations = false;
 
   private readonly destroy$ = new Subject<void>();
 
@@ -85,11 +97,13 @@ export class InventoryAdjustmentDialogComponent implements OnInit, OnDestroy {
     private readonly dialogRef: MatDialogRef<InventoryAdjustmentDialogComponent, InventoryAdjustmentDialogResult | null>,
     private readonly fb: UntypedFormBuilder,
     private readonly products: ProductsService,
-    private readonly admin: AdminService,
+    private readonly inventory: InventoryService,
+    private readonly locationsService: LocationService,
     @Inject(MAT_DIALOG_DATA) public readonly data: InventoryAdjustmentDialogData,
     private readonly toast: ToastService,
     private readonly i18n: TranslateService,
-    private readonly cdr: ChangeDetectorRef
+    private readonly cdr: ChangeDetectorRef,
+    private readonly audit: AuditService
   ) {}
 
   get productControl(): UntypedFormControl {
@@ -128,12 +142,15 @@ export class InventoryAdjustmentDialogComponent implements OnInit, OnDestroy {
         {
           productId: this.data.productId,
           productSearch: this.data.productName || '',
-          variantId: this.data.variantId || ''
+          variantId: this.data.variantId || '',
+          locationId: this.data.defaultLocationId || ''
         },
         { emitEvent: false }
       );
       this.loadProductById(this.data.productId, this.data.variantId);
     }
+
+    this.loadLocations();
   }
 
   ngOnDestroy(): void {
@@ -199,28 +216,62 @@ export class InventoryAdjustmentDialogComponent implements OnInit, OnDestroy {
       return;
     }
     const qtyChange = raw.direction === 'decrease' ? -quantity : quantity;
-    const payload = {
+    const payload: CreateAdjustmentRequest = {
       productId: raw.productId,
       variantId: raw.variantId || undefined,
-      qtyChange,
-      reason: raw.reason || undefined,
-      note: raw.note || undefined,
-      location: raw.location || undefined
+      quantityChange: qtyChange,
+      reason: raw.reason,
+      note: raw.note?.trim() || undefined,
+      locationId: raw.locationId || undefined
     };
     this.saving = true;
     this.cdr.markForCheck();
-    this.admin
-      .createInventoryAdjustment(payload)
+    this.inventory
+      .createAdjustment(payload)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
           this.saving = false;
           this.toast.success(this.i18n.instant('inventory.adjustments.toasts.created'));
+          this.audit
+            .log({
+              action: 'inventory.adjustment.create',
+              entity: 'inventoryAdjustment',
+              metadata: {
+                productId: payload.productId,
+                variantId: payload.variantId,
+                locationId: payload.locationId,
+                quantityChange: payload.quantityChange,
+                reason: payload.reason
+              }
+            })
+            .subscribe();
           this.dialogRef.close({ refresh: true });
         },
         error: () => {
           this.saving = false;
           this.toast.error(this.i18n.instant('inventory.errors.adjustmentCreateFailed'));
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  private loadLocations(): void {
+    this.loadingLocations = true;
+    this.cdr.markForCheck();
+    this.locationsService
+      .list({ includeDeleted: false, page: 1, limit: 100, sort: 'priority', order: 'asc' })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          const items = response.items || response.data || [];
+          this.locations = (items as InventoryLocation[]).filter(Boolean);
+          this.loadingLocations = false;
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.locations = [];
+          this.loadingLocations = false;
           this.cdr.markForCheck();
         }
       });
@@ -301,6 +352,17 @@ export class InventoryAdjustmentDialogComponent implements OnInit, OnDestroy {
     }
     if (direction === 'remove') {
       return 'decrease';
+    }
+    return null;
+  }
+
+  private mapInitialReason(reason?: string | null): InventoryAdjustmentReason | null {
+    if (!reason) {
+      return null;
+    }
+    const normalized = reason.toUpperCase() as InventoryAdjustmentReason;
+    if (this.reasons.some((option) => option.value === normalized)) {
+      return normalized;
     }
     return null;
   }

@@ -15,6 +15,8 @@ export interface Category {
   sortOrder?: number;
   createdAt?: string;
   updatedAt?: string;
+  isActive?: boolean;
+  deletedAt?: string | null;
 }
 
 export interface CategoryInput {

@@ -5,159 +5,164 @@ import { map } from 'rxjs/operators';
 
 import { environment } from '../../environments/environment';
 import {
-  InventorySnapshot,
+  ApiResponse,
   InventoryAdjustment,
   InventoryAdjustmentReason,
+  InventoryDirection,
+  InventoryReservation,
   Paginated,
-  ApiResponse,
   PaginationParams,
-  SortParams
+  ReservationStatus,
+  SortParams,
+  StockItem,
+  StockLedgerEntry
 } from './api.types';
 
-export interface InventoryFilters extends PaginationParams, SortParams {
-  product?: string;
-  variant?: string;
-  location?: string;
-  status?: 'in-stock' | 'low' | 'out-of-stock';
+export interface InventoryQuery extends PaginationParams, SortParams {
+  [key: string]: string | number | boolean | undefined;
+  productId?: string;
+  variantId?: string;
+  locationId?: string;
+  search?: string;
 }
 
-export interface InventoryAdjustmentFilters extends PaginationParams, SortParams {
-  product?: string;
-  variant?: string;
+export interface LowStockQuery extends PaginationParams, SortParams {
+  [key: string]: string | number | boolean | undefined;
+  productId?: string;
+  variantId?: string;
+  locationId?: string;
+}
+
+export interface ReservationQuery extends PaginationParams, SortParams {
+  [key: string]: string | number | boolean | undefined;
+  productId?: string;
+  variantId?: string;
+  status?: ReservationStatus;
+}
+
+export interface LedgerQuery extends PaginationParams, SortParams {
+  [key: string]: string | number | boolean | undefined;
+  productId?: string;
+  variantId?: string;
+  locationId?: string;
+  direction?: InventoryDirection;
   reason?: InventoryAdjustmentReason;
-  dateStart?: string;
-  dateEnd?: string;
+  from?: string;
+  to?: string;
 }
 
 export interface CreateAdjustmentRequest {
-  product: string;
-  variant?: string;
+  productId: string;
+  variantId?: string;
+  locationId?: string;
   quantityChange: number;
   reason: InventoryAdjustmentReason;
   note?: string;
-  location?: string;
 }
 
 @Injectable({ providedIn: 'root' })
 export class InventoryService {
-  private readonly baseUrl = `${environment.apiBaseUrl}`;
+  private readonly baseUrl = `${environment.apiBaseUrl}/admin`;
 
   constructor(private readonly http: HttpClient) {}
 
-  // Admin endpoints
-  getInventoryOverview(filters: InventoryFilters = {}): Observable<Paginated<InventorySnapshot>> {
-    let params = new HttpParams();
-
-    if (filters.product) params = params.set('product', filters.product);
-    if (filters.variant) params = params.set('variant', filters.variant);
-    if (filters.location) params = params.set('location', filters.location);
-    if (filters.status) params = params.set('status', filters.status);
-    if (filters.page) params = params.set('page', filters.page.toString());
-    if (filters.limit) params = params.set('limit', filters.limit.toString());
-    if (filters.sort) params = params.set('sort', filters.sort);
-    if (filters.order) params = params.set('order', filters.order);
-
-    return this.http.get<Paginated<InventorySnapshot>>(`${this.baseUrl}/admin/inventory`, { params });
+  getInventory(query: InventoryQuery = {}): Observable<Paginated<StockItem>> {
+    const params = this.buildParams(query);
+    return this.http.get<Paginated<StockItem>>(`${this.baseUrl}/inventory`, { params });
   }
 
-  getInventoryAdjustments(filters: InventoryAdjustmentFilters = {}): Observable<Paginated<InventoryAdjustment>> {
-    let params = new HttpParams();
-
-    if (filters.product) params = params.set('product', filters.product);
-    if (filters.variant) params = params.set('variant', filters.variant);
-    if (filters.reason) params = params.set('reason', filters.reason);
-    if (filters.dateStart) params = params.set('dateStart', filters.dateStart);
-    if (filters.dateEnd) params = params.set('dateEnd', filters.dateEnd);
-    if (filters.page) params = params.set('page', filters.page.toString());
-    if (filters.limit) params = params.set('limit', filters.limit.toString());
-    if (filters.sort) params = params.set('sort', filters.sort);
-    if (filters.order) params = params.set('order', filters.order);
-
-    return this.http.get<Paginated<InventoryAdjustment>>(`${this.baseUrl}/admin/inventory/adjustments`, { params });
+  getLowStock(query: LowStockQuery = {}): Observable<Paginated<StockItem>> {
+    const params = this.buildParams(query);
+    return this.http.get<Paginated<StockItem>>(`${this.baseUrl}/inventory/low`, { params });
   }
 
-  createInventoryAdjustment(adjustmentData: CreateAdjustmentRequest): Observable<InventoryAdjustment> {
-    return this.http.post<ApiResponse<InventoryAdjustment>>(`${this.baseUrl}/admin/inventory/adjustments`, adjustmentData, {
-      headers: { 'Idempotency-Key': this.generateIdempotencyKey() }
-    }).pipe(map(response => response.data!));
+  createAdjustment(payload: CreateAdjustmentRequest): Observable<InventoryAdjustment> {
+    return this.http
+      .post<ApiResponse<InventoryAdjustment>>(
+        `${this.baseUrl}/inventory/adjustments`,
+        payload,
+        { headers: { 'Idempotency-Key': this.generateIdempotencyKey() } }
+      )
+      .pipe(map((response) => response.data ?? (response as unknown as InventoryAdjustment)));
   }
 
-  getLowStockItems(filters: Partial<InventoryFilters> = {}): Observable<Paginated<InventorySnapshot>> {
-    let params = new HttpParams();
-
-    if (filters.page) params = params.set('page', filters.page.toString());
-    if (filters.limit) params = params.set('limit', filters.limit.toString());
-    if (filters.sort) params = params.set('sort', filters.sort);
-    if (filters.order) params = params.set('order', filters.order);
-
-    return this.http.get<Paginated<InventorySnapshot>>(`${this.baseUrl}/admin/inventory/low`, { params });
+  getReservations(query: ReservationQuery = {}): Observable<Paginated<InventoryReservation>> {
+    const params = this.buildParams(query);
+    return this.http.get<Paginated<InventoryReservation>>(`${this.baseUrl}/reservations`, { params });
   }
 
-  // Backward compatibility methods
-  list(params: any = {}): Observable<Paginated<InventorySnapshot>> {
-    const filters: InventoryFilters = {
-      product: params.product,
-      variant: params.variant,
-      location: params.location,
-      status: params.status,
+  releaseReservation(id: string): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/reservations/${id}/release`, {});
+  }
+
+  getLedger(query: LedgerQuery = {}): Observable<Paginated<StockLedgerEntry>> {
+    const params = this.buildParams(query);
+    return this.http.get<Paginated<StockLedgerEntry>>(`${this.baseUrl}/inventory/ledger`, { params });
+  }
+
+  // Legacy compatibility methods -------------------------------------------------
+
+  list(params: any = {}): Observable<Paginated<StockItem>> {
+    const query: InventoryQuery = {
+      productId: params.productId || params.product,
+      variantId: params.variantId || params.variant,
+      locationId: params.locationId || params.location,
+      search: params.search,
       page: params.page,
       limit: params.limit,
-      sort: params.sort
+      sort: params.sort,
+      order: params.order
     };
+    return this.getInventory(query);
+  }
 
-    return this.getInventoryOverview(filters);
+  listLowStock(params: any = {}): Observable<Paginated<StockItem>> {
+    const query: LowStockQuery = {
+      productId: params.productId || params.product,
+      variantId: params.variantId || params.variant,
+      locationId: params.locationId || params.location,
+      page: params.page,
+      limit: params.limit,
+      sort: params.sort,
+      order: params.order
+    };
+    return this.getLowStock(query);
   }
 
   listAdjustments(params: any = {}): Observable<Paginated<InventoryAdjustment>> {
-    const filters: InventoryAdjustmentFilters = {
-      product: params.product,
-      variant: params.variant,
-      reason: params.reason,
+    const queryParams = this.buildParams({
+      productId: params.productId || params.product,
+      variantId: params.variantId || params.variant,
+      locationId: params.locationId || params.location,
       page: params.page,
       limit: params.limit,
-      sort: params.sort
-    };
-
-    return this.getInventoryAdjustments(filters);
+      sort: params.sort,
+      order: params.order
+    });
+    return this.http.get<Paginated<InventoryAdjustment>>(`${this.baseUrl}/inventory/adjustments`, { params: queryParams });
   }
 
-  listLowStock(params: any = {}): Observable<Paginated<InventorySnapshot>> {
-    const filters: Partial<InventoryFilters> = {
-      page: params.page,
-      limit: params.limit,
-      sort: params.sort
-    };
-
-    return this.getLowStockItems(filters);
-  }
-
-  createAdjustment(payload: any): Observable<{ adjustment: InventoryAdjustment; product?: any; inventory?: InventorySnapshot }> {
-    // Map old payload format to new format
-    const adjustmentData: CreateAdjustmentRequest = {
-      product: payload.productId || payload.product,
-      variant: payload.variantId || payload.variant,
-      quantityChange: payload.qtyChange || payload.quantityChange,
-      reason: payload.reason || 'manual',
-      note: payload.note,
-      location: payload.location
-    };
-
-    return this.createInventoryAdjustment(adjustmentData).pipe(
-      map(adjustment => ({
-        adjustment,
-        product: undefined,
-        inventory: undefined
-      }))
-    );
+  private buildParams(query: Record<string, unknown>): HttpParams {
+    let params = new HttpParams();
+    Object.entries(query)
+      .filter(([, value]) => value !== undefined && value !== null && value !== '')
+      .forEach(([key, value]) => {
+        if (typeof value === 'number') {
+          params = params.set(key, value.toString());
+          return;
+        }
+        params = params.set(key, String(value));
+      });
+    return params;
   }
 
   private generateIdempotencyKey(): string {
-    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
       return crypto.randomUUID();
     }
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-      const r = Math.random() * 16 | 0;
-      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
       return v.toString(16);
     });
   }

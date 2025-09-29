@@ -24,6 +24,8 @@ import { AdminOrderDetailComponent } from './pages/admin/order-admin-detail.comp
 import { AdminReturnsListComponent } from './pages/admin/returns-admin-list.component';
 import { AdminInventoryComponent } from './pages/admin/inventory-admin.component';
 import { InventoryAdjustmentDialogComponent } from './pages/admin/inventory-adjustment-dialog.component';
+import { InventoryLocationDialogComponent } from './pages/admin/inventory-location-dialog.component';
+import { InventoryTransferDialogComponent } from './pages/admin/inventory-transfer-dialog.component';
 import { CategoriesComponent } from './pages/categories/categories.component';
 import { CategoryFormDialogComponent } from './pages/categories/category-form-dialog.component';
 import { CategoryReorderDialogComponent } from './pages/categories/category-reorder-dialog.component';
@@ -91,6 +93,8 @@ export function translateHttpLoaderFactory(http: HttpClient) {
     AdminReturnsListComponent,
     AdminInventoryComponent,
     InventoryAdjustmentDialogComponent,
+    InventoryLocationDialogComponent,
+    InventoryTransferDialogComponent,
     ErrorBannerComponent,
     LoadingComponent,
     AccessDeniedComponent,
