@@ -41,6 +41,15 @@
   </form>
 
   <div class="topbar__actions">
+    <mat-progress-spinner
+      *ngIf="refreshing"
+      class="topbar__refresh"
+      mode="indeterminate"
+      diameter="28"
+      strokeWidth="4"
+      color="accent"
+      aria-hidden="true"
+    ></mat-progress-spinner>
     <button
       mat-icon-button
       type="button"

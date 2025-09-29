@@ -1590,6 +1590,7 @@
   "errors": {
     "backend": {
       "INVALID_CREDENTIALS": "Invalid email or password.",
+      "TOKEN_EXPIRED": "Votre session a expiré. Veuillez vous reconnecter.",
       "UNAUTHORIZED": "You need to sign in to continue.",
       "FORBIDDEN": "You do not have permission to perform this action.",
       "NOT_FOUND": "The requested resource could not be found.",

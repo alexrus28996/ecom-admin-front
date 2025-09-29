@@ -14,6 +14,7 @@ export class TopbarComponent {
   @Input() isDark = false;
   @Input() isHandset = false;
   @Input() user: PublicUser | null = null;
+  @Input() refreshing = false;
 
   @Output() menuClick = new EventEmitter<void>();
   @Output() toggleTheme = new EventEmitter<void>();

@@ -1643,6 +1643,7 @@
   "errors": {
     "backend": {
       "INVALID_CREDENTIALS": "Invalid email or password.",
+      "TOKEN_EXPIRED": "Your session expired. Please sign in again.",
       "UNAUTHORIZED": "You need to sign in to continue.",
       "FORBIDDEN": "You do not have permission to perform this action.",
       "NOT_FOUND": "The requested resource could not be found.",

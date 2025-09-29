@@ -4,6 +4,8 @@ import { Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { AuthService } from '../../core/auth.service';
 import { PermissionsService } from '../../core/permissions.service';
+import { ToastService } from '../../core/toast.service';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-login',
@@ -24,7 +26,9 @@ export class LoginComponent {
     private fb: FormBuilder,
     private auth: AuthService,
     private router: Router,
-    private permissions: PermissionsService
+    private permissions: PermissionsService,
+    private toast: ToastService,
+    private translate: TranslateService
   ) {}
 
   submit(): void {
@@ -49,19 +53,19 @@ export class LoginComponent {
     this.auth
       .login(email.trim(), password)
       .pipe(finalize(() => (this.loading = false)))
-      .subscribe({
-        next: (response) => {
-          console.log('Login successful:', response);
-          console.log('User from login response:', response.user);
-          this.permissions.load().subscribe({ next: () => {}, error: () => {} });
-          this.router.navigate(['/dashboard']);
-        },
+        .subscribe({
+          next: () => {
+            this.permissions.load().subscribe({ next: () => {}, error: () => {} });
+            this.router.navigate(['/dashboard']);
+          },
         error: (err) => {
           const code = err?.error?.error?.code;
           const message = err?.error?.error?.message;
           const hasMessage = typeof message === 'string' && message.trim().length > 0;
           this.errorKey = code ? `errors.backend.${code}` : null;
-          this.lastError = code || hasMessage ? err : { error: { error: { message: 'Unable to sign in. Please check your credentials and try again.' } } };
+          this.lastError = code || hasMessage ? err : { error: { error: { message: this.translate.instant('login.errors.generic') } } };
+          const toastMessage = this.resolveErrorMessage(code, hasMessage ? message : null);
+          this.toast.error(toastMessage);
         }
       });
   }
@@ -69,5 +73,21 @@ export class LoginComponent {
   showError(control: 'email' | 'password', error: string): boolean {
     const ctrl = this.form.get(control);
     return !!ctrl && ctrl.touched && ctrl.hasError(error);
+  }
+
+  private resolveErrorMessage(code?: string, fallbackMessage: string | null = null): string {
+    if (code) {
+      const translationKey = `errors.backend.${code}`;
+      const translated = this.translate.instant(translationKey);
+      if (translated && translated !== translationKey) {
+        return translated;
+      }
+    }
+
+    if (fallbackMessage && fallbackMessage.trim().length > 0) {
+      return fallbackMessage;
+    }
+
+    return this.translate.instant('login.errors.generic');
   }
 }

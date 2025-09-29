@@ -22,7 +22,7 @@ import { AdminInventoryComponent } from './pages/admin/inventory-admin.component
 import { EmailVerifyComponent } from './pages/email-verify/email-verify.component';
 import { AddressManagementComponent } from './pages/addresses/address-management.component';
 import { AuthGuard } from './core/auth.guard';
-import { AdminGuard } from './core/admin.guard';
+import { RoleGuard } from './core/role.guard';
 import { LayoutWrapperComponent } from './layout/layout-wrapper.component';
 import { ReviewsListComponent } from './pages/admin/reviews/reviews-list.component';
 import { ShipmentsListComponent } from './pages/admin/shipments/shipments-list.component';
@@ -57,91 +57,91 @@ const routes: Routes = [
       {
         path: 'admin/products',
         component: ProductsListComponent,
-        canActivate: [AdminGuard],
+        canActivate: [RoleGuard],
         data: { roles: ['admin'], breadcrumb: 'products' }
       },
       {
         path: 'admin/products/new',
         component: ProductFormComponent,
-        canActivate: [AdminGuard],
+        canActivate: [RoleGuard],
         data: { roles: ['admin'], breadcrumb: 'createProduct' }
       },
       {
         path: 'admin/products/:id/edit',
         component: ProductFormComponent,
-        canActivate: [AdminGuard],
+        canActivate: [RoleGuard],
         data: { roles: ['admin'], breadcrumb: 'editProduct' }
       },
       {
         path: 'admin/users',
         component: AdminUsersListComponent,
-        canActivate: [AdminGuard],
+        canActivate: [RoleGuard],
         data: { roles: ['admin'], breadcrumb: 'users' }
       },
       {
         path: 'admin/roles',
         component: AdminUsersComponent,
-        canActivate: [AdminGuard],
+        canActivate: [RoleGuard],
         data: { roles: ['admin'], breadcrumb: 'roles' }
       },
       {
         path: 'admin/orders',
         component: AdminOrdersListComponent,
-        canActivate: [AdminGuard],
+        canActivate: [RoleGuard],
         data: { roles: ['admin'], breadcrumb: 'orders' }
       },
       {
         path: 'admin/orders/:id',
         component: AdminOrderDetailComponent,
-        canActivate: [AdminGuard],
+        canActivate: [RoleGuard],
         data: { roles: ['admin'], breadcrumb: 'orderDetail' }
       },
       {
         path: 'admin/returns',
         component: AdminReturnsListComponent,
-        canActivate: [AdminGuard],
+        canActivate: [RoleGuard],
         data: { roles: ['admin'], breadcrumb: 'returns' }
       },
       {
         path: 'admin/inventory',
         component: AdminInventoryComponent,
-        canActivate: [AdminGuard],
+        canActivate: [RoleGuard],
         data: { roles: ['admin'], breadcrumb: 'inventory' }
       },
       {
         path: 'admin/coupons',
         component: CouponsListComponent,
-        canActivate: [AdminGuard],
+        canActivate: [RoleGuard],
         data: { roles: ['admin'], breadcrumb: 'coupons' }
       },
       {
         path: 'admin/permissions',
         component: PermissionsSettingsComponent,
-        canActivate: [AdminGuard],
+        canActivate: [RoleGuard],
         data: { roles: ['admin'], breadcrumb: 'permissions' }
       },
       {
         path: 'admin/reviews',
         component: ReviewsListComponent,
-        canActivate: [AdminGuard],
+        canActivate: [RoleGuard],
         data: { roles: ['admin'], breadcrumb: 'reviews' }
       },
       {
         path: 'admin/shipments',
         component: ShipmentsListComponent,
-        canActivate: [AdminGuard],
+        canActivate: [RoleGuard],
         data: { roles: ['admin'], breadcrumb: 'shipments' }
       },
       {
         path: 'admin/settings',
         component: AdminSettingsPlaceholderComponent,
-        canActivate: [AdminGuard],
+        canActivate: [RoleGuard],
         data: { roles: ['admin'], breadcrumb: 'settings' }
       },
       {
         path: 'admin/categories',
         component: CategoriesComponent,
-        canActivate: [AdminGuard],
+        canActivate: [RoleGuard],
         data: { roles: ['admin'], breadcrumb: 'categories' }
       }
     ]

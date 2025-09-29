@@ -93,6 +93,11 @@
   gap: 12px;
 }
 
+.topbar__refresh {
+  width: 28px !important;
+  height: 28px !important;
+}
+
 .topbar__action {
   border-radius: 14px !important;
   transition: background 160ms ease, color 160ms ease;

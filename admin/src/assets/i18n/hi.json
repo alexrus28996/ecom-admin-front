@@ -1549,6 +1549,7 @@
   "errors": {
     "backend": {
       "INVALID_CREDENTIALS": "Invalid email or password.",
+      "TOKEN_EXPIRED": "आपका सत्र समाप्त हो गया है. कृपया फिर से साइन इन करें.",
       "UNAUTHORIZED": "You need to sign in to continue.",
       "FORBIDDEN": "You do not have permission to perform this action.",
       "NOT_FOUND": "The requested resource could not be found.",
