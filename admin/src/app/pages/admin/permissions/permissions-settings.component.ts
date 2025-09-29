@@ -1,10 +1,3 @@
-<<<<<<< ours
-<<<<<<< ours
-<<<<<<< ours
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
-=======
-=======
->>>>>>> theirs
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -13,13 +6,6 @@ import {
   DestroyRef,
   ViewChild,
 } from '@angular/core';
-<<<<<<< ours
->>>>>>> theirs
-=======
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, OnInit } from '@angular/core';
->>>>>>> theirs
-=======
->>>>>>> theirs
 import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
@@ -64,37 +50,12 @@ export class PermissionsSettingsComponent implements AfterViewInit {
   constructor(
     private readonly permissionsService: PermissionsService,
     private readonly cdr: ChangeDetectorRef,
-<<<<<<< ours
-<<<<<<< ours
-    private readonly dialog: MatDialog,
-<<<<<<< ours
-    private readonly translate: TranslateService
-  ) {}
-
-  ngOnInit(): void {
-    this.searchControl.valueChanges
-      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
-=======
-=======
->>>>>>> theirs
-    private readonly toast: ToastService,
-=======
->>>>>>> theirs
     private readonly dialog: MatDialog,
     private readonly toast: ToastService,
     private readonly destroyRef: DestroyRef
   ) {
     this.searchControl.valueChanges
-<<<<<<< ours
-<<<<<<< ours
-      .pipe(debounceTime(250), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
->>>>>>> theirs
-=======
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
->>>>>>> theirs
-=======
-      .pipe(debounceTime(250), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
->>>>>>> theirs
       .subscribe((term) => {
         this.searchTerm = (term || '').toString().trim();
         this.pageIndex = 0;
