@@ -28,7 +28,6 @@ export class InventoryLocationDialogComponent {
     type: ['WAREHOUSE' as LocationType, Validators.required],
     priority: [null as number | null],
     active: [true],
-    metadata: [''],
     geo: this.fb.group({
       address1: [''],
       address2: [''],
@@ -115,7 +114,6 @@ export class InventoryLocationDialogComponent {
       type: (location.type as LocationType) || 'WAREHOUSE',
       priority: location.priority ?? null,
       active: location.active,
-      metadata: location.metadata ? JSON.stringify(location.metadata, null, 2) : '',
       geo: {
         address1: location.geo?.address1 || '',
         address2: location.geo?.address2 || '',
@@ -141,7 +139,6 @@ export class InventoryLocationDialogComponent {
       type: raw.type || undefined,
       priority: raw.priority === null ? null : Number(raw.priority),
       active: raw.active ?? true,
-      metadata,
       geo: {
         address1: raw.geo?.address1?.trim() || undefined,
         address2: raw.geo?.address2?.trim() || undefined,
@@ -152,21 +149,8 @@ export class InventoryLocationDialogComponent {
         latitude: typeof raw.geo?.latitude === 'number' ? raw.geo.latitude : raw.geo?.latitude ? Number(raw.geo.latitude) : undefined,
         longitude: typeof raw.geo?.longitude === 'number' ? raw.geo.longitude : raw.geo?.longitude ? Number(raw.geo.longitude) : undefined
       },
-      metadata: this.parseMetadata(raw.metadata)
+      metadata
     };
-  }
-
-  private parseMetadata(value: string | null | undefined): Record<string, unknown> | null {
-    if (!value || !value.trim()) {
-      return null;
-    }
-
-    try {
-      const parsed = JSON.parse(value);
-      return typeof parsed === 'object' && parsed !== null ? parsed as Record<string, unknown> : null;
-    } catch {
-      throw new Error('invalid-metadata');
-    }
   }
 
   private resolveError(error: any): string {
@@ -177,12 +161,13 @@ export class InventoryLocationDialogComponent {
     );
   }
 
-  private parseMetadata(input: unknown): Record<string, unknown> | null | undefined {
+
+  private parseMetadata(input: unknown): Record<string, unknown> | null {
     const metadataControl = this.form.get('metadata');
     metadataControl?.setErrors(null);
 
     if (typeof input !== 'string') {
-      return undefined;
+      return null;
     }
 
     const trimmed = input.trim();
@@ -199,9 +184,7 @@ export class InventoryLocationDialogComponent {
     } catch (error) {
       metadataControl?.setErrors({ invalidJson: true });
       metadataControl?.markAsTouched();
-      throw new Error(
-        error instanceof Error ? error.message : 'Invalid metadata JSON'
-      );
+      throw new Error(error instanceof Error ? error.message : 'Invalid metadata JSON');
     }
   }
 }

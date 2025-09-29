@@ -5,9 +5,9 @@ import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
 import { ToastService } from '../../core/toast.service';
 import { TranslateService } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
-import { Return } from '../../services/api.types';
-
-type ReturnStatus = 'requested'|'approved'|'rejected'|'refunded';
+import { Paginated, Return, ReturnStatus } from '../../services/api.types';
+import { ReturnsService } from '../../services/returns.service';
+import { PermissionsService } from '../../core/permissions.service';
 
 @Component({
   selector: 'app-admin-returns-list',
@@ -53,8 +53,9 @@ export class AdminReturnsListComponent implements OnInit {
     this.cdr.markForCheck();
 
     const s = (this.filterForm.value.status || '') as ReturnStatus | '';
-    this.returns.getReturns({ status: (s || undefined) as any, page: this.page + 1, limit: this.pageSize }).subscribe({
-      next: (res) => {
+    const status = s ? (s as ReturnStatus) : undefined;
+    this.returns.getReturns({ status, page: this.page + 1, limit: this.pageSize }).subscribe({
+      next: (res: Paginated<Return>) => {
         this.data = (res.items || []) as Return[];
         this.total = res.total || 0;
         this.page = (res.page || 1) - 1;
@@ -67,7 +68,7 @@ export class AdminReturnsListComponent implements OnInit {
 
         this.cdr.markForCheck();
       },
-      error: (err) => {
+      error: (err: any) => {
         this.lastError = err;
         const code = err?.error?.error?.code;
         this.errorKey = code ? `errors.backend.${code}` : 'returns.list.errors.loadFailed';
@@ -103,11 +104,11 @@ export class AdminReturnsListComponent implements OnInit {
   }
 
   approve(item: Return): void {
-    this.confirm('returns.list.actions.approve', () => this.runAction(() => this.admin.approveReturn(item._id), 'returns.list.toasts.approved'));
+    this.confirm('returns.list.actions.approve', () => this.runAction(() => this.returns.approveReturn(item._id), 'returns.list.toasts.approved'));
   }
 
   reject(item: Return): void {
-    this.confirm('returns.list.actions.reject', () => this.runAction(() => this.admin.rejectReturn(item._id), 'returns.list.toasts.rejected'));
+    this.confirm('returns.list.actions.reject', () => this.runAction(() => this.returns.rejectReturn(item._id), 'returns.list.toasts.rejected'));
   }
 
   private runAction(request: () => Observable<any>, successToastKey: string): void {
@@ -121,7 +122,7 @@ export class AdminReturnsListComponent implements OnInit {
         this.toast.success(this.i18n.instant(successToastKey));
         this.load();
       },
-      error: (err) => {
+      error: (err: any) => {
         const code = err?.error?.error?.code;
         this.errorKey = code ? `errors.backend.${code}` : 'returns.list.errors.updateFailed';
         this.lastError = err;
@@ -134,7 +135,7 @@ export class AdminReturnsListComponent implements OnInit {
 
   private confirm(actionKey: string, fn: () => void): void {
     const ref = this.dialog.open(ConfirmDialogComponent, { width: '360px', data: { confirmKey: actionKey } });
-    ref.afterClosed().subscribe((ok) => {
+    ref.afterClosed().subscribe((ok: boolean) => {
       if (ok) {
         fn();
       }
