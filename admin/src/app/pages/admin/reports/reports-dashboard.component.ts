@@ -1,14 +1,12 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
-import { Chart, ChartConfiguration, ChartOptions, registerables } from 'chart.js';
+import { ChartData, ChartOptions } from '../../../shared/ng-charts.module';
 import { Subject, takeUntil } from 'rxjs';
 
 import { ReportService, SalesReport, TopCustomerReportItem, TopProductReportItem } from '../../../services/report.service';
 import { AuditService } from '../../../services/audit.service';
 import { ToastService } from '../../../core/toast.service';
 import { PermissionsService } from '../../../core/permissions.service';
-
-Chart.register(...registerables);
 
 interface SalesFilters {
   from?: string;
@@ -47,7 +45,7 @@ export class ReportsDashboardComponent implements OnInit, OnDestroy {
     })
   });
 
-  readonly salesChartOptions: ChartOptions<'line'> = {
+  readonly salesChartOptions: ChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -67,7 +65,7 @@ export class ReportsDashboardComponent implements OnInit, OnDestroy {
     }
   };
 
-  salesChartData: ChartConfiguration<'line'>['data'] = {
+  salesChartData: ChartData = {
     labels: [],
     datasets: [
       {
@@ -129,17 +127,17 @@ export class ReportsDashboardComponent implements OnInit, OnDestroy {
 
   applySalesFilters(): void {
     this.loadSales();
-    this.audit.log({ action: 'reports.sales.filter', metadata: this.salesFilterPayload() }).subscribe();
+    this.audit.log({ action: 'reports.sales.filter', metadata: this.salesFilterPayload() as Record<string, unknown> }).subscribe();
   }
 
   applyProductsFilters(): void {
     this.loadTopProducts();
-    this.audit.log({ action: 'reports.products.filter', metadata: this.topProductsFilterPayload() }).subscribe();
+    this.audit.log({ action: 'reports.products.filter', metadata: this.topProductsFilterPayload() as Record<string, unknown> }).subscribe();
   }
 
   applyCustomersFilters(): void {
     this.loadTopCustomers();
-    this.audit.log({ action: 'reports.customers.filter', metadata: this.topCustomersFilterPayload() }).subscribe();
+    this.audit.log({ action: 'reports.customers.filter', metadata: this.topCustomersFilterPayload() as Record<string, unknown> }).subscribe();
   }
 
   exportTopProducts(): void {

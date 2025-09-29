@@ -56,7 +56,7 @@ export class ShipmentDetailComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           this.error = err?.error?.error?.message ?? 'Failed to load shipment detail';
-          this.toast.error(this.error);
+          this.toast.error(this.error ?? 'Failed to load shipment detail');
           this.loading = false;
           this.cdr.markForCheck();
         }

@@ -81,16 +81,17 @@ export class ShipmentFormComponent implements OnDestroy {
             this.orderError = 'Shipments can only be created for paid orders';
             this.loadingOrder = false;
             this.order = undefined;
-            this.toast.error(this.orderError);
+            this.toast.error(this.orderError ?? 'Shipments can only be created for paid orders');
             this.cdr.markForCheck();
             return;
           }
           this.order = order;
           order.items.forEach((item) => {
+            const productName = typeof item.product === 'string' ? undefined : item.product?.name;
             this.items.push(
               this.fb.group({
                 itemId: [item._id || item.id, Validators.required],
-                name: [item.name || item.product?.['name'] || 'Item'],
+                name: [item.name || productName || 'Item'],
                 ordered: [item.quantity],
                 quantity: [item.quantity, [Validators.required, Validators.min(1), Validators.max(item.quantity)]]
               })
@@ -102,7 +103,7 @@ export class ShipmentFormComponent implements OnDestroy {
         error: (err) => {
           this.loadingOrder = false;
           this.orderError = err?.error?.error?.message ?? 'Unable to load order';
-          this.toast.error(this.orderError);
+          this.toast.error(this.orderError ?? 'Unable to load order');
           this.order = undefined;
           this.cdr.markForCheck();
         }

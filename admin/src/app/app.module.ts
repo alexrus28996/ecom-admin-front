@@ -63,7 +63,7 @@ import { DebugUserComponent } from './shared/debug-user.component';
 import { PermissionsSettingsComponent } from './pages/admin/permissions/permissions-settings.component';
 
 import { MaterialModule } from './shared/material.module';
-import { NgChartsModule } from 'ng2-charts';
+import { NgChartsModule } from './shared/ng-charts.module';
 import { AuthInterceptor } from './core/auth.interceptor';
 
 export function translateHttpLoaderFactory(http: HttpClient) {

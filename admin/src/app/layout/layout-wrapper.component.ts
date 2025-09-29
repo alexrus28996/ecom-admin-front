@@ -1,5 +1,5 @@
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
@@ -38,8 +38,7 @@ export class LayoutWrapperComponent implements OnInit {
     private readonly theme: ThemeService,
     private readonly permissions: PermissionsService,
     private readonly translate: TranslateService,
-    breakpointObserver: BreakpointObserver,
-    private readonly destroyRef: DestroyRef
+    breakpointObserver: BreakpointObserver
   ) {
     this.isHandset$ = breakpointObserver.observe([Breakpoints.Handset, Breakpoints.Tablet]).pipe(
       map((result) => result.matches),
@@ -59,14 +58,14 @@ export class LayoutWrapperComponent implements OnInit {
     this.initializeNavItems();
 
     this.translate.onLangChange
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(takeUntilDestroyed())
       .subscribe(() => this.initializeNavItems());
 
-    this.theme.changes.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((mode) => {
+    this.theme.changes.pipe(takeUntilDestroyed()).subscribe((mode) => {
       this.isDark = mode === 'dark';
     });
 
-    this.isHandset$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((isHandset) => {
+    this.isHandset$.pipe(takeUntilDestroyed()).subscribe((isHandset) => {
       if (!isHandset) {
         this.mobileNavOpen = false;
       }
@@ -75,7 +74,7 @@ export class LayoutWrapperComponent implements OnInit {
     this.router.events
       .pipe(
         filter((event) => event instanceof NavigationEnd),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed()
       )
       .subscribe(() => {
         this.mobileNavOpen = false;

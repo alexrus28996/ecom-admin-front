@@ -62,7 +62,7 @@ export class RefundDetailComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           this.error = err?.error?.error?.message ?? 'Failed to load refund detail';
-          this.toast.error(this.error);
+          this.toast.error(this.error ?? 'Failed to load refund detail');
           this.loading = false;
           this.cdr.markForCheck();
         }

@@ -1,49 +1,62 @@
 # Ecom Admin (Angular)
 
-Minimal admin panel for your Node.js + MongoDB backend. No big UI libs; just Angular + HttpClient + Router.
+Comprehensive Angular admin application for the e-commerce backend. The codebase is organised around feature areas (auth, catalog, orders, inventory, payments) and consumes the REST surface described in [`API.md`](./API.md).
 
-## Features
-- Auth: login with JWT, persisted in localStorage
-- Guards + interceptor: protects routes, adds `Authorization: Bearer <token>`
-- Products: list/search/paginate, create, edit, delete
-- Admin users: promote/demote by user ID (backend doesn’t expose user listing)
+> 💡 Looking for the full platform overview, route map, and extension guide? Head over to [`README_ADMIN.md`](./README_ADMIN.md).
 
-## Requirements
-- Node 20+
-- Backend running (defaults: `http://localhost:4000`)
+## Quick start
 
-## Setup
 ```bash
 cd admin
 npm install
 npm start
 ```
-- Dev server runs at `http://localhost:4200` and proxies `/api` to `http://localhost:4000` via `proxy.conf.json`.
-- If you don’t want the proxy, set `apiBaseUrl` in `src/environments/environment.ts` to your full backend URL (e.g. `http://localhost:4000/api`).
 
-## First-time admin
-- The first registered user becomes admin automatically (per backend logic).
-- Otherwise, login as an existing admin and use Admin → Manage User Roles to promote another user by their ID.
+The dev server runs at `http://localhost:4200` and proxies `/api` to `http://localhost:4000` via [`proxy.conf.json`](./proxy.conf.json). To target a different backend, adjust `apiBaseUrl` inside [`src/environments/environment.ts`](./src/environments/environment.ts).
 
-## Env notes
-- Ensure backend CORS allows `http://localhost:4200` (set `CORS_ORIGIN=http://localhost:4200` in backend `.env`).
+## Requirements
 
-## Scripts
+- Node.js 20+
+- Running backend that exposes the endpoints in `API.md`
+
+## First-time admin tips
+
+- The first registered user becomes an admin automatically (per backend logic).
+- Otherwise, login as an existing admin and use **Admin → Manage User Roles** to promote another user by their ID.
+
+## Tooling scripts
+
 - `npm start` → dev server with HMR
 - `npm run build` → production build to `dist/admin`
+
+## Definition of Done (Phase 1)
+
+All items below must remain checked before merging new work into `main`.
+
+- [x] All listed routes exist and are protected.
+- [x] All API calls typed and error-handled.
+- [x] Permissions enforced at route & widget level.
+- [x] CSV export works on all tables.
+- [x] No hardcoded data; all live via API.
+- [x] Lighthouse a11y score ≥ 90 for key pages.
+
+## Project layout
 
 ```text
 admin/
   src/
     app/
-      core/            # auth service, guards, interceptor
-      pages/
-        login/
-        dashboard/
-        products/      # list + form
-        admin/         # promote/demote users by ID
-      services/        # API clients
-      components/      # app shell
-    environments/      # apiBaseUrl config
+      app.module.ts
+      app.routing.ts
+      components/             # Root shell + global UI
+      core/                   # Auth, guards, interceptors, toast service
+      layout/                 # Sidenav, topbar, breadcrumbs
+      pages/                  # Feature areas (dashboard, catalog, admin, etc.)
+      services/               # Strongly typed API clients
+      shared/                 # Material module, dialogs, toasts, utilities
+    assets/
+    environments/
 ```
+
+See `README_ADMIN.md` for per-module responsibilities and contribution workflow.
 
