@@ -1,4 +1,19 @@
+<<<<<<< ours
+<<<<<<< ours
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+=======
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  DestroyRef,
+  ViewChild,
+} from '@angular/core';
+>>>>>>> theirs
+=======
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, OnInit } from '@angular/core';
+>>>>>>> theirs
 import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -54,14 +69,32 @@ export class PermissionsSettingsComponent implements OnInit {
   constructor(
     private readonly usersService: UserManagementService,
     private readonly cdr: ChangeDetectorRef,
-    private readonly toast: ToastService,
+<<<<<<< ours
     private readonly dialog: MatDialog,
+<<<<<<< ours
     private readonly translate: TranslateService
   ) {}
 
   ngOnInit(): void {
     this.searchControl.valueChanges
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
+=======
+=======
+>>>>>>> theirs
+    private readonly toast: ToastService,
+    private readonly dialog: MatDialog,
+    private readonly destroyRef: DestroyRef,
+    private readonly translate: TranslateService
+  ) {}
+
+  ngOnInit(): void {
+    this.searchControl.valueChanges
+<<<<<<< ours
+      .pipe(debounceTime(250), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+>>>>>>> theirs
+=======
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+>>>>>>> theirs
       .subscribe((term) => {
         this.loadUsers((term || '').toString().trim());
       });
