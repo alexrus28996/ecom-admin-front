@@ -25,6 +25,20 @@
       <input matInput type="number" formControlName="priority" placeholder="Lower numbers pick first" />
     </mat-form-field>
 
+    <mat-form-field appearance="outline">
+      <mat-label>Metadata (JSON)</mat-label>
+      <textarea
+        matInput
+        formControlName="metadata"
+        placeholder="{ &quot;key&quot;: &quot;value&quot; }"
+        rows="4"
+      ></textarea>
+      <mat-hint align="start">Optional JSON object stored with the location.</mat-hint>
+      <mat-error *ngIf="form.get('metadata')?.hasError('invalidJson')">
+        Metadata must be valid JSON representing an object.
+      </mat-error>
+    </mat-form-field>
+
     <mat-slide-toggle formControlName="active">Active</mat-slide-toggle>
 
     <mat-divider></mat-divider>
@@ -55,7 +69,23 @@
         <mat-label>Country</mat-label>
         <input matInput formControlName="country" />
       </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Latitude</mat-label>
+        <input matInput type="number" formControlName="latitude" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Longitude</mat-label>
+        <input matInput type="number" formControlName="longitude" />
+      </mat-form-field>
     </div>
+
+    <mat-divider></mat-divider>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Metadata (JSON)</mat-label>
+      <textarea matInput rows="4" formControlName="metadata" placeholder='{"region":"North"}'></textarea>
+      <mat-hint>Use JSON to store additional key/value data for integrations.</mat-hint>
+    </mat-form-field>
   </form>
 </mat-dialog-content>
 <mat-dialog-actions align="end">

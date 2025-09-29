@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { environment } from '../../environments/environment';
@@ -29,6 +29,30 @@ export interface CreateOrderRequest {
   shipping?: number;
   taxRate?: number;
   idempotencyKey?: string;
+}
+
+export interface OrderStatusUpdatePayload {
+  status?: string;
+  paymentStatus?: string;
+}
+
+export interface OrderFulfillmentPayload {
+  carrier?: string;
+  trackingNumber?: string;
+  items: Array<{ itemId: string; quantity: number }>;
+  note?: string;
+}
+
+export interface OrderRefundPayload {
+  items?: Array<{ itemId: string; quantity?: number; amount?: number }>;
+  amount?: number;
+  reason?: string;
+  note?: string;
+}
+
+export interface OrderTimelinePayload {
+  message: string;
+  metadata?: Record<string, unknown>;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -88,6 +112,7 @@ export class OrdersService {
     if (filters.paymentStatus) params = params.set('paymentStatus', filters.paymentStatus);
     if (filters.userId) params = params.set('userId', filters.userId);
     if (filters.userEmail) params = params.set('userEmail', filters.userEmail);
+    if (filters.customer) params = params.set('customer', filters.customer);
     if (filters.dateStart) params = params.set('dateStart', filters.dateStart);
     if (filters.dateEnd) params = params.set('dateEnd', filters.dateEnd);
     if (filters.page) params = params.set('page', filters.page.toString());
@@ -108,6 +133,56 @@ export class OrdersService {
 
     return this.http.patch<ApiResponse<Order>>(`${this.baseUrl}/admin/orders/${id}`, cleanData)
       .pipe(map(response => response.data!));
+  }
+
+  updateAdminOrderStatus(id: string, payload: OrderStatusUpdatePayload): Observable<Order> {
+    return this.http
+      .patch<ApiResponse<Order>>(`${this.baseUrl}/admin/orders/${id}`, payload)
+      .pipe(map((response) => response.data!));
+  }
+
+  fulfillAdminOrder(id: string, payload: OrderFulfillmentPayload): Observable<Order> {
+    return this.http
+      .post<ApiResponse<Order>>(`${this.baseUrl}/admin/orders/${id}/fulfill`, payload)
+      .pipe(map((response) => response.data!));
+  }
+
+  refundAdminOrder(id: string, payload: OrderRefundPayload): Observable<Order> {
+    return this.http
+      .post<ApiResponse<Order>>(`${this.baseUrl}/admin/orders/${id}/refund`, payload)
+      .pipe(map((response) => response.data!));
+  }
+
+  addTimelineEntry(id: string, payload: OrderTimelinePayload): Observable<OrderTimelineEvent> {
+    return this.http
+      .post<ApiResponse<OrderTimelineEvent>>(`${this.baseUrl}/admin/orders/${id}/timeline`, payload)
+      .pipe(map((response) => response.data!));
+  }
+
+  bulkUpdateAdminOrders(ids: string[], payload: OrderStatusUpdatePayload): Observable<Order[]> {
+    if (!ids.length) {
+      return of([]);
+    }
+
+    const requests = ids.map((orderId) => this.updateAdminOrderStatus(orderId, payload));
+    return forkJoin(requests);
+  }
+
+  exportAdminOrders(filters: OrderFilters = {}): Observable<Blob> {
+    let params = new HttpParams().set('format', 'csv');
+
+    if (filters.status) params = params.set('status', filters.status);
+    if (filters.paymentStatus) params = params.set('paymentStatus', filters.paymentStatus);
+    if (filters.userId) params = params.set('userId', filters.userId);
+    if (filters.userEmail) params = params.set('userEmail', filters.userEmail);
+    if (filters.customer) params = params.set('customer', filters.customer);
+    if (filters.dateStart) params = params.set('dateStart', filters.dateStart);
+    if (filters.dateEnd) params = params.set('dateEnd', filters.dateEnd);
+
+    return this.http.get(`${this.baseUrl}/admin/orders`, {
+      params,
+      responseType: 'blob'
+    });
   }
 
   // Backward compatibility methods
@@ -163,6 +238,7 @@ export class OrdersService {
       paymentStatus: params.paymentStatus,
       userId: params.user,
       userEmail: params.email,
+      customer: params.customer,
       dateStart: params.from,
       dateEnd: params.to,
       page: params.page,

@@ -30,6 +30,16 @@
   gap: 16px;
 }
 
+.operations-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.operations-card {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(59, 130, 246, 0));
+}
+
 .metric-card {
   position: relative;
   overflow: hidden;

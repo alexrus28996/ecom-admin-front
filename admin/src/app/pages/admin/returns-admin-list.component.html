@@ -79,7 +79,7 @@
                 color="primary"
                 (click)="approve(r)"
                 *ngIf="r.status==='requested'"
-                [disabled]="loading"
+                [disabled]="loading || !(canManage$ | async)"
                 matTooltip="{{ 'returns.list.actions.approve' | translate }}"
                 aria-label="{{ 'returns.list.actions.approve' | translate }}"
               >
@@ -90,7 +90,7 @@
                 color="warn"
                 (click)="reject(r)"
                 *ngIf="r.status==='requested'"
-                [disabled]="loading"
+                [disabled]="loading || !(canManage$ | async)"
                 matTooltip="{{ 'returns.list.actions.reject' | translate }}"
                 aria-label="{{ 'returns.list.actions.reject' | translate }}"
               >
@@ -126,14 +126,22 @@
         <div><strong>{{ 'returns.list.table.status' | translate }}:</strong> {{ ('returns.status.' + (selected.status || 'requested')) | translate }}</div>
         <div *ngIf="selected.reason"><strong>{{ 'returns.list.detail.reason' | translate }}:</strong> {{ selected.reason }}</div>
         <div *ngIf="selected.note"><strong>{{ 'returns.list.detail.note' | translate }}:</strong> {{ selected.note }}</div>
+        <div *ngIf="selected.items?.length">
+          <strong>Items</strong>
+          <ul>
+            <li *ngFor="let item of selected.items">
+              {{ item.quantity }} × {{ item.name || item.productName || item.sku }}
+            </li>
+          </ul>
+        </div>
         <div *ngIf="selected.createdAt"><strong>{{ 'returns.list.table.requestedAt' | translate }}:</strong> {{ selected.createdAt | date:'short' }}</div>
       </div>
       <div class="drawer-actions">
-        <button mat-raised-button color="primary" (click)="approve(selected)" *ngIf="selected.status==='requested'" [disabled]="loading">
+        <button mat-raised-button color="primary" (click)="approve(selected)" *ngIf="selected.status==='requested'" [disabled]="loading || !(canManage$ | async)">
           <mat-icon>check</mat-icon>
           {{ 'returns.list.actions.approve' | translate }}
         </button>
-        <button mat-raised-button color="warn" (click)="reject(selected)" *ngIf="selected.status==='requested'" [disabled]="loading">
+        <button mat-raised-button color="warn" (click)="reject(selected)" *ngIf="selected.status==='requested'" [disabled]="loading || !(canManage$ | async)">
           <mat-icon>close</mat-icon>
           {{ 'returns.list.actions.reject' | translate }}
         </button>

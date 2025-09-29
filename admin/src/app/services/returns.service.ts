@@ -44,13 +44,24 @@ export class ReturnsService {
     return this.http.get<Paginated<Return>>(`${this.baseUrl}/admin/returns`, { params });
   }
 
-  approveReturn(id: string): Observable<Return> {
-    return this.http.post<ApiResponse<Return>>(`${this.baseUrl}/admin/returns/${id}/approve`, {})
+  getReturn(id: string): Observable<Return> {
+    return this.http.get<ApiResponse<Return>>(`${this.baseUrl}/admin/returns/${id}`)
+      .pipe(map((response) => response.data!));
+  }
+
+  approveReturn(id: string, payload: { items?: Array<{ itemId: string; quantity?: number }>; refundAmount?: number; note?: string } = {}): Observable<Return> {
+    return this.http.post<ApiResponse<Return>>(`${this.baseUrl}/admin/returns/${id}/approve`, payload)
       .pipe(map(response => response.data!));
   }
 
-  rejectReturn(id: string, reason?: string): Observable<Return> {
-    const payload = reason ? { reason } : {};
+  rejectReturn(id: string, reason?: string, note?: string): Observable<Return> {
+    const payload: Record<string, unknown> = {};
+    if (reason) {
+      payload['reason'] = reason;
+    }
+    if (note) {
+      payload['note'] = note;
+    }
 
     return this.http.post<ApiResponse<Return>>(`${this.baseUrl}/admin/returns/${id}/reject`, payload)
       .pipe(map(response => response.data!));
@@ -68,14 +79,14 @@ export class ReturnsService {
     return this.getReturns(returnFilters);
   }
 
-  approve(id: string): Observable<{ success: boolean }> {
-    return this.approveReturn(id).pipe(
+  approve(id: string, payload: { items?: Array<{ itemId: string; quantity?: number }>; refundAmount?: number; note?: string } = {}): Observable<{ success: boolean }> {
+    return this.approveReturn(id, payload).pipe(
       map(() => ({ success: true }))
     );
   }
 
-  reject(id: string, reason?: string): Observable<{ success: boolean }> {
-    return this.rejectReturn(id, reason).pipe(
+  reject(id: string, reason?: string, note?: string): Observable<{ success: boolean }> {
+    return this.rejectReturn(id, reason, note).pipe(
       map(() => ({ success: true }))
     );
   }

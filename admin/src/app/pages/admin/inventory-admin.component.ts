@@ -178,9 +178,9 @@ export class AdminInventoryComponent implements OnInit, OnDestroy {
     adjust: this.permissionAny$('inventory:adjust'),
     transfer: this.permissionAny$('inventory:transfer', 'inventory:transfer:create'),
     transferUpdate: this.permissionAny$('inventory:transfer', 'inventory:transfer:edit', 'inventory:transfer:update'),
-    locationCreate: this.permissionAny$('inventory:location:create'),
-    locationEdit: this.permissionAny$('inventory:location:edit'),
-    locationDelete: this.permissionAny$('inventory:location:delete')
+    locationCreate: this.permissionAny$('location:create', 'inventory:location:create'),
+    locationEdit: this.permissionAny$('location:edit', 'inventory:location:edit'),
+    locationDelete: this.permissionAny$('location:delete', 'inventory:location:delete')
   }).pipe(shareReplay({ bufferSize: 1, refCount: true }));
 
   private readonly destroy$ = new Subject<void>();
@@ -420,6 +420,25 @@ export class AdminInventoryComponent implements OnInit, OnDestroy {
           this.locationState.loading = false;
           this.locationState.error = this.resolveErrorMessage(error, 'Unable to load locations.');
           this.cdr.markForCheck();
+        }
+      });
+  }
+
+  exportLocations(): void {
+    this.locations
+      .export({ includeDeleted: true, sort: 'priority', order: 'asc' })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `locations-${new Date().toISOString().slice(0, 10)}.csv`;
+          link.click();
+          window.URL.revokeObjectURL(url);
+        },
+        error: (error) => {
+          this.toast.error(this.resolveErrorMessage(error, 'Unable to export locations.'));
         }
       });
   }

@@ -1,9 +1,15 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { PageEvent } from '@angular/material/paginator';
+import { SelectionModel } from '@angular/cdk/collections';
+import { MatDialog } from '@angular/material/dialog';
 import { OrdersService, Order } from '../../services/orders.service';
 import { ORDER_STATUS_OPTIONS, PAYMENT_STATUS_OPTIONS, orderStatusKey, paymentStatusKey } from './order-status.util';
 import { MoneyAmount } from '../../services/api.types';
+import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
+import { ToastService } from '../../core/toast.service';
+import { TranslateService } from '@ngx-translate/core';
+import { PermissionsService } from '../../core/permissions.service';
 
 @Component({
   selector: 'app-admin-orders-list',
@@ -11,7 +17,7 @@ import { MoneyAmount } from '../../services/api.types';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AdminOrdersListComponent implements OnInit {
-  readonly displayedColumns = ['id', 'customer', 'status', 'payment', 'total', 'createdAt', 'actions'];
+  readonly displayedColumns = ['select', 'id', 'customer', 'status', 'payment', 'total', 'createdAt', 'actions'];
   readonly pageSizeOptions = [10, 25, 50, 100];
   readonly skeletonRows = Array.from({ length: 6 });
 
@@ -19,9 +25,12 @@ export class AdminOrdersListComponent implements OnInit {
   total = 0;
   pageIndex = 0;
   pageSize = 10;
+  readonly selection = new SelectionModel<Order>(true, []);
 
   loading = false;
   errorKey: string | null = null;
+  exporting = false;
+  bulkUpdating = false;
 
   readonly statusKeyFor = orderStatusKey;
   readonly paymentStatusKeyFor = paymentStatusKey;
@@ -31,11 +40,14 @@ export class AdminOrdersListComponent implements OnInit {
     status: [''],
     paymentStatus: [''],
     email: [''],
+    customer: [''],
     range: this.fb.group({
       start: [null as Date | null],
       end: [null as Date | null]
     })
   });
+
+  readonly canEdit$ = this.permissions.can$('order:edit');
 
   private readonly statusTone: Record<string, 'warning' | 'success' | 'danger' | 'info' | 'neutral'> = {
     pending: 'warning',
@@ -58,7 +70,11 @@ export class AdminOrdersListComponent implements OnInit {
   constructor(
     private readonly ordersService: OrdersService,
     private readonly cdr: ChangeDetectorRef,
-    private readonly fb: FormBuilder
+    private readonly fb: FormBuilder,
+    private readonly dialog: MatDialog,
+    private readonly toast: ToastService,
+    private readonly i18n: TranslateService,
+    private readonly permissions: PermissionsService
   ) {}
 
   ngOnInit() { this.load(); }
@@ -77,6 +93,7 @@ export class AdminOrdersListComponent implements OnInit {
     if (value.status) params.status = value.status;
     if (value.paymentStatus) params.paymentStatus = value.paymentStatus;
     if (value.email) params.email = value.email.trim();
+    if (value.customer) params.customer = value.customer.trim();
     const start = value.range?.start ? new Date(value.range.start) : null;
     const end = value.range?.end ? new Date(value.range.end) : null;
     if (start) params.from = start.toISOString();
@@ -88,6 +105,7 @@ export class AdminOrdersListComponent implements OnInit {
         this.total = res.pagination?.total || res.total || this.orders.length;
         this.pageIndex = Math.max((res.pagination?.page || res.page || 1) - 1, 0);
         this.loading = false;
+        this.selection.clear();
         this.cdr.markForCheck();
       },
       error: (error) => {
@@ -115,6 +133,7 @@ export class AdminOrdersListComponent implements OnInit {
       status: '',
       paymentStatus: '',
       email: '',
+      customer: '',
       range: { start: null, end: null }
     });
     this.applyFilters();
@@ -126,6 +145,105 @@ export class AdminOrdersListComponent implements OnInit {
 
   trackById(_: number, order: Order): string {
     return order?._id ?? (order as any)?.id ?? `${_}`;
+  }
+
+  toggleAll(): void {
+    if (this.isAllSelected()) {
+      this.selection.clear();
+      return;
+    }
+    this.orders.forEach((order) => this.selection.select(order));
+  }
+
+  isAllSelected(): boolean {
+    return this.selection.selected.length === this.orders.length && this.orders.length > 0;
+  }
+
+  selectedIds(): string[] {
+    return this.selection.selected
+      .map((order) => this.orderId(order))
+      .filter((id): id is string => !!id);
+  }
+
+  bulkMarkShipped(): void {
+    const ids = this.selectedIds();
+    if (!ids.length || this.bulkUpdating) {
+      return;
+    }
+
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '360px',
+      data: {
+        titleKey: 'orders.bulk.markShippedTitle',
+        messageKey: 'orders.bulk.markShippedMessage',
+        confirmKey: 'orders.bulk.markShippedConfirm',
+        cancelKey: 'common.actions.cancel'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((confirmed) => {
+      if (!confirmed) {
+        return;
+      }
+
+      this.bulkUpdating = true;
+      this.cdr.markForCheck();
+      this.ordersService.bulkUpdateAdminOrders(ids, { status: 'shipped' }).subscribe({
+        next: () => {
+          this.bulkUpdating = false;
+          this.toast.success(this.t('orders.bulk.markShippedSuccess', 'Orders marked as shipped.'));
+          this.load();
+        },
+        error: (error) => {
+          this.bulkUpdating = false;
+          this.toast.error(this.t('orders.bulk.markShippedError', 'Failed to update orders.'));
+          this.errorKey = error?.error?.error?.code ? `errors.backend.${error.error.error.code}` : 'orders.errorLoad';
+          this.cdr.markForCheck();
+        }
+      });
+    });
+  }
+
+  exportOrders(): void {
+    if (this.exporting) {
+      return;
+    }
+
+    const value = this.filterForm.value;
+    const filters = {
+      status: value.status || undefined,
+      paymentStatus: value.paymentStatus || undefined,
+      userEmail: value.email?.trim() || undefined,
+      customer: value.customer?.trim() || undefined,
+      dateStart: value.range?.start ? new Date(value.range.start).toISOString() : undefined,
+      dateEnd: value.range?.end ? new Date(value.range.end).toISOString() : undefined
+    };
+
+    this.exporting = true;
+    this.cdr.markForCheck();
+    this.ordersService.exportAdminOrders(filters).subscribe({
+      next: (blob) => {
+        this.exporting = false;
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `orders-${new Date().toISOString().slice(0, 10)}.csv`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+        this.toast.success(this.t('orders.actions.exportSuccess', 'Export complete.'));
+      },
+      error: (error) => {
+        this.exporting = false;
+        this.toast.error(this.t('orders.actions.exportError', 'Export failed.'));
+        this.errorKey = error?.error?.error?.code ? `errors.backend.${error.error.error.code}` : 'orders.errorLoad';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  private t(key: string, fallback: string): string {
+    const value = this.i18n.instant(key);
+    return value === key ? fallback : value;
   }
 
   statusBadgeClass(value: string | null | undefined): string {

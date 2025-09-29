@@ -18,11 +18,23 @@
             <mat-icon>{{ card.icon }}</mat-icon>
           </div>
           <mat-card-title>{{ card.value }}</mat-card-title>
-          <mat-card-subtitle>{{ card.titleKey | translate }}</mat-card-subtitle>
+          <mat-card-subtitle>{{ card.titleKey ? (card.titleKey | translate) : card.title }}</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content *ngIf="card.hintKey">
           <p>{{ card.hintKey | translate }}</p>
         </mat-card-content>
+      </mat-card>
+    </section>
+
+    <section class="operations-cards">
+      <mat-card *ngFor="let card of operationsCards()" class="metric-card operations-card" [ngClass]="card.color">
+        <mat-card-header>
+          <div mat-card-avatar class="metric-icon">
+            <mat-icon>{{ card.icon }}</mat-icon>
+          </div>
+          <mat-card-title>{{ card.value }}</mat-card-title>
+          <mat-card-subtitle>{{ card.titleKey ? (card.titleKey | translate) : card.title }}</mat-card-subtitle>
+        </mat-card-header>
       </mat-card>
     </section>
 

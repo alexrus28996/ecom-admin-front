@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { UntypedFormBuilder } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { AdminService } from '../../services/admin.service';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
 import { ToastService } from '../../core/toast.service';
 import { TranslateService } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
+import { Return } from '../../services/api.types';
 
 type ReturnStatus = 'requested'|'approved'|'rejected'|'refunded';
 
@@ -19,8 +19,8 @@ export class AdminReturnsListComponent implements OnInit {
   readonly filterForm = this.fb.group({ status: [''] });
   readonly displayed = ['order', 'amount', 'status', 'requestedAt', 'actions'];
 
-  data: any[] = [];
-  selected: any | null = null;
+  data: Return[] = [];
+  selected: Return | null = null;
   total = 0;
   page = 0;
   pageSize = 10;
@@ -31,13 +31,16 @@ export class AdminReturnsListComponent implements OnInit {
   lastError: any = null;
 
   constructor(
-    private readonly admin: AdminService,
+    private readonly returns: ReturnsService,
     private readonly fb: UntypedFormBuilder,
     private readonly dialog: MatDialog,
     private readonly toast: ToastService,
     private readonly i18n: TranslateService,
-    private readonly cdr: ChangeDetectorRef
+    private readonly cdr: ChangeDetectorRef,
+    private readonly permissions: PermissionsService
   ) {}
+
+  readonly canManage$ = this.permissions.can$('admin');
 
   ngOnInit(): void {
     this.load();
@@ -50,16 +53,16 @@ export class AdminReturnsListComponent implements OnInit {
     this.cdr.markForCheck();
 
     const s = (this.filterForm.value.status || '') as ReturnStatus | '';
-    this.admin.listReturns({ status: (s || undefined) as any, page: this.page + 1, limit: this.pageSize }).subscribe({
+    this.returns.getReturns({ status: (s || undefined) as any, page: this.page + 1, limit: this.pageSize }).subscribe({
       next: (res) => {
-        this.data = res.items || [];
+        this.data = (res.items || []) as Return[];
         this.total = res.total || 0;
         this.page = (res.page || 1) - 1;
         this.loading = false;
 
         if (this.selected) {
           const selectedId = this.selected._id || this.selected.id;
-          this.selected = this.data.find((row) => (row._id || row.id) === selectedId) || null;
+          this.selected = this.data.find((row) => (row._id || (row as any).id) === selectedId) || null;
         }
 
         this.cdr.markForCheck();
@@ -89,7 +92,7 @@ export class AdminReturnsListComponent implements OnInit {
     this.load();
   }
 
-  open(row: any): void {
+  open(row: Return): void {
     this.selected = row;
     this.cdr.markForCheck();
   }
@@ -99,12 +102,12 @@ export class AdminReturnsListComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  approve(item: any): void {
-    this.confirm('returns.list.actions.approve', () => this.runAction(() => this.admin.approveReturn(item._id || item.id), 'returns.list.toasts.approved'));
+  approve(item: Return): void {
+    this.confirm('returns.list.actions.approve', () => this.runAction(() => this.admin.approveReturn(item._id), 'returns.list.toasts.approved'));
   }
 
-  reject(item: any): void {
-    this.confirm('returns.list.actions.reject', () => this.runAction(() => this.admin.rejectReturn(item._id || item.id), 'returns.list.toasts.rejected'));
+  reject(item: Return): void {
+    this.confirm('returns.list.actions.reject', () => this.runAction(() => this.admin.rejectReturn(item._id), 'returns.list.toasts.rejected'));
   }
 
   private runAction(request: () => Observable<any>, successToastKey: string): void {

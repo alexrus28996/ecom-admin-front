@@ -1,12 +1,21 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { FormBuilder, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { TranslateService } from '@ngx-translate/core';
 import { combineLatest, Subject } from 'rxjs';
 import { distinctUntilChanged, map, takeUntil } from 'rxjs/operators';
 import { ToastService } from '../../core/toast.service';
-import { OrdersService, Order, OrderTimelineEntry, OrderAddress, OrderItem } from '../../services/orders.service';
+import {
+  OrdersService,
+  Order,
+  OrderTimelineEntry,
+  OrderAddress,
+  OrderItem,
+  OrderFulfillmentPayload,
+  OrderRefundPayload,
+  OrderTimelinePayload
+} from '../../services/orders.service';
 import { ORDER_STATUS_OPTIONS, PAYMENT_STATUS_OPTIONS, StatusOption, orderStatusKey, paymentStatusKey, OrderStatusValue, PaymentStatusValue } from './order-status.util';
 import { MoneyAmount } from '../../services/api.types';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
@@ -42,6 +51,28 @@ export class AdminOrderDetailComponent implements OnInit, OnDestroy {
     status: ['', Validators.required],
     paymentStatus: ['', Validators.required]
   });
+
+  readonly fulfillmentForm = this.fb.group({
+    carrier: [''],
+    trackingNumber: [''],
+    note: [''],
+    items: this.fb.array([] as FormGroup[])
+  });
+
+  readonly refundForm = this.fb.group({
+    reason: [''],
+    note: [''],
+    amount: [null as number | null],
+    items: this.fb.array([] as FormGroup[])
+  });
+
+  readonly timelineForm = this.fb.group({
+    message: ['', [Validators.required, Validators.maxLength(500)]]
+  });
+
+  fulfillmentSaving = false;
+  refundSaving = false;
+  timelineSaving = false;
 
   readonly orderPermissions$ = combineLatest({
     update: this.permissions.can$('order:edit'),
@@ -121,6 +152,7 @@ export class AdminOrderDetailComponent implements OnInit, OnDestroy {
           status: order.status || '',
           paymentStatus: order.paymentStatus || ''
         });
+        this.buildItemForms(order);
         this.loading = false;
         this.cdr.markForCheck();
         this.loadTimeline();
@@ -155,6 +187,7 @@ export class AdminOrderDetailComponent implements OnInit, OnDestroy {
       next: ({ order }) => {
         this.order = order;
         this.statusForm.patchValue({ status: order.status || '', paymentStatus: order.paymentStatus || '' }, { emitEvent: false });
+        this.buildItemForms(order);
         this.saving = false;
         this.toast.success(this.i18n.instant('orders.saveSuccess'));
         this.cdr.markForCheck();
@@ -382,5 +415,159 @@ export class AdminOrderDetailComponent implements OnInit, OnDestroy {
 
   private isMoneyAmount(value: unknown): value is MoneyAmount {
     return typeof value === 'object' && value !== null && 'amount' in value && 'currency' in value;
+  }
+
+  get fulfillmentItems(): FormArray<FormGroup> {
+    return this.fulfillmentForm.get('items') as FormArray<FormGroup>;
+  }
+
+  get refundItems(): FormArray<FormGroup> {
+    return this.refundForm.get('items') as FormArray<FormGroup>;
+  }
+
+  submitFulfillment(): void {
+    if (!this.order || this.fulfillmentSaving || !this.canUpdateOrder) {
+      return;
+    }
+
+    const payload: OrderFulfillmentPayload = {
+      carrier: this.fulfillmentForm.value.carrier || undefined,
+      trackingNumber: this.fulfillmentForm.value.trackingNumber || undefined,
+      note: this.fulfillmentForm.value.note || undefined,
+      items: this.fulfillmentItems.controls
+        .map((group) => group.value)
+        .filter((value) => value.selected && value.itemId)
+        .map((value) => ({ itemId: value.itemId, quantity: Number(value.quantity) || 0 }))
+        .filter((value) => value.quantity > 0)
+    };
+
+    if (!payload.items.length) {
+      this.toast.show(this.i18n.instant('orders.fulfillment.selectItems') || 'Select at least one item to fulfill.', 'info');
+      return;
+    }
+
+    this.fulfillmentSaving = true;
+    this.cdr.markForCheck();
+    this.orders.fulfillAdminOrder(this.id, payload).subscribe({
+      next: (order) => {
+        this.fulfillmentSaving = false;
+        this.fulfillmentForm.patchValue({ note: '' });
+        this.buildItemForms(order);
+        this.toast.success(this.t('orders.fulfillment.success', 'Fulfillment recorded.'));
+        this.load();
+      },
+      error: (error) => {
+        this.fulfillmentSaving = false;
+        this.toast.error(this.resolveError(error, 'orders.fulfillment.error'));
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  submitRefund(): void {
+    if (!this.order || this.refundSaving || !this.canUpdateOrder) {
+      return;
+    }
+
+    const payload: OrderRefundPayload = {
+      reason: this.refundForm.value.reason || undefined,
+      note: this.refundForm.value.note || undefined,
+      amount: this.refundForm.value.amount ? Number(this.refundForm.value.amount) : undefined,
+      items: this.refundItems.controls
+        .map((group) => group.value)
+        .filter((value) => value.selected && value.itemId)
+        .map((value) => ({ itemId: value.itemId, quantity: value.quantity ? Number(value.quantity) : undefined, amount: value.amount ? Number(value.amount) : undefined }))
+    };
+
+    if (!payload.items?.length && !payload.amount) {
+      this.toast.show(this.i18n.instant('orders.refund.noSelection'), 'info');
+      return;
+    }
+
+    this.refundSaving = true;
+    this.cdr.markForCheck();
+    this.orders.refundAdminOrder(this.id, payload).subscribe({
+      next: (order) => {
+        this.refundSaving = false;
+        this.refundForm.reset({ reason: '', note: '', amount: null });
+        this.buildItemForms(order);
+        this.toast.success(this.t('orders.refund.success', 'Refund issued.'));
+        this.load();
+      },
+      error: (error) => {
+        this.refundSaving = false;
+        this.toast.error(this.resolveError(error, 'orders.refund.error'));
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  submitTimelineEntry(): void {
+    if (!this.canUpdateOrder || !this.id || this.timelineSaving || this.timelineForm.invalid) {
+      this.timelineForm.markAllAsTouched();
+      return;
+    }
+
+    const payload: OrderTimelinePayload = {
+      message: this.timelineForm.value.message || ''
+    };
+
+    this.timelineSaving = true;
+    this.cdr.markForCheck();
+    this.orders.addTimelineEntry(this.id, payload).subscribe({
+      next: (entry) => {
+        this.timelineSaving = false;
+        this.timelineForm.reset({ message: '' });
+        this.timeline = [entry, ...this.timeline];
+        this.toast.success(this.t('orders.timeline.added', 'Timeline entry added.'));
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        this.timelineSaving = false;
+        this.toast.error(this.resolveError(error, 'orders.timelineError'));
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  private buildItemForms(order: Order): void {
+    const items = Array.isArray(order?.items) ? order.items : [];
+    this.fulfillmentItems.clear();
+    this.refundItems.clear();
+
+    items.forEach((item) => {
+      this.fulfillmentItems.push(
+        this.fb.group({
+          itemId: [item._id || (item as any).id],
+          name: [item.name],
+          selected: [false],
+          quantity: [item.quantity || 1, [Validators.min(1)]]
+        })
+      );
+
+      this.refundItems.push(
+        this.fb.group({
+          itemId: [item._id || (item as any).id],
+          name: [item.name],
+          selected: [false],
+          quantity: [item.quantity || 1, [Validators.min(0)]],
+          amount: [null as number | null, [Validators.min(0)]]
+        })
+      );
+    });
+    this.cdr.markForCheck();
+  }
+
+  private resolveError(error: any, fallbackKey: string): string {
+    const code = error?.error?.error?.code;
+    if (code) {
+      return this.i18n.instant(`errors.backend.${code}`);
+    }
+    return this.t(fallbackKey, 'Unable to complete the action. Please try again.');
+  }
+
+  private t(key: string, fallback: string): string {
+    const value = this.i18n.instant(key);
+    return value === key ? fallback : value;
   }
 }

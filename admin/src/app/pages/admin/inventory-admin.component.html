@@ -478,6 +478,10 @@
         <mat-card-title>Locations</mat-card-title>
         <mat-card-subtitle>Manage storage and fulfilment locations.</mat-card-subtitle>
         <span class="inventory-card__spacer"></span>
+        <button mat-stroked-button type="button" (click)="exportLocations()">
+          <mat-icon>ios_share</mat-icon>
+          Export CSV
+        </button>
         <button mat-stroked-button color="primary" type="button" *ngIf="perms.locationCreate" (click)="openLocationDialog()">
           <mat-icon>add</mat-icon>
           Add location

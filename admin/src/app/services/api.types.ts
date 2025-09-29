@@ -20,6 +20,7 @@ export interface MoneyAmount {
 
 export interface BaseDocument {
   _id: string;
+  id?: string;
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | null;
@@ -180,6 +181,9 @@ export interface Order extends BaseDocument {
 }
 
 export interface OrderItem {
+  _id?: string;
+  id?: string;
+  name?: string;
   product: string | Product;
   variant?: string | ProductVariant;
   quantity: number;
@@ -340,9 +344,18 @@ export interface InventoryLocation extends BaseDocument {
   } | null;
   priority?: number | null;
   active: boolean;
+  metadata?: Record<string, unknown> | null;
 }
 
-export type LocationType = 'WAREHOUSE' | 'STORE' | 'DISTRIBUTION' | 'FULFILLMENT' | 'VENDOR' | 'OTHER';
+export type LocationType =
+  | 'WAREHOUSE'
+  | 'STORE'
+  | 'DISTRIBUTION'
+  | 'FULFILLMENT'
+  | 'VENDOR'
+  | 'OTHER'
+  | 'DROPSHIP'
+  | 'BUFFER';
 
 export interface TransferOrder extends BaseDocument {
   fromLocation: string | InventoryLocation;
@@ -539,10 +552,11 @@ export interface ProductFilters extends PaginationParams, SortParams {
 }
 
 export interface OrderFilters extends PaginationParams, SortParams {
-  status?: OrderStatus;
-  paymentStatus?: PaymentStatus;
+  status?: OrderStatus | (string & {});
+  paymentStatus?: PaymentStatus | (string & {});
   userId?: string;
   userEmail?: string;
+  customer?: string;
   dateStart?: string;
   dateEnd?: string;
 }

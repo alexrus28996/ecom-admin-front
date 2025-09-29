@@ -24,6 +24,13 @@
   margin-top: 24px;
 }
 
+.orders-admin__table-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
 .orders-admin__skeleton {
   height: 48px;
   border-radius: 12px;

@@ -25,20 +25,33 @@ export class InventoryLocationDialogComponent {
   readonly form = this.fb.group({
     code: ['', [Validators.required, Validators.maxLength(40)]],
     name: ['', [Validators.required, Validators.maxLength(120)]],
-    type: ['WAREHOUSE' as LocationType],
+    type: ['WAREHOUSE' as LocationType, Validators.required],
     priority: [null as number | null],
     active: [true],
+    metadata: [''],
     geo: this.fb.group({
       address1: [''],
       address2: [''],
       city: [''],
       region: [''],
       postalCode: [''],
-      country: ['']
-    })
+      country: [''],
+      latitude: [null as number | null],
+      longitude: [null as number | null]
+    }),
+    metadata: ['']
   });
 
-  readonly locationTypes: LocationType[] = ['WAREHOUSE', 'STORE', 'DISTRIBUTION', 'FULFILLMENT', 'VENDOR', 'OTHER'];
+  readonly locationTypes: LocationType[] = [
+    'WAREHOUSE',
+    'STORE',
+    'DISTRIBUTION',
+    'FULFILLMENT',
+    'VENDOR',
+    'OTHER',
+    'DROPSHIP',
+    'BUFFER'
+  ];
   saving = false;
 
   constructor(
@@ -60,7 +73,16 @@ export class InventoryLocationDialogComponent {
       return;
     }
 
-    const payload = this.createPayload();
+    let payload: LocationPayload;
+    try {
+      payload = this.createPayload();
+    } catch (error) {
+      this.toast.error('Metadata must be valid JSON.');
+      const message = error instanceof Error ? error.message : 'Invalid metadata JSON';
+      this.toast.error(message);
+      this.cdr.markForCheck();
+      return;
+    }
     this.saving = true;
     this.cdr.markForCheck();
 
@@ -93,14 +115,18 @@ export class InventoryLocationDialogComponent {
       type: (location.type as LocationType) || 'WAREHOUSE',
       priority: location.priority ?? null,
       active: location.active,
+      metadata: location.metadata ? JSON.stringify(location.metadata, null, 2) : '',
       geo: {
         address1: location.geo?.address1 || '',
         address2: location.geo?.address2 || '',
         city: location.geo?.city || '',
         region: location.geo?.region || '',
         postalCode: location.geo?.postalCode || '',
-        country: location.geo?.country || ''
-      }
+        country: location.geo?.country || '',
+        latitude: location.geo?.latitude ?? null,
+        longitude: location.geo?.longitude ?? null
+      },
+      metadata: location.metadata ? JSON.stringify(location.metadata, null, 2) : ''
     });
   }
 
@@ -108,21 +134,39 @@ export class InventoryLocationDialogComponent {
     const raw = this.form.getRawValue();
     const code = (raw.code || '').trim();
     const name = (raw.name || '').trim();
+    const metadata = this.parseMetadata(raw.metadata);
     return {
       code,
       name,
       type: raw.type || undefined,
       priority: raw.priority === null ? null : Number(raw.priority),
       active: raw.active ?? true,
+      metadata,
       geo: {
         address1: raw.geo?.address1?.trim() || undefined,
         address2: raw.geo?.address2?.trim() || undefined,
         city: raw.geo?.city?.trim() || undefined,
         region: raw.geo?.region?.trim() || undefined,
         postalCode: raw.geo?.postalCode?.trim() || undefined,
-        country: raw.geo?.country?.trim() || undefined
-      }
+        country: raw.geo?.country?.trim() || undefined,
+        latitude: typeof raw.geo?.latitude === 'number' ? raw.geo.latitude : raw.geo?.latitude ? Number(raw.geo.latitude) : undefined,
+        longitude: typeof raw.geo?.longitude === 'number' ? raw.geo.longitude : raw.geo?.longitude ? Number(raw.geo.longitude) : undefined
+      },
+      metadata: this.parseMetadata(raw.metadata)
     };
+  }
+
+  private parseMetadata(value: string | null | undefined): Record<string, unknown> | null {
+    if (!value || !value.trim()) {
+      return null;
+    }
+
+    try {
+      const parsed = JSON.parse(value);
+      return typeof parsed === 'object' && parsed !== null ? parsed as Record<string, unknown> : null;
+    } catch {
+      throw new Error('invalid-metadata');
+    }
   }
 
   private resolveError(error: any): string {
@@ -131,5 +175,33 @@ export class InventoryLocationDialogComponent {
       error?.message ||
       'Unable to save location. Please try again.'
     );
+  }
+
+  private parseMetadata(input: unknown): Record<string, unknown> | null | undefined {
+    const metadataControl = this.form.get('metadata');
+    metadataControl?.setErrors(null);
+
+    if (typeof input !== 'string') {
+      return undefined;
+    }
+
+    const trimmed = input.trim();
+    if (!trimmed) {
+      return null;
+    }
+
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        throw new Error('Metadata must be a JSON object');
+      }
+      return parsed as Record<string, unknown>;
+    } catch (error) {
+      metadataControl?.setErrors({ invalidJson: true });
+      metadataControl?.markAsTouched();
+      throw new Error(
+        error instanceof Error ? error.message : 'Invalid metadata JSON'
+      );
+    }
   }
 }

@@ -21,6 +21,7 @@ export interface LocationPayload {
   geo?: InventoryLocation['geo'];
   priority?: number | null;
   active?: boolean;
+  metadata?: Record<string, unknown> | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -32,6 +33,12 @@ export class LocationService {
   list(query: LocationQuery = {}): Observable<Paginated<InventoryLocation>> {
     const params = this.buildParams(query);
     return this.http.get<Paginated<InventoryLocation>>(this.baseUrl, { params });
+  }
+
+  get(id: string): Observable<InventoryLocation> {
+    return this.http
+      .get<ApiResponse<InventoryLocation>>(`${this.baseUrl}/${id}`)
+      .pipe(map((response) => response.data ?? (response as unknown as { location: InventoryLocation }).location));
   }
 
   create(payload: LocationPayload): Observable<InventoryLocation> {
@@ -54,6 +61,14 @@ export class LocationService {
     return this.http
       .post<ApiResponse<InventoryLocation>>(`${this.baseUrl}/${id}/restore`, {})
       .pipe(map((response) => response.data ?? (response as unknown as { location: InventoryLocation }).location));
+  }
+
+  export(query: LocationQuery = {}): Observable<Blob> {
+    const params = this.buildParams({ ...query, format: 'csv' });
+    return this.http.get(`${this.baseUrl}`, {
+      params,
+      responseType: 'blob'
+    });
   }
 
   private buildParams(query: Record<string, unknown>): HttpParams {

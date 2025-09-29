@@ -93,6 +93,50 @@
   color: var(--app-text-muted, #64748b);
 }
 
+.order-admin-detail__action-form {
+  display: grid;
+  gap: 16px;
+}
+
+.order-admin-detail__form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.order-admin-detail__items-selector {
+  display: grid;
+  gap: 12px;
+}
+
+.order-admin-detail__item-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.order-admin-detail__item-selector mat-form-field {
+  width: 140px;
+  flex: 0 0 auto;
+}
+
+.order-admin-detail__form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.order-admin-detail__timeline-form {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  align-items: flex-start;
+}
+
+.order-admin-detail__timeline-input {
+  flex: 1;
+}
+
 .label {
   display: block;
   font-size: 12px;
@@ -142,5 +186,17 @@
 
   .order-admin-detail__status-form button {
     justify-self: stretch;
+  }
+
+  .order-admin-detail__timeline-form {
+    flex-direction: column;
+  }
+
+  .order-admin-detail__timeline-form button {
+    align-self: stretch;
+  }
+
+  .order-admin-detail__form-actions {
+    justify-content: stretch;
   }
 }

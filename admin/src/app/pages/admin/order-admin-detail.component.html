@@ -199,11 +199,175 @@
           </mat-card-content>
         </mat-card>
 
+        <mat-card class="order-admin-detail__card order-admin-detail__operations">
+          <mat-card-header>
+            <mat-card-title>{{ 'orders.manageActions' | translate }}</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <mat-tab-group>
+              <mat-tab label="{{ 'orders.fulfillment.tab' | translate }}">
+                <form [formGroup]="fulfillmentForm" (ngSubmit)="submitFulfillment()" class="order-admin-detail__action-form">
+                  <div class="order-admin-detail__form-grid">
+                    <mat-form-field appearance="outline">
+                      <mat-label>{{ 'orders.fulfillment.carrier' | translate }}</mat-label>
+                      <input matInput formControlName="carrier" [disabled]="!perms.update || fulfillmentSaving" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>{{ 'orders.fulfillment.tracking' | translate }}</mat-label>
+                      <input matInput formControlName="trackingNumber" [disabled]="!perms.update || fulfillmentSaving" />
+                    </mat-form-field>
+                  </div>
+
+                  <div formArrayName="items" class="order-admin-detail__items-selector">
+                    <div
+                      class="order-admin-detail__item-selector"
+                      *ngFor="let ctrl of fulfillmentItems.controls; let i = index"
+                      [formGroupName]="i"
+                    >
+                      <mat-checkbox formControlName="selected" [disabled]="!perms.update || fulfillmentSaving">
+                        {{ ctrl.value.name }}
+                      </mat-checkbox>
+                      <mat-form-field appearance="outline">
+                        <mat-label>{{ 'orders.fulfillment.quantity' | translate }}</mat-label>
+                        <input
+                          matInput
+                          type="number"
+                          min="1"
+                          formControlName="quantity"
+                          [disabled]="!perms.update || fulfillmentSaving"
+                        />
+                      </mat-form-field>
+                    </div>
+                  </div>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>{{ 'orders.fulfillment.note' | translate }}</mat-label>
+                    <textarea
+                      matInput
+                      formControlName="note"
+                      rows="2"
+                      [disabled]="!perms.update || fulfillmentSaving"
+                    ></textarea>
+                  </mat-form-field>
+
+                  <div class="order-admin-detail__form-actions">
+                    <button
+                      mat-flat-button
+                      color="primary"
+                      type="submit"
+                      [disabled]="fulfillmentSaving || !perms.update"
+                    >
+                      <mat-progress-spinner
+                        *ngIf="fulfillmentSaving"
+                        mode="indeterminate"
+                        diameter="18"
+                      ></mat-progress-spinner>
+                      <span>{{ 'orders.fulfillment.submit' | translate }}</span>
+                    </button>
+                  </div>
+                </form>
+              </mat-tab>
+
+              <mat-tab label="{{ 'orders.refund.tab' | translate }}">
+                <form [formGroup]="refundForm" (ngSubmit)="submitRefund()" class="order-admin-detail__action-form">
+                  <div class="order-admin-detail__form-grid">
+                    <mat-form-field appearance="outline">
+                      <mat-label>{{ 'orders.refund.amount' | translate }}</mat-label>
+                      <input
+                        matInput
+                        type="number"
+                        min="0"
+                        formControlName="amount"
+                        [disabled]="!perms.update || refundSaving"
+                      />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>{{ 'orders.refund.reason' | translate }}</mat-label>
+                      <input matInput formControlName="reason" [disabled]="!perms.update || refundSaving" />
+                    </mat-form-field>
+                  </div>
+
+                  <div formArrayName="items" class="order-admin-detail__items-selector">
+                    <div
+                      class="order-admin-detail__item-selector"
+                      *ngFor="let ctrl of refundItems.controls; let i = index"
+                      [formGroupName]="i"
+                    >
+                      <mat-checkbox formControlName="selected" [disabled]="!perms.update || refundSaving">
+                        {{ ctrl.value.name }}
+                      </mat-checkbox>
+                      <mat-form-field appearance="outline">
+                        <mat-label>{{ 'orders.refund.quantity' | translate }}</mat-label>
+                        <input
+                          matInput
+                          type="number"
+                          min="0"
+                          formControlName="quantity"
+                          [disabled]="!perms.update || refundSaving"
+                        />
+                      </mat-form-field>
+                      <mat-form-field appearance="outline">
+                        <mat-label>{{ 'orders.refund.lineAmount' | translate }}</mat-label>
+                        <input
+                          matInput
+                          type="number"
+                          min="0"
+                          formControlName="amount"
+                          [disabled]="!perms.update || refundSaving"
+                        />
+                      </mat-form-field>
+                    </div>
+                  </div>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>{{ 'orders.refund.note' | translate }}</mat-label>
+                    <textarea
+                      matInput
+                      rows="2"
+                      formControlName="note"
+                      [disabled]="!perms.update || refundSaving"
+                    ></textarea>
+                  </mat-form-field>
+
+                  <div class="order-admin-detail__form-actions">
+                    <button mat-flat-button color="warn" type="submit" [disabled]="refundSaving || !perms.update">
+                      <mat-progress-spinner
+                        *ngIf="refundSaving"
+                        mode="indeterminate"
+                        diameter="18"
+                      ></mat-progress-spinner>
+                      <span>{{ 'orders.refund.submit' | translate }}</span>
+                    </button>
+                  </div>
+                </form>
+              </mat-tab>
+            </mat-tab-group>
+          </mat-card-content>
+        </mat-card>
+
         <mat-card class="order-admin-detail__card order-admin-detail__timeline-card">
           <mat-card-header>
             <mat-card-title>{{ 'orders.timeline' | translate }}</mat-card-title>
           </mat-card-header>
           <mat-card-content>
+            <form [formGroup]="timelineForm" (ngSubmit)="submitTimelineEntry()" class="order-admin-detail__timeline-form">
+              <mat-form-field appearance="outline" class="order-admin-detail__timeline-input">
+                <mat-label>{{ 'orders.timeline.addEntry' | translate }}</mat-label>
+                <textarea
+                  matInput
+                  rows="2"
+                  formControlName="message"
+                  [disabled]="timelineSaving || !perms.update"
+                ></textarea>
+                <mat-error *ngIf="timelineForm.controls.message.hasError('required')">
+                  {{ 'orders.timeline.required' | translate }}
+                </mat-error>
+              </mat-form-field>
+              <button mat-flat-button color="primary" type="submit" [disabled]="timelineSaving || timelineForm.invalid || !perms.update">
+                <mat-progress-spinner *ngIf="timelineSaving" diameter="18" mode="indeterminate"></mat-progress-spinner>
+                <span>{{ 'orders.timeline.submit' | translate }}</span>
+              </button>
+            </form>
             <app-loading [show]="tlLoading" labelKey="common.loading"></app-loading>
             <app-error-banner [key]="tlErrorKey" [error]="tlLastError"></app-error-banner>
 
