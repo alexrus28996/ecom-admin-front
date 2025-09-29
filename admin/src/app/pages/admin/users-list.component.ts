@@ -9,12 +9,8 @@ import { catchError, finalize, map } from 'rxjs/operators';
 
 import { ToastService } from '../../core/toast.service';
 import { TranslateService } from '@ngx-translate/core';
-import {
-  AdminUser,
-  UserManagementService,
-  UserPermissionsResponse,
-} from '../../services/user-management.service';
-import { UserPermissionsDialogComponent } from './user-permissions-dialog.component';
+import { AdminUser, UserManagementService } from '../../services/user-management.service';
+import { UserPermissionsDialogComponent } from './permissions/user-permissions-dialog.component';
 
 @Component({ selector: 'app-admin-users-list', templateUrl: './users-list.component.html', changeDetection: ChangeDetectionStrategy.OnPush })
 export class AdminUsersListComponent implements OnInit {
@@ -103,24 +99,20 @@ export class AdminUsersListComponent implements OnInit {
     }
 
     const ref = this.dialog.open(UserPermissionsDialogComponent, {
-      width: '100vw',
+      width: '480px',
       maxWidth: '100vw',
       height: '100vh',
-      panelClass: 'permissions-fullscreen-dialog',
+      position: { right: '0' },
+      panelClass: 'permissions-drawer-panel',
       data: {
         user: { ...user },
         isLastAdmin: this.isLastAdmin(user)
       }
     });
 
-    ref.afterClosed().subscribe((result: { roles?: string[]; permissions?: UserPermissionsResponse; updatedUser?: AdminUser } | undefined) => {
-      if (!result) {
-        return;
-      }
-      const existing = this.rows.find((row) => row.id === user.id);
-      if (existing && Array.isArray(result.roles)) {
-        existing.roles = result.roles;
-        this.cdr.markForCheck();
+    ref.afterClosed().subscribe((result: { updated?: boolean } | undefined) => {
+      if (result?.updated) {
+        this.load();
       }
     });
   }

@@ -7,7 +7,7 @@ import { TranslateService } from '@ngx-translate/core';
 
 import { ToastService } from '../../core/toast.service';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
-import { UserPermissionsDialogComponent } from './user-permissions-dialog.component';
+import { UserPermissionsDialogComponent } from './permissions/user-permissions-dialog.component';
 import { AdminUser, UserManagementService } from '../../services/user-management.service';
 
 interface AdminUserDetail extends AdminUser {
@@ -179,23 +179,35 @@ export class AdminUserDetailComponent implements OnInit, OnDestroy {
       return;
     }
     const ref = this.dialog.open(UserPermissionsDialogComponent, {
-      width: '100vw',
+      width: '480px',
       maxWidth: '100vw',
       height: '100vh',
-      panelClass: 'permissions-fullscreen-dialog',
+      position: { right: '0' },
+      panelClass: 'permissions-drawer-panel',
       data: {
         user: { ...this.user },
         isLastAdmin: this.isLastAdmin(),
       },
     });
     ref.afterClosed().subscribe((result) => {
-      if (!result || !Array.isArray(result.roles)) {
-        return;
+      if (result?.updated) {
+        this.reloadUser();
       }
-      if (this.user) {
-        this.user = { ...this.user, roles: result.roles };
+    });
+  }
+
+  private reloadUser(): void {
+    if (!this.user?.id) {
+      return;
+    }
+    this.users.getUser(this.user.id).subscribe({
+      next: (user) => {
+        this.user = user as AdminUserDetail;
         this.cdr.markForCheck();
-      }
+      },
+      error: () => {
+        // keep silent refresh
+      },
     });
   }
 

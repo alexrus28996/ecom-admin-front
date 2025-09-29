@@ -17,7 +17,6 @@ import { ProductFormComponent } from './pages/products/product-form.component';
 import { ProductVariantsDialogComponent } from './pages/products/product-variants-dialog.component';
 import { AdminUsersComponent } from './pages/admin/admin-users.component';
 import { AdminUsersListComponent } from './pages/admin/users-list.component';
-import { UserPermissionsDialogComponent } from './pages/admin/user-permissions-dialog.component';
 import { AdminUserDetailComponent } from './pages/admin/user-detail.component';
 import { AdminOrdersListComponent } from './pages/admin/orders-admin-list.component';
 import { AdminOrderDetailComponent } from './pages/admin/order-admin-detail.component';
@@ -60,7 +59,7 @@ import { CouponsListComponent } from './pages/admin/coupons/coupons-list.compone
 import { CouponFormComponent } from './pages/admin/coupons/coupon-form.component';
 import { ReviewsListComponent } from './pages/admin/reviews/reviews-list.component';
 import { DebugUserComponent } from './shared/debug-user.component';
-import { PermissionsSettingsComponent } from './pages/admin/permissions/permissions-settings.component';
+import { PermissionsModule } from './pages/admin/permissions/permissions.module';
 
 import { MaterialModule } from './shared/material.module';
 import { NgChartsModule } from './shared/ng-charts.module';
@@ -95,7 +94,6 @@ export function translateHttpLoaderFactory(http: HttpClient) {
     CategoryFormDialogComponent,
     CategoryReorderDialogComponent,
     AdminUsersComponent,
-    UserPermissionsDialogComponent,
     ConfirmDialogComponent,
     AdminReturnsListComponent,
     AdminInventoryComponent,
@@ -117,7 +115,6 @@ export function translateHttpLoaderFactory(http: HttpClient) {
     AdminSettingsPlaceholderComponent,
     CouponsListComponent,
     CouponFormComponent,
-    PermissionsSettingsComponent,
     DebugUserComponent,
     ShipmentDetailComponent,
     TransactionsListComponent,
@@ -143,7 +140,8 @@ export function translateHttpLoaderFactory(http: HttpClient) {
         deps: [HttpClient]
       }
     }),
-    AppRoutingModule
+    AppRoutingModule,
+    PermissionsModule
   ],
   providers: [{ provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }],
   bootstrap: [AppComponent]

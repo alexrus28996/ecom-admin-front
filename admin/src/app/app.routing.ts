@@ -24,6 +24,7 @@ import { EmailVerifyComponent } from './pages/email-verify/email-verify.componen
 import { AddressManagementComponent } from './pages/addresses/address-management.component';
 import { AuthGuard } from './core/auth.guard';
 import { RoleGuard } from './core/role.guard';
+import { PermissionGuard } from './core/permission.guard';
 import { LayoutWrapperComponent } from './layout/layout-wrapper.component';
 import { ReviewsListComponent } from './pages/admin/reviews/reviews-list.component';
 import { ShipmentsListComponent } from './pages/admin/shipments/shipments-list.component';
@@ -64,20 +65,20 @@ const routes: Routes = [
       {
         path: 'admin/products',
         component: ProductsListComponent,
-        canActivate: [RoleGuard],
-        data: { roles: ['admin'], breadcrumb: 'products' }
+        canActivate: [RoleGuard, PermissionGuard],
+        data: { roles: ['admin'], permissions: ['product:read'], breadcrumb: 'products' }
       },
       {
         path: 'admin/products/new',
         component: ProductFormComponent,
-        canActivate: [RoleGuard],
-        data: { roles: ['admin'], breadcrumb: 'createProduct' }
+        canActivate: [RoleGuard, PermissionGuard],
+        data: { roles: ['admin'], permissions: ['product:create'], breadcrumb: 'createProduct' }
       },
       {
         path: 'admin/products/:id/edit',
         component: ProductFormComponent,
-        canActivate: [RoleGuard],
-        data: { roles: ['admin'], breadcrumb: 'editProduct' }
+        canActivate: [RoleGuard, PermissionGuard],
+        data: { roles: ['admin'], permissions: ['product:update'], breadcrumb: 'editProduct' }
       },
       {
         path: 'admin/users',
@@ -100,38 +101,38 @@ const routes: Routes = [
       {
         path: 'admin/orders',
         component: AdminOrdersListComponent,
-        canActivate: [RoleGuard],
-        data: { roles: ['admin'], breadcrumb: 'orders' }
+        canActivate: [RoleGuard, PermissionGuard],
+        data: { roles: ['admin'], permissions: ['order:manage'], breadcrumb: 'orders' }
       },
       {
         path: 'admin/orders/:id',
         component: AdminOrderDetailComponent,
-        canActivate: [RoleGuard],
-        data: { roles: ['admin'], breadcrumb: 'orderDetail' }
+        canActivate: [RoleGuard, PermissionGuard],
+        data: { roles: ['admin'], permissions: ['order:manage'], breadcrumb: 'orderDetail' }
       },
       {
         path: 'admin/returns',
         component: AdminReturnsListComponent,
-        canActivate: [RoleGuard],
-        data: { roles: ['admin'], breadcrumb: 'returns' }
+        canActivate: [RoleGuard, PermissionGuard],
+        data: { roles: ['admin'], permissions: ['return:manage'], breadcrumb: 'returns' }
       },
       {
         path: 'admin/inventory',
         component: AdminInventoryComponent,
-        canActivate: [RoleGuard],
-        data: { roles: ['admin'], breadcrumb: 'inventory' }
+        canActivate: [RoleGuard, PermissionGuard],
+        data: { roles: ['admin'], permissions: ['inventory:adjust'], breadcrumb: 'inventory' }
       },
       {
         path: 'admin/coupons',
         component: CouponsListComponent,
-        canActivate: [RoleGuard],
-        data: { roles: ['admin'], breadcrumb: 'coupons' }
+        canActivate: [RoleGuard, PermissionGuard],
+        data: { roles: ['admin'], permissions: ['custom:manage'], breadcrumb: 'coupons' }
       },
       {
         path: 'admin/permissions',
         component: PermissionsSettingsComponent,
-        canActivate: [RoleGuard],
-        data: { roles: ['admin'], breadcrumb: 'permissions' }
+        canActivate: [RoleGuard, PermissionGuard],
+        data: { roles: ['admin'], permissions: ['permissions:manage'], breadcrumb: 'permissions' }
       },
       {
         path: 'admin/reviews',
@@ -142,44 +143,44 @@ const routes: Routes = [
       {
         path: 'admin/shipments',
         component: ShipmentsListComponent,
-        canActivate: [RoleGuard],
-        data: { roles: ['admin'], breadcrumb: 'shipments' }
+        canActivate: [RoleGuard, PermissionGuard],
+        data: { roles: ['admin'], permissions: ['shipment:manage'], breadcrumb: 'shipments' }
       },
       {
         path: 'admin/shipments/:id',
         component: ShipmentDetailComponent,
-        canActivate: [RoleGuard],
-        data: { roles: ['admin'], breadcrumb: 'shipmentDetail' }
+        canActivate: [RoleGuard, PermissionGuard],
+        data: { roles: ['admin'], permissions: ['shipment:manage'], breadcrumb: 'shipmentDetail' }
       },
       {
         path: 'admin/transactions',
         component: TransactionsListComponent,
-        canActivate: [RoleGuard],
-        data: { roles: ['admin'], breadcrumb: 'transactions' }
+        canActivate: [RoleGuard, PermissionGuard],
+        data: { roles: ['admin'], permissions: ['report:view'], breadcrumb: 'transactions' }
       },
       {
         path: 'admin/transactions/:id',
         component: TransactionDetailComponent,
-        canActivate: [RoleGuard],
-        data: { roles: ['admin'], breadcrumb: 'transactionDetail' }
+        canActivate: [RoleGuard, PermissionGuard],
+        data: { roles: ['admin'], permissions: ['report:view'], breadcrumb: 'transactionDetail' }
       },
       {
         path: 'admin/refunds',
         component: RefundsListComponent,
-        canActivate: [RoleGuard],
-        data: { roles: ['admin'], breadcrumb: 'refunds' }
+        canActivate: [RoleGuard, PermissionGuard],
+        data: { roles: ['admin'], permissions: ['return:manage'], breadcrumb: 'refunds' }
       },
       {
         path: 'admin/refunds/:id',
         component: RefundDetailComponent,
-        canActivate: [RoleGuard],
-        data: { roles: ['admin'], breadcrumb: 'refundDetail' }
+        canActivate: [RoleGuard, PermissionGuard],
+        data: { roles: ['admin'], permissions: ['return:manage'], breadcrumb: 'refundDetail' }
       },
       {
         path: 'admin/reports',
         component: ReportsDashboardComponent,
-        canActivate: [RoleGuard],
-        data: { roles: ['admin'], breadcrumb: 'reports' }
+        canActivate: [RoleGuard, PermissionGuard],
+        data: { roles: ['admin'], permissions: ['report:view'], breadcrumb: 'reports' }
       },
       {
         path: 'admin/settings',

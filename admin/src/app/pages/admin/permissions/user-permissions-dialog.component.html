@@ -1,0 +1,86 @@
+<div class="drawer-container" role="dialog" aria-label="Edit permissions">
+  <header class="drawer-header">
+    <div class="user-header">
+      <div class="avatar" [ngClass]="{ placeholder: !data.user.avatarUrl }">
+        <img *ngIf="data.user.avatarUrl" [src]="data.user.avatarUrl" [alt]="data.user.name || data.user.email" />
+        <span *ngIf="!data.user.avatarUrl">{{ (data.user.name || data.user.email || '?') | slice:0:2 | uppercase }}</span>
+      </div>
+      <div class="user-details">
+        <h2>{{ data.user.name || data.user.email }}</h2>
+        <p>{{ data.user.email }}</p>
+      </div>
+    </div>
+    <button mat-icon-button type="button" aria-label="Close" (click)="cancel()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </header>
+
+  <div class="drawer-body" *ngIf="!loading; else loadingState">
+    <div class="toolbar">
+      <mat-form-field appearance="fill" class="search-field">
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput [formControl]="searchControl" placeholder="Search permissions" />
+      </mat-form-field>
+      <div class="quick-actions">
+        <button mat-stroked-button color="primary" type="button" (click)="selectAll()" [disabled]="saving">Select All</button>
+        <button mat-stroked-button type="button" (click)="clearAll()" [disabled]="saving">Clear All</button>
+        <button mat-stroked-button type="button" (click)="reset()" [disabled]="saving || !hasChanges()">Reset to Default</button>
+      </div>
+    </div>
+
+    <section class="domain-list" *ngIf="filteredGroups().length; else emptyState">
+      <mat-accordion displayMode="flat" multi>
+        <mat-expansion-panel *ngFor="let group of filteredGroups(); trackBy: trackByGroup" expanded>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon>{{ group.icon }}</mat-icon>
+              <span class="group-title">{{ group.title }}</span>
+            </mat-panel-title>
+            <mat-panel-description>
+              {{ grantedCount(group) }} / {{ group.permissions.length }} granted
+            </mat-panel-description>
+          </mat-expansion-panel-header>
+
+          <div class="permissions-grid">
+            <mat-checkbox
+              *ngFor="let permission of group.permissions"
+              [checked]="isGranted(permission.code)"
+              (change)="togglePermission(permission.code, $event.checked)"
+              [matTooltip]="tooltipFor(permission.code, permission.description)"
+              matTooltipShowDelay="200"
+            >
+              <span class="permission-label">{{ permission.label }}</span>
+              <span class="permission-description" *ngIf="permission.description">
+                {{ permission.description }}
+              </span>
+            </mat-checkbox>
+          </div>
+        </mat-expansion-panel>
+      </mat-accordion>
+    </section>
+  </div>
+
+  <ng-template #loadingState>
+    <div class="loading-state" role="status" aria-live="polite">
+      <mat-spinner diameter="48"></mat-spinner>
+      <p>Loading permissions…</p>
+    </div>
+  </ng-template>
+
+  <ng-template #emptyState>
+    <div class="empty-state">
+      <mat-icon>rule_folder</mat-icon>
+      <p>No permissions match your search.</p>
+    </div>
+  </ng-template>
+
+  <footer class="drawer-footer">
+    <div class="status-message" *ngIf="error">{{ error }}</div>
+    <span class="spacer"></span>
+    <button mat-button type="button" (click)="cancel()">Cancel</button>
+    <button mat-raised-button color="primary" type="button" (click)="save()" [disabled]="saving || !hasChanges()">
+      <mat-progress-spinner *ngIf="saving" diameter="18" mode="indeterminate"></mat-progress-spinner>
+      <span>Save</span>
+    </button>
+  </footer>
+</div>

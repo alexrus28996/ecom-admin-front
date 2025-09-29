@@ -1,215 +1,96 @@
-<section class="permissions-settings">
-  <header class="permissions-settings__header">
-    <h1>{{ 'permissionsSettings.title' | translate }}</h1>
-    <p>{{ 'permissionsSettings.subtitle' | translate }}</p>
-  </header>
+<div class="permissions-page">
+  <div class="page-header">
+    <div>
+      <h1>User Permissions Management</h1>
+      <p>Control access across the admin workspace with granular permissions.</p>
+    </div>
+  </div>
 
-  <div class="permissions-settings__content">
-    <aside class="permissions-settings__sidebar">
-      <mat-form-field appearance="outline" class="permissions-settings__search">
-        <mat-label>{{ 'permissionsSettings.search.label' | translate }}</mat-label>
-        <input matInput [placeholder]="'permissionsSettings.search.placeholder' | translate" [formControl]="searchControl" />
-        <button
-          *ngIf="searchControl.value"
-          mat-icon-button
-          matSuffix
-          type="button"
-          aria-label="{{ 'permissionsSettings.search.clear' | translate }}"
-          (click)="searchControl.setValue('')"
-        >
-          <mat-icon>close</mat-icon>
-        </button>
+  <mat-card class="table-card">
+    <div class="table-toolbar">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search users</mat-label>
         <mat-icon matPrefix>search</mat-icon>
+        <input matInput [formControl]="searchControl" placeholder="Search by name or email" />
       </mat-form-field>
+    </div>
 
-      <div class="permissions-settings__users">
-        <div class="permissions-settings__users-loading" *ngIf="usersLoading">
-          <mat-progress-spinner mode="indeterminate" diameter="32"></mat-progress-spinner>
-          <span>{{ 'permissionsSettings.loadingUsers' | translate }}</span>
-        </div>
+    <mat-progress-bar *ngIf="loading" mode="indeterminate" color="accent"></mat-progress-bar>
 
-        <app-error-banner *ngIf="usersErrorKey" [key]="usersErrorKey"></app-error-banner>
-
-        <div class="permissions-settings__empty" *ngIf="!usersLoading && !usersErrorKey && users.length === 0">
-          <mat-icon>group_off</mat-icon>
-          <p>{{ 'permissionsSettings.usersEmpty' | translate }}</p>
-        </div>
-
-        <div class="permissions-settings__list" *ngIf="!usersLoading && !usersErrorKey && users.length">
-          <button
-            type="button"
-            class="permissions-settings__user"
-            *ngFor="let user of users; trackBy: trackByUserId"
-            [class.permissions-settings__user--selected]="isSelected(user)"
-            (click)="selectUser(user)"
-          >
-            <div class="permissions-settings__user-details">
-              <div class="permissions-settings__user-name">{{ user.name || ('adminUsers.list.table.unknown' | translate) }}</div>
-              <div class="permissions-settings__user-email">{{ user.email }}</div>
+    <div class="table-wrapper">
+      <table
+        mat-table
+        [dataSource]="users"
+        matSort
+        [matSortActive]="sortActive"
+        [matSortDirection]="sortDirection"
+        class="permissions-table"
+      >
+        <ng-container matColumnDef="user">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> User </th>
+          <td mat-cell *matCellDef="let user">
+            <div class="user-cell">
+              <div class="avatar" [ngClass]="{ placeholder: !user.avatarUrl }">
+                <img *ngIf="user.avatarUrl" [src]="user.avatarUrl" [alt]="user.name || user.email" />
+                <span *ngIf="!user.avatarUrl">{{ avatarFallback(user) }}</span>
+              </div>
+              <div class="user-meta">
+                <span class="name">{{ user.name || user.email }}</span>
+              </div>
             </div>
-            <div class="permissions-settings__user-roles">
-              <span *ngFor="let role of user.roles || []" class="permissions-settings__role" [class.permissions-settings__role--admin]="role === 'admin'">
-                {{ role | titlecase }}
-              </span>
-              <span *ngIf="!user.roles?.length" class="permissions-settings__role permissions-settings__role--empty">
-                {{ 'permissionsSettings.noRoles' | translate }}
-              </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Email </th>
+          <td mat-cell *matCellDef="let user">{{ user.email }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="roles">
+          <th mat-header-cell *matHeaderCellDef> Roles </th>
+          <td mat-cell *matCellDef="let user">
+            <div class="roles" *ngIf="user.roles?.length; else noRole">
+              <span *ngFor="let role of user.roles" [ngClass]="roleClass(role)">{{ role }}</span>
             </div>
-          </button>
-        </div>
-      </div>
-    </aside>
+            <ng-template #noRole>
+              <span class="role-chip muted">none</span>
+            </ng-template>
+          </td>
+        </ng-container>
 
-    <section class="permissions-settings__editor" *ngIf="selectedUser; else permissionsPlaceholder">
-      <div class="permissions-settings__user-summary">
-        <div class="permissions-settings__user-info">
-          <h2>{{ selectedUser?.name || ('adminUsers.list.table.unknown' | translate) }}</h2>
-          <p>{{ selectedUser?.email }}</p>
-          <div class="permissions-settings__user-roles">
-            <span
-              *ngFor="let role of selectedUser?.roles || []"
-              class="permissions-settings__role"
-              [class.permissions-settings__role--admin]="role === 'admin'"
-            >
-              {{ role | titlecase }}
-            </span>
-            <span *ngIf="!selectedUser?.roles?.length" class="permissions-settings__role permissions-settings__role--empty">
-              {{ 'permissionsSettings.noRoles' | translate }}
-            </span>
-          </div>
-        </div>
-        <div class="permissions-settings__actions">
-          <button
-            mat-stroked-button
-            color="primary"
-            type="button"
-            (click)="promote()"
-            [disabled]="roleActionLoading || selectedUser?.roles?.includes('admin')"
-          >
-            <mat-progress-spinner
-              *ngIf="roleActionLoading && !selectedUser?.roles?.includes('admin')"
-              class="permissions-settings__inline-spinner"
-              mode="indeterminate"
-              diameter="16"
-            ></mat-progress-spinner>
-            <span *ngIf="!roleActionLoading || selectedUser?.roles?.includes('admin')">
-              {{ 'permissionsSettings.actions.promote' | translate }}
-            </span>
-          </button>
-          <button
-            mat-stroked-button
-            color="warn"
-            type="button"
-            (click)="demote()"
-            [disabled]="roleActionLoading || !selectedUser?.roles?.includes('admin')"
-          >
-            <mat-progress-spinner
-              *ngIf="roleActionLoading && selectedUser?.roles?.includes('admin')"
-              class="permissions-settings__inline-spinner"
-              mode="indeterminate"
-              diameter="16"
-            ></mat-progress-spinner>
-            <span *ngIf="!roleActionLoading || !selectedUser?.roles?.includes('admin')">
-              {{ 'permissionsSettings.actions.demote' | translate }}
-            </span>
-          </button>
-        </div>
-      </div>
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef> Status </th>
+          <td mat-cell *matCellDef="let user">
+            <span [ngClass]="statusClass(user)">{{ statusLabel(user) }}</span>
+          </td>
+        </ng-container>
 
-      <div class="permissions-settings__warning" *ngIf="isLastAdmin()">
-        <mat-icon color="warn">warning</mat-icon>
-        <span>{{ 'permissionsSettings.lastAdminWarning' | translate }}</span>
-      </div>
-
-      <div class="permissions-settings__toolbar">
-        <button mat-button type="button" (click)="selectAll()" [disabled]="permissionsLoading || savingPermissions">
-          <mat-icon>select_all</mat-icon>
-          <span>{{ 'permissionsSettings.actions.selectAll' | translate }}</span>
-        </button>
-        <button mat-button type="button" (click)="clearAll()" [disabled]="permissionsLoading || savingPermissions">
-          <mat-icon>clear_all</mat-icon>
-          <span>{{ 'permissionsSettings.actions.clearAll' | translate }}</span>
-        </button>
-        <span class="permissions-settings__summary" *ngIf="!permissionsLoading">
-          <strong>{{ permissions.size }}</strong>
-          {{ 'permissionsSettings.summary.granted' | translate }}
-        </span>
-      </div>
-
-      <div class="permissions-settings__state" *ngIf="permissionsLoading">
-        <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
-        <p>{{ 'permissionsSettings.loadingPermissions' | translate }}</p>
-      </div>
-
-      <app-error-banner *ngIf="permissionsErrorKey" [key]="permissionsErrorKey"></app-error-banner>
-
-      <mat-accordion class="permissions-settings__accordion" multi *ngIf="!permissionsLoading && !permissionsErrorKey">
-        <mat-expansion-panel *ngFor="let group of groups">
-          <mat-expansion-panel-header>
-            <mat-panel-title>
-              <mat-icon>{{ group.icon }}</mat-icon>
-              <span>{{ group.label }}</span>
-            </mat-panel-title>
-            <mat-panel-description>
-              {{ groupGrantedCount(group) }}/{{ group.permissions.length }}
-            </mat-panel-description>
-          </mat-expansion-panel-header>
-          <div class="permissions-settings__group-actions">
-            <button mat-stroked-button type="button" (click)="toggleGroup(group, true)" [disabled]="permissionsLoading || savingPermissions">
-              {{ 'permissionsSettings.actions.grantGroup' | translate }}
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef> Actions </th>
+          <td mat-cell *matCellDef="let user">
+            <button mat-stroked-button color="primary" (click)="openPermissions(user)">
+              <mat-icon>tune</mat-icon>
+              Edit Permissions
             </button>
-            <button mat-stroked-button type="button" (click)="toggleGroup(group, false)" [disabled]="permissionsLoading || savingPermissions">
-              {{ 'permissionsSettings.actions.revokeGroup' | translate }}
-            </button>
-          </div>
-          <div class="permissions-settings__permissions">
-            <label
-              *ngFor="let permission of group.permissions"
-              class="permissions-settings__permission"
-              [class.permissions-settings__permission--granted]="isGranted(permission.id)"
-            >
-              <mat-checkbox
-                [checked]="isGranted(permission.id)"
-                (change)="togglePermission(permission.id, $event.checked)"
-                [disabled]="permissionsLoading || savingPermissions"
-                [matTooltip]="permission.description || ''"
-                [matTooltipDisabled]="!permission.description"
-              >
-                {{ permission.label }}
-              </mat-checkbox>
-            </label>
-          </div>
-        </mat-expansion-panel>
-      </mat-accordion>
+          </td>
+        </ng-container>
 
-      <div class="permissions-settings__footer">
-        <button mat-button type="button" (click)="resetChanges()" [disabled]="permissionsLoading || savingPermissions || !hasChanges()">
-          {{ 'permissionsSettings.actions.reset' | translate }}
-        </button>
-        <span class="permissions-settings__footer-spacer"></span>
-        <button
-          mat-raised-button
-          color="primary"
-          type="button"
-          (click)="saveChanges()"
-          [disabled]="permissionsLoading || savingPermissions || !hasChanges()"
-        >
-          <mat-progress-spinner
-            *ngIf="savingPermissions"
-            class="permissions-settings__inline-spinner"
-            mode="indeterminate"
-            diameter="18"
-          ></mat-progress-spinner>
-          <span *ngIf="!savingPermissions">{{ 'permissionsSettings.actions.save' | translate }}</span>
-        </button>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns; trackBy: trackByUserId"></tr>
+      </table>
+
+      <div class="empty" *ngIf="!loading && users.length === 0">
+        <mat-icon>group_off</mat-icon>
+        <p>{{ error || 'No users found for the current filters.' }}</p>
       </div>
-    </section>
-  </div>
-</section>
+    </div>
 
-<ng-template #permissionsPlaceholder>
-  <div class="permissions-settings__placeholder">
-    <mat-icon>person_search</mat-icon>
-    <p>{{ 'permissionsSettings.placeholder' | translate }}</p>
-  </div>
-</ng-template>
+    <mat-paginator
+      [length]="total"
+      [pageIndex]="pageIndex"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="[10, 25, 50]"
+      showFirstLastButtons
+    ></mat-paginator>
+  </mat-card>
+</div>
