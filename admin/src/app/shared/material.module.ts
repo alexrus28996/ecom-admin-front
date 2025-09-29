@@ -29,6 +29,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatGridListModule } from '@angular/material/grid-list';
 
 const MATERIAL = [
   MatToolbarModule,
@@ -61,7 +62,8 @@ const MATERIAL = [
   MatNativeDateModule,
   MatButtonToggleModule,
   MatStepperModule,
-  MatCheckboxModule
+  MatCheckboxModule,
+  MatGridListModule
 ];
 
 @NgModule({

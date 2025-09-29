@@ -253,6 +253,8 @@ export interface Shipment extends BaseDocument {
   order: string | Order;
   carrier: string;
   trackingNumber?: string;
+  tracking?: string;
+  service?: string;
   status: ShipmentStatus;
   estimatedDelivery?: string;
   items: ShipmentItem[];
@@ -440,21 +442,29 @@ export interface ReviewMedia {
 export type ReviewStatus = 'pending' | 'approved' | 'rejected';
 
 // Payment interfaces
+export type TransactionStatus = 'pending' | 'succeeded' | 'failed' | 'cancelled' | 'refunded';
+
 export interface Transaction extends BaseDocument {
   order: string | Order;
+  provider: string;
   amount: MoneyAmount;
-  type: 'payment' | 'refund';
-  method: string;
-  status: 'pending' | 'completed' | 'failed' | 'cancelled';
+  currency: string;
+  status: TransactionStatus;
+  capturedAt?: string;
   externalId?: string;
+  type?: 'payment' | 'refund';
   metadata?: Record<string, any>;
+  rawPayload?: Record<string, unknown> | null;
 }
 
+export type RefundStatus = 'pending' | 'succeeded' | 'failed';
+
 export interface Refund extends BaseDocument {
+  order: string | Order;
   transaction: string | Transaction;
   amount: MoneyAmount;
   reason?: string;
-  status: 'pending' | 'completed' | 'failed';
+  status: RefundStatus;
   processedAt?: string;
 }
 
@@ -578,6 +588,22 @@ export interface ReviewFilters extends PaginationParams, SortParams {
 export interface ShipmentFilters extends PaginationParams, SortParams {
   status?: ShipmentStatus;
   carrier?: string;
+  orderId?: string;
+  dateStart?: string;
+  dateEnd?: string;
+}
+
+export interface TransactionFilters extends PaginationParams, SortParams {
+  orderId?: string;
+  provider?: string;
+  status?: TransactionStatus;
+  dateStart?: string;
+  dateEnd?: string;
+}
+
+export interface RefundFilters extends PaginationParams, SortParams {
+  orderId?: string;
+  status?: RefundStatus;
   dateStart?: string;
   dateEnd?: string;
 }

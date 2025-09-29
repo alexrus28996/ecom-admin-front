@@ -1,0 +1,91 @@
+.shipment-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  button {
+    align-self: flex-start;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    p {
+      margin: 4px 0 0;
+      color: rgba(0, 0, 0, 0.54);
+    }
+
+    .status-pill {
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.08);
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: 0.4px;
+    }
+  }
+
+  dl {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+
+    div {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    dt {
+      font-size: 12px;
+      text-transform: uppercase;
+      color: rgba(0, 0, 0, 0.54);
+    }
+
+    dd {
+      margin: 0;
+      font-size: 14px;
+    }
+  }
+
+  table {
+    width: 100%;
+  }
+
+  .status-pill.success {
+    background: rgba(46, 204, 113, 0.15);
+    color: #1e824c;
+  }
+
+  .status-pill.pending {
+    background: rgba(241, 196, 15, 0.2);
+    color: #af7d00;
+  }
+
+  .status-pill.error {
+    background: rgba(231, 76, 60, 0.15);
+    color: #c0392b;
+  }
+
+  .status-pill.info {
+    background: rgba(63, 81, 181, 0.15);
+    color: #3f51b5;
+  }
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 0;
+  color: rgba(0, 0, 0, 0.54);
+}

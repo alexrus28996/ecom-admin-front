@@ -22,7 +22,9 @@
                          "@angular/material":  "^18.0.0",
                          "@angular/cdk":  "^18.0.0",
                          "@ngx-translate/core":  "^16.0.0",
-                         "@ngx-translate/http-loader":  "^16.0.0"
+        "@ngx-translate/http-loader":  "^16.0.0",
+        "chart.js": "^4.4.4",
+        "ng2-charts": "^5.0.3"
                      },
     "devDependencies":  {
                             "@angular/cli":  "^18.0.0",

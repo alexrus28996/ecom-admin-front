@@ -1,254 +1,120 @@
-<div class="page page--panel shipments-page">
-  <section class="page__header">
-    <div class="page__headline">
-      <div>
-        <span class="page__eyebrow">{{ 'shipments.list.eyebrow' | translate }}</span>
-        <h1>{{ 'shipments.list.title' | translate }}</h1>
-        <p>{{ 'shipments.list.subtitle' | translate }}</p>
-      </div>
-      <div class="page__actions">
-        <button mat-flat-button color="primary" type="button" (click)="openCreate()">
-          <mat-icon>local_shipping</mat-icon>
-          {{ 'shipments.list.actions.create' | translate }}
-        </button>
-        <button mat-stroked-button color="primary" type="button" (click)="load()" [disabled]="loading">
-          <mat-icon>refresh</mat-icon>
-          {{ 'shipments.list.actions.refresh' | translate }}
-        </button>
-      </div>
+<section class="shipments">
+  <header class="header">
+    <div>
+      <h1>Shipments</h1>
+      <p class="subtitle">Track outbound shipments and fulfillment progress.</p>
     </div>
-    <form class="page__filters shipments-filters" [formGroup]="filterForm" (ngSubmit)="applyFilters()" novalidate>
+    <button mat-flat-button color="primary" (click)="openCreate()" [disabled]="!canCreate">
+      <mat-icon>local_shipping</mat-icon>
+      Create Shipment
+    </button>
+  </header>
+
+  <ng-container *ngIf="canView; else shipmentsDenied">
+  <mat-card class="filters" appearance="outlined">
+    <form [formGroup]="filtersForm" class="filters-form" (ngSubmit)="applyFilters()">
       <mat-form-field appearance="outline">
-        <mat-label>{{ 'shipments.list.filters.status.label' | translate }}</mat-label>
+        <mat-label>Order ID</mat-label>
+        <input matInput formControlName="orderId" placeholder="Order" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Carrier</mat-label>
+        <input matInput formControlName="carrier" placeholder="Carrier" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Status</mat-label>
         <mat-select formControlName="status">
-          <mat-option *ngFor="let option of statusOptions" [value]="option.value">{{ option.labelKey | translate }}</mat-option>
+          <mat-option *ngFor="let option of statusOptions" [value]="option.value">{{ option.label }}</mat-option>
         </mat-select>
       </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>{{ 'shipments.list.filters.carrier' | translate }}</mat-label>
-        <input matInput [placeholder]="'shipments.list.filters.carrierPlaceholder' | translate" formControlName="carrier" />
-      </mat-form-field>
-      <div formGroupName="range" class="shipments-filters__range">
+      <div class="date-range" [formGroup]="filtersForm.get('range')">
         <mat-form-field appearance="outline">
-          <mat-label>{{ 'shipments.list.filters.range.label' | translate }}</mat-label>
-          <mat-date-range-input [rangePicker]="rangePicker">
-            <input matStartDate [placeholder]="'shipments.list.filters.range.start' | translate" formControlName="start" />
-            <input matEndDate [placeholder]="'shipments.list.filters.range.end' | translate" formControlName="end" />
+          <mat-label>Date range</mat-label>
+          <mat-date-range-input [rangePicker]="picker">
+            <input matStartDate formControlName="start" placeholder="Start" />
+            <input matEndDate formControlName="end" placeholder="End" />
           </mat-date-range-input>
-          <mat-datepicker-toggle matSuffix [for]="rangePicker"></mat-datepicker-toggle>
-          <mat-date-range-picker #rangePicker></mat-date-range-picker>
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-date-range-picker #picker></mat-date-range-picker>
         </mat-form-field>
       </div>
-      <div class="shipments-filters__actions">
-        <button mat-raised-button color="primary" type="submit" [disabled]="loading">
-          <mat-icon>filter_alt</mat-icon>
-          {{ 'common.actions.apply' | translate }}
-        </button>
-        <button mat-button type="button" (click)="resetFilters()" [disabled]="loading">
-          {{ 'shipments.list.filters.clear' | translate }}
-        </button>
+      <div class="actions">
+        <button mat-flat-button color="primary" type="submit">Apply</button>
+        <button mat-button type="button" (click)="resetFilters()">Reset</button>
       </div>
     </form>
-  </section>
+  </mat-card>
 
-  <section class="page__body">
-    <mat-drawer-container class="shipments-container" autosize>
-      <mat-drawer #drawer position="end" mode="over" class="shipments-drawer" (closedStart)="selected = null">
-        <ng-container *ngIf="selected as shipment; else noSelection">
-          <header class="shipments-drawer__header">
-            <div>
-              <h2>{{ 'shipments.list.drawer.title' | translate:{ id: shipment.id } }}</h2>
-              <p>
-                {{ 'shipments.list.drawer.orderLabel' | translate }}
-                <a [routerLink]="['/admin/orders', shipment.orderId]">{{ shipment.orderId }}</a>
-              </p>
-            </div>
-            <div class="shipments-drawer__header-actions">
-              <button
-                mat-icon-button
-                color="primary"
-                (click)="editShipment(shipment)"
-                matTooltip="{{ 'shipments.list.table.edit' | translate }}"
-                aria-label="{{ 'shipments.list.table.edit' | translate }}"
-              >
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button
-                mat-icon-button
-                color="warn"
-                (click)="deleteShipment(shipment)"
-                matTooltip="{{ 'shipments.list.table.delete' | translate }}"
-                aria-label="{{ 'shipments.list.table.delete' | translate }}"
-              >
-                <mat-icon>delete</mat-icon>
-              </button>
-              <button mat-icon-button (click)="closeDetails()" matTooltip="{{ 'common.actions.close' | translate }}" aria-label="{{ 'common.actions.close' | translate }}">
-                <mat-icon>close</mat-icon>
-              </button>
-            </div>
-          </header>
-
-          <div class="shipments-drawer__status">
-            <span [ngClass]="statusBadgeClass(shipment.status)">{{ ('shipments.list.status.' + (shipment.status || 'pending')) | translate }}</span>
-            <div class="muted">{{ 'shipments.list.drawer.updated' | translate:{ date: (shipment.updatedAt | date:'short') } }}</div>
-          </div>
-
-          <mat-divider></mat-divider>
-
-          <div class="shipments-drawer__body">
-            <div class="drawer-field">
-              <span class="drawer-field__label">{{ 'shipments.list.drawer.fields.carrier' | translate }}</span>
-              <span class="drawer-field__value">{{ shipment.carrier || ('common.empty' | translate) }}</span>
-            </div>
-            <div class="drawer-field">
-              <span class="drawer-field__label">{{ 'shipments.list.drawer.fields.tracking' | translate }}</span>
-              <span class="drawer-field__value">{{ shipment.trackingNumber || ('common.empty' | translate) }}</span>
-            </div>
-            <div class="drawer-field">
-              <span class="drawer-field__label">{{ 'shipments.list.drawer.fields.estimatedDelivery' | translate }}</span>
-              <span class="drawer-field__value">{{ shipment.estimatedDeliveryDate ? (shipment.estimatedDeliveryDate | date: 'mediumDate') : ('common.empty' | translate) }}</span>
-            </div>
-            <div class="drawer-field">
-              <span class="drawer-field__label">{{ 'shipments.list.drawer.fields.created' | translate }}</span>
-              <span class="drawer-field__value">{{ shipment.createdAt | date: 'short' }}</span>
-            </div>
-          </div>
-
-          <mat-divider></mat-divider>
-
-          <section class="shipments-drawer__history">
-            <h3>{{ 'shipments.list.drawer.history.title' | translate }}</h3>
-            <div *ngIf="shipment.statusHistory?.length || shipment.history?.length; else noHistory" class="history-list">
-              <div
-                class="history-item"
-                *ngFor="let entry of (shipment.statusHistory || shipment.history); trackBy: trackHistoryEntry"
-              >
-                <div class="history-item__status">{{ ('shipments.list.status.' + (entry.status || 'pending')) | translate }}</div>
-                <div class="history-item__meta">{{ entry.updatedAt | date: 'short' }}</div>
-                <div class="history-item__note" *ngIf="entry.note">{{ entry.note }}</div>
-              </div>
-            </div>
-            <ng-template #noHistory>
-              <p class="muted">{{ 'shipments.list.drawer.history.empty' | translate }}</p>
-            </ng-template>
-          </section>
+  <mat-card appearance="outlined">
+    <div class="table-container" *ngIf="!loading; else loadingState">
+      <table mat-table [dataSource]="shipments" class="shipments-table" *ngIf="shipments.length; else emptyState">
+        <ng-container matColumnDef="id">
+          <th mat-header-cell *matHeaderCellDef>Shipment ID</th>
+          <td mat-cell *matCellDef="let shipment">{{ shipment._id }}</td>
         </ng-container>
-        <ng-template #noSelection>
-          <div class="shipments-drawer__empty">
-            <mat-icon>local_shipping</mat-icon>
-            <p>{{ 'shipments.list.drawer.empty' | translate }}</p>
-          </div>
-        </ng-template>
-      </mat-drawer>
 
-      <div class="shipments-container__content">
-        <ng-container *ngIf="loading && !shipments.length; else tableContent">
-          <div class="skeleton" *ngFor="let _ of skeletonRows">
-            <div class="skeleton__bar"></div>
-          </div>
+        <ng-container matColumnDef="order">
+          <th mat-header-cell *matHeaderCellDef>Order</th>
+          <td mat-cell *matCellDef="let shipment">{{ shipment.order?.['orderNumber'] || shipment.order?.['number'] || shipment.order }}</td>
         </ng-container>
-        <ng-template #tableContent>
-          <div class="data-table" *ngIf="shipments.length; else emptyState">
-            <table mat-table [dataSource]="shipments" class="data-table__table">
-              <ng-container matColumnDef="id">
-                <th mat-header-cell *matHeaderCellDef>{{ 'shipments.list.table.id' | translate }}</th>
-                <td mat-cell *matCellDef="let shipment" (click)="openDetails(shipment)">
-                  <span class="strong">{{ shipment.id }}</span>
-                </td>
-              </ng-container>
 
-              <ng-container matColumnDef="order">
-                <th mat-header-cell *matHeaderCellDef>{{ 'shipments.list.table.order' | translate }}</th>
-                <td mat-cell *matCellDef="let shipment" (click)="openDetails(shipment)">
-                  <a
-                    [routerLink]="['/admin/orders', shipment.orderId]"
-                    (click)="$event.stopPropagation()"
-                    matTooltip="{{ 'shipments.list.table.viewOrder' | translate }}"
-                  >
-                    {{ shipment.orderId }}
-                  </a>
-                </td>
-              </ng-container>
+        <ng-container matColumnDef="carrier">
+          <th mat-header-cell *matHeaderCellDef>Carrier</th>
+          <td mat-cell *matCellDef="let shipment">{{ shipment.carrier || '—' }}</td>
+        </ng-container>
 
-              <ng-container matColumnDef="carrier">
-                <th mat-header-cell *matHeaderCellDef>{{ 'shipments.list.table.carrier' | translate }}</th>
-                <td mat-cell *matCellDef="let shipment" (click)="openDetails(shipment)">{{ shipment.carrier || ('common.empty' | translate) }}</td>
-              </ng-container>
+        <ng-container matColumnDef="tracking">
+          <th mat-header-cell *matHeaderCellDef>Tracking</th>
+          <td mat-cell *matCellDef="let shipment">{{ shipment.tracking || shipment.trackingNumber || '—' }}</td>
+        </ng-container>
 
-              <ng-container matColumnDef="trackingNumber">
-                <th mat-header-cell *matHeaderCellDef>{{ 'shipments.list.table.tracking' | translate }}</th>
-                <td mat-cell *matCellDef="let shipment" (click)="openDetails(shipment)">
-                  <span class="tracking">{{ shipment.trackingNumber || ('common.empty' | translate) }}</span>
-                </td>
-              </ng-container>
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let shipment">
+            <span [class]="statusClass(shipment.status)">{{ shipment.status | titlecase }}</span>
+          </td>
+        </ng-container>
 
-              <ng-container matColumnDef="status">
-                <th mat-header-cell *matHeaderCellDef>{{ 'shipments.list.table.status' | translate }}</th>
-                <td mat-cell *matCellDef="let shipment" (click)="openDetails(shipment)">
-                  <span [ngClass]="statusBadgeClass(shipment.status)">{{ ('shipments.list.status.' + (shipment.status || 'pending')) | translate }}</span>
-                </td>
-              </ng-container>
+        <ng-container matColumnDef="createdAt">
+          <th mat-header-cell *matHeaderCellDef>Created</th>
+          <td mat-cell *matCellDef="let shipment">{{ shipment.createdAt | date:'medium' }}</td>
+        </ng-container>
 
-              <ng-container matColumnDef="createdAt">
-                <th mat-header-cell *matHeaderCellDef>{{ 'shipments.list.table.created' | translate }}</th>
-                <td mat-cell *matCellDef="let shipment" (click)="openDetails(shipment)">{{ shipment.createdAt | date: 'short' }}</td>
-              </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef class="actions-column">Actions</th>
+          <td mat-cell *matCellDef="let shipment" class="actions-column">
+            <button mat-button color="primary" (click)="viewShipment(shipment)">View</button>
+          </td>
+        </ng-container>
 
-              <ng-container matColumnDef="updatedAt">
-                <th mat-header-cell *matHeaderCellDef>{{ 'shipments.list.table.updated' | translate }}</th>
-                <td mat-cell *matCellDef="let shipment" (click)="openDetails(shipment)">{{ shipment.updatedAt | date: 'short' }}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef>{{ 'shipments.list.table.actions' | translate }}</th>
-                <td mat-cell *matCellDef="let shipment">
-                  <div class="table-actions">
-                    <button
-                      mat-icon-button
-                      color="primary"
-                      (click)="editShipment(shipment); $event.stopPropagation()"
-                      matTooltip="{{ 'shipments.list.table.edit' | translate }}"
-                      aria-label="{{ 'shipments.list.table.edit' | translate }}"
-                    >
-                      <mat-icon>edit</mat-icon>
-                    </button>
-                    <button
-                      mat-icon-button
-                      color="warn"
-                      (click)="deleteShipment(shipment); $event.stopPropagation()"
-                      matTooltip="{{ 'shipments.list.table.delete' | translate }}"
-                      aria-label="{{ 'shipments.list.table.delete' | translate }}"
-                    >
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </div>
-                </td>
-              </ng-container>
-
-              <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumns; trackBy: trackById" class="data-row"></tr>
-            </table>
-          </div>
-          <ng-template #emptyState>
-            <div class="empty-state">
-              <mat-icon>inventory_2</mat-icon>
-              <p>{{ 'shipments.list.empty' | translate }}</p>
-            </div>
-          </ng-template>
-        </ng-template>
-      </div>
-    </mat-drawer-container>
-    <app-error-banner [key]="errorKey"></app-error-banner>
-  </section>
-
-  <section class="page__footer" *ngIf="total > 0">
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </div>
     <mat-paginator
       [length]="total"
       [pageIndex]="pageIndex"
       [pageSize]="pageSize"
-      [pageSizeOptions]="pageSizeOptions"
-      (page)="onPage($event)"
-      showFirstLastButtons
-    ></mat-paginator>
-  </section>
-</div>
+      [pageSizeOptions]="[10, 20, 50]"
+      (page)="onPageChange($event)">
+    </mat-paginator>
+  </mat-card>
+
+  <ng-template #loadingState>
+    <div class="loading-state">
+      <mat-progress-spinner diameter="32" mode="indeterminate"></mat-progress-spinner>
+      <span>Loading shipments…</span>
+    </div>
+  </ng-template>
+
+  <ng-template #emptyState>
+    <div class="empty-state">No shipments match the selected filters.</div>
+  </ng-template>
+  </ng-container>
+  <ng-template #shipmentsDenied>
+    <mat-card appearance="outlined" class="denied">
+      <h2>Shipments unavailable</h2>
+      <p>You do not have permission to view shipments.</p>
+    </mat-card>
+  </ng-template>
+</section>

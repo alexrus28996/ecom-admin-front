@@ -1,4 +1,4 @@
-.shipments {
+.refunds {
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -7,7 +7,6 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 16px;
 
     h1 {
       margin: 0;
@@ -17,16 +16,12 @@
       margin: 4px 0 0;
       color: rgba(0, 0, 0, 0.54);
     }
-
-    button mat-icon {
-      margin-right: 4px;
-    }
   }
 
   .filters-form {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 
     .actions {
       display: flex;
@@ -40,7 +35,7 @@
     overflow-x: auto;
   }
 
-  .shipments-table {
+  .refunds-table {
     width: 100%;
   }
 
@@ -54,8 +49,8 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
     padding: 32px 0;
+    gap: 12px;
     color: rgba(0, 0, 0, 0.54);
   }
 
@@ -75,24 +70,14 @@
       color: #1e824c;
     }
 
-    &.pending {
-      background: rgba(241, 196, 15, 0.2);
-      color: #af7d00;
-    }
-
     &.error {
       background: rgba(231, 76, 60, 0.15);
       color: #c0392b;
     }
 
-    &.info {
-      background: rgba(63, 81, 181, 0.15);
-      color: #3f51b5;
+    &.pending {
+      background: rgba(241, 196, 15, 0.2);
+      color: #af7d00;
     }
   }
-}
-
-.denied {
-  text-align: center;
-  padding: 32px;
 }

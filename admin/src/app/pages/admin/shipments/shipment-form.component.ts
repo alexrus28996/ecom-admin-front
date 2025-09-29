@@ -1,20 +1,16 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, OnDestroy, OnInit } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, OnDestroy } from '@angular/core';
+import { FormArray, FormBuilder, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Subject, takeUntil } from 'rxjs';
-import { AdminService } from '../../../services/admin.service';
-import { Shipment } from './shipments-list.component';
+
+import { OrdersService, Order } from '../../../services/orders.service';
+import { ShipmentsService, CreateShipmentPayload } from '../../../services/shipments.service';
+import { ToastService } from '../../../core/toast.service';
+import { AuditService } from '../../../services/audit.service';
 
 export interface ShipmentFormData {
-  mode: 'create' | 'edit';
-  shipment?: Shipment;
+  mode: 'create';
   orderId?: string;
-}
-
-interface OrderOption {
-  id: string;
-  label: string;
-  raw: any;
 }
 
 @Component({
@@ -23,68 +19,40 @@ interface OrderOption {
   styleUrls: ['./shipment-form.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ShipmentFormComponent implements OnInit, OnDestroy {
+export class ShipmentFormComponent implements OnDestroy {
   readonly form = this.fb.group({
     orderId: ['', Validators.required],
     carrier: ['', Validators.required],
-    trackingNumber: ['', Validators.required],
-    estimatedDeliveryDate: [null as Date | null],
-    status: ['pending', Validators.required]
+    tracking: ['', Validators.required],
+    service: [''],
+    items: this.fb.array([] as any[])
   });
 
-  readonly statuses = ['pending', 'shipped', 'delivered', 'cancelled'];
-
-  orderOptions: OrderOption[] = [];
-  filteredOrders: OrderOption[] = [];
-  loadingOrders = false;
-  loading = false;
+  order?: Order;
+  loadingOrder = false;
+  submitting = false;
+  orderError?: string;
 
   private readonly destroy$ = new Subject<void>();
 
   constructor(
     private readonly dialogRef: MatDialogRef<ShipmentFormComponent, boolean>,
+    @Inject(MAT_DIALOG_DATA) public readonly data: ShipmentFormData,
     private readonly fb: FormBuilder,
-    private readonly admin: AdminService,
-    private readonly cdr: ChangeDetectorRef,
-    @Inject(MAT_DIALOG_DATA) public readonly data: ShipmentFormData
-  ) {}
-
-  get isEdit(): boolean {
-    return this.data.mode === 'edit';
+    private readonly ordersService: OrdersService,
+    private readonly shipmentsService: ShipmentsService,
+    private readonly toast: ToastService,
+    private readonly audit: AuditService,
+    private readonly cdr: ChangeDetectorRef
+  ) {
+    if (this.data.orderId) {
+      this.form.patchValue({ orderId: this.data.orderId });
+      this.loadOrder();
+    }
   }
 
-  ngOnInit(): void {
-    if (this.isEdit && this.data.shipment) {
-      const shipment = this.data.shipment;
-      this.form.patchValue({
-        orderId: shipment.orderId,
-        carrier: shipment.carrier || '',
-        trackingNumber: shipment.trackingNumber || '',
-        estimatedDeliveryDate: shipment.estimatedDeliveryDate ? new Date(shipment.estimatedDeliveryDate) : null,
-        status: shipment.status || 'pending'
-      });
-      this.form.get('orderId')?.disable();
-    }
-
-    if (!this.isEdit) {
-      this.form.get('status')?.disable({ emitEvent: false });
-    }
-
-    if (!this.isEdit && this.data.orderId) {
-      this.form.patchValue({ orderId: this.data.orderId });
-    }
-
-    this.loadOrders();
-
-    this.form
-      .get('orderId')
-      ?.valueChanges.pipe(takeUntil(this.destroy$))
-      .subscribe((term) => {
-        if (this.isEdit) {
-          return;
-        }
-        this.filterOrders(String(term || ''));
-      });
+  get items(): FormArray {
+    return this.form.get('items') as FormArray;
   }
 
   ngOnDestroy(): void {
@@ -92,109 +60,105 @@ export class ShipmentFormComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  loadOrder(): void {
+    const orderId = this.form.get('orderId')?.value;
+    if (!orderId) {
+      this.toast.error('Enter an order ID to load');
+      return;
+    }
+
+    this.loadingOrder = true;
+    this.orderError = undefined;
+    this.items.clear();
+    this.cdr.markForCheck();
+
+    this.ordersService
+      .getAdminOrder(orderId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (order) => {
+          if (!this.isOrderPaid(order)) {
+            this.orderError = 'Shipments can only be created for paid orders';
+            this.loadingOrder = false;
+            this.order = undefined;
+            this.toast.error(this.orderError);
+            this.cdr.markForCheck();
+            return;
+          }
+          this.order = order;
+          order.items.forEach((item) => {
+            this.items.push(
+              this.fb.group({
+                itemId: [item._id || item.id, Validators.required],
+                name: [item.name || item.product?.['name'] || 'Item'],
+                ordered: [item.quantity],
+                quantity: [item.quantity, [Validators.required, Validators.min(1), Validators.max(item.quantity)]]
+              })
+            );
+          });
+          this.loadingOrder = false;
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          this.loadingOrder = false;
+          this.orderError = err?.error?.error?.message ?? 'Unable to load order';
+          this.toast.error(this.orderError);
+          this.order = undefined;
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
   submit(): void {
-    if (this.form.invalid) {
+    if (this.form.invalid || !this.order) {
       this.form.markAllAsTouched();
       return;
     }
 
-    const raw = this.form.getRawValue();
-    const payload = {
-      carrier: raw.carrier,
-      trackingNumber: raw.trackingNumber,
-      estimatedDeliveryDate: raw.estimatedDeliveryDate ? new Date(raw.estimatedDeliveryDate).toISOString() : undefined
-    } as any;
+    const payload: CreateShipmentPayload = {
+      carrier: this.form.value.carrier!,
+      tracking: this.form.value.tracking!,
+      service: this.form.value.service || undefined,
+      items: this.items.controls
+        .map((control) => ({
+          itemId: control.get('itemId')?.value,
+          quantity: Number(control.get('quantity')?.value || 0)
+        }))
+        .filter((item) => item.quantity > 0)
+    };
 
-    this.loading = true;
+    if (!payload.items.length) {
+      this.toast.error('Select at least one item to ship');
+      return;
+    }
+
+    this.submitting = true;
     this.cdr.markForCheck();
 
-    if (this.isEdit && this.data.shipment) {
-      if (raw.status) {
-        payload.status = raw.status;
-      }
-      this.admin
-        .updateShipment(this.data.shipment.id, payload)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: () => this.dialogRef.close(true),
-          error: () => {
-            this.loading = false;
-            this.cdr.markForCheck();
-          }
-        });
-    } else {
-      this.admin
-        .createShipment(raw.orderId!, payload)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: () => this.dialogRef.close(true),
-          error: () => {
-            this.loading = false;
-            this.cdr.markForCheck();
-          }
-        });
-    }
+    this.shipmentsService
+      .createShipment(this.order._id || this.order.id!, payload)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.audit.log({ action: 'shipments.create', entity: 'order', entityId: this.order?._id || this.order?.id }).subscribe();
+          this.submitting = false;
+          this.toast.success('Shipment created');
+          this.dialogRef.close(true);
+        },
+        error: (err) => {
+          this.submitting = false;
+          this.toast.error(err?.error?.error?.message ?? 'Failed to create shipment');
+          this.cdr.markForCheck();
+        }
+      });
   }
 
   cancel(): void {
     this.dialogRef.close(false);
   }
 
-  onOrderSelected(value: string): void {
-    this.form.get('orderId')?.setValue(value);
-  }
-
-  private loadOrders(): void {
-    if (this.isEdit && this.data.shipment) {
-      this.orderOptions = [
-        {
-          id: this.data.shipment.orderId,
-          label: this.data.shipment.orderId,
-          raw: null
-        }
-      ];
-      this.filteredOrders = this.orderOptions;
-      this.cdr.markForCheck();
-      return;
-    }
-
-    this.loadingOrders = true;
-    this.cdr.markForCheck();
-    const orderControl = this.form.get('orderId');
-    orderControl?.disable({ emitEvent: false });
-    this.admin
-      .listOrders({ page: 1, limit: 50 })
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (res) => {
-          this.orderOptions = (res?.items || []).map((order: any) => ({
-            id: order.id || order._id,
-            label: `${order.id || order._id} — ${order.customer?.email || order.status || ''}`.trim(),
-            raw: order
-          }));
-          this.filteredOrders = this.orderOptions;
-          this.loadingOrders = false;
-          orderControl?.enable({ emitEvent: false });
-          if (!this.isEdit && this.data.orderId) {
-            const match = this.orderOptions.find((option) => option.id === this.data.orderId);
-            if (match) {
-              this.form.patchValue({ orderId: match.id }, { emitEvent: false });
-            }
-          }
-          this.cdr.markForCheck();
-        },
-        error: () => {
-          this.loadingOrders = false;
-          this.filteredOrders = [];
-          orderControl?.enable({ emitEvent: false });
-          this.cdr.markForCheck();
-        }
-      });
-  }
-
-  private filterOrders(term: string): void {
-    const value = term.toLowerCase();
-    this.filteredOrders = this.orderOptions.filter((option) => option.label.toLowerCase().includes(value));
-    this.cdr.markForCheck();
+  private isOrderPaid(order: Order): boolean {
+    const paymentStatus = (order.paymentStatus || '').toLowerCase();
+    return ['paid', 'captured', 'completed', 'succeeded'].includes(paymentStatus);
   }
 }

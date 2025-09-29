@@ -27,9 +27,15 @@ import { RoleGuard } from './core/role.guard';
 import { LayoutWrapperComponent } from './layout/layout-wrapper.component';
 import { ReviewsListComponent } from './pages/admin/reviews/reviews-list.component';
 import { ShipmentsListComponent } from './pages/admin/shipments/shipments-list.component';
+import { ShipmentDetailComponent } from './pages/admin/shipments/shipment-detail.component';
 import { AdminSettingsPlaceholderComponent } from './pages/admin/placeholders/admin-settings-placeholder.component';
 import { PermissionsSettingsComponent } from './pages/admin/permissions/permissions-settings.component';
 import { CouponsListComponent } from './pages/admin/coupons/coupons-list.component';
+import { TransactionsListComponent } from './pages/admin/transactions/transactions-list.component';
+import { TransactionDetailComponent } from './pages/admin/transactions/transaction-detail.component';
+import { RefundsListComponent } from './pages/admin/refunds/refunds-list.component';
+import { RefundDetailComponent } from './pages/admin/refunds/refund-detail.component';
+import { ReportsDashboardComponent } from './pages/admin/reports/reports-dashboard.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -138,6 +144,42 @@ const routes: Routes = [
         component: ShipmentsListComponent,
         canActivate: [RoleGuard],
         data: { roles: ['admin'], breadcrumb: 'shipments' }
+      },
+      {
+        path: 'admin/shipments/:id',
+        component: ShipmentDetailComponent,
+        canActivate: [RoleGuard],
+        data: { roles: ['admin'], breadcrumb: 'shipmentDetail' }
+      },
+      {
+        path: 'admin/transactions',
+        component: TransactionsListComponent,
+        canActivate: [RoleGuard],
+        data: { roles: ['admin'], breadcrumb: 'transactions' }
+      },
+      {
+        path: 'admin/transactions/:id',
+        component: TransactionDetailComponent,
+        canActivate: [RoleGuard],
+        data: { roles: ['admin'], breadcrumb: 'transactionDetail' }
+      },
+      {
+        path: 'admin/refunds',
+        component: RefundsListComponent,
+        canActivate: [RoleGuard],
+        data: { roles: ['admin'], breadcrumb: 'refunds' }
+      },
+      {
+        path: 'admin/refunds/:id',
+        component: RefundDetailComponent,
+        canActivate: [RoleGuard],
+        data: { roles: ['admin'], breadcrumb: 'refundDetail' }
+      },
+      {
+        path: 'admin/reports',
+        component: ReportsDashboardComponent,
+        canActivate: [RoleGuard],
+        data: { roles: ['admin'], breadcrumb: 'reports' }
       },
       {
         path: 'admin/settings',

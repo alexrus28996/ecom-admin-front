@@ -1,0 +1,93 @@
+<section class="refund-detail" *ngIf="!loading && refund; else loadingTpl">
+  <button mat-button (click)="back()">
+    <mat-icon>arrow_back</mat-icon>
+    Back to refunds
+  </button>
+
+  <header>
+    <div>
+      <h1>Refund {{ refund?._id }}</h1>
+      <p>Order: {{ refund?.order?.['orderNumber'] || refund?.order?.['number'] || refund?.order }}</p>
+    </div>
+    <span [class]="statusClass(refund?.status || '')">{{ refund?.status | titlecase }}</span>
+  </header>
+
+  <mat-grid-list cols="2" rowHeight="fit" gutterSize="16">
+    <mat-grid-tile>
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>Refund summary</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <dl>
+            <div>
+              <dt>Status</dt>
+              <dd>{{ refund?.status | titlecase }}</dd>
+            </div>
+            <div>
+              <dt>Amount</dt>
+              <dd>{{ refund?.amount?.amount | number:'1.2-2' }} {{ refund?.amount?.currency }}</dd>
+            </div>
+            <div>
+              <dt>Reason</dt>
+              <dd>{{ refund?.reason || '—' }}</dd>
+            </div>
+            <div>
+              <dt>Created</dt>
+              <dd>{{ refund?.createdAt | date:'medium' }}</dd>
+            </div>
+            <div>
+              <dt>Processed</dt>
+              <dd>{{ refund?.processedAt ? (refund?.processedAt | date:'medium') : '—' }}</dd>
+            </div>
+          </dl>
+        </mat-card-content>
+      </mat-card>
+    </mat-grid-tile>
+
+    <mat-grid-tile>
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>Transaction</mat-card-title>
+          <mat-card-subtitle *ngIf="transactionLoading">Loading transaction…</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content *ngIf="transaction; else noTransaction">
+          <dl>
+            <div>
+              <dt>ID</dt>
+              <dd>{{ transaction?._id }}</dd>
+            </div>
+            <div>
+              <dt>Provider</dt>
+              <dd>{{ transaction?.provider }}</dd>
+            </div>
+            <div>
+              <dt>Status</dt>
+              <dd>{{ transaction?.status | titlecase }}</dd>
+            </div>
+            <div>
+              <dt>Created</dt>
+              <dd>{{ transaction?.createdAt | date:'medium' }}</dd>
+            </div>
+          </dl>
+          <div class="actions">
+            <button mat-button color="primary" (click)="goToTransaction()">
+              View transaction
+            </button>
+          </div>
+        </mat-card-content>
+        <ng-template #noTransaction>
+          <p class="empty">No transaction information available.</p>
+        </ng-template>
+      </mat-card>
+    </mat-grid-tile>
+  </mat-grid-list>
+</section>
+
+<ng-template #loadingTpl>
+  <div class="loading-state">
+    <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+    <span *ngIf="!error">Loading refund…</span>
+    <span *ngIf="error">{{ error }}</span>
+  </div>
+</ng-template>

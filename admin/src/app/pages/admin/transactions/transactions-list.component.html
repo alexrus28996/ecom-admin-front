@@ -1,0 +1,130 @@
+<section class="transactions">
+  <header class="header">
+    <div>
+      <h1>Payment Transactions</h1>
+      <p class="subtitle">Monitor payments, status transitions, and providers.</p>
+    </div>
+    <button mat-stroked-button color="primary" (click)="exportTransactions()" [disabled]="exportInFlight || readOnly">
+      <mat-icon>download</mat-icon>
+      Export Transactions
+    </button>
+  </header>
+
+  <mat-card class="filters" appearance="outlined">
+    <form [formGroup]="filtersForm" class="filters-form" (ngSubmit)="applyFilters()">
+      <div class="field">
+        <mat-form-field appearance="outline">
+          <mat-label>Order ID</mat-label>
+          <input matInput formControlName="orderId" placeholder="Search by order" />
+        </mat-form-field>
+      </div>
+      <div class="field">
+        <mat-form-field appearance="outline">
+          <mat-label>Provider</mat-label>
+          <input matInput formControlName="provider" placeholder="Stripe, PayPal..." />
+        </mat-form-field>
+      </div>
+      <div class="field">
+        <mat-form-field appearance="outline">
+          <mat-label>Status</mat-label>
+          <mat-select formControlName="status">
+            <mat-option *ngFor="let option of statusOptions" [value]="option.value">{{ option.label }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <div class="field date-range" [formGroup]="filtersForm.get('range')">
+        <mat-form-field appearance="outline">
+          <mat-label>Date range</mat-label>
+          <mat-date-range-input [rangePicker]="picker">
+            <input matStartDate formControlName="start" placeholder="Start" />
+            <input matEndDate formControlName="end" placeholder="End" />
+          </mat-date-range-input>
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-date-range-picker #picker></mat-date-range-picker>
+        </mat-form-field>
+      </div>
+      <div class="actions">
+        <button mat-flat-button color="primary" type="submit">Apply</button>
+        <button mat-button type="button" (click)="resetFilters()">Reset</button>
+      </div>
+    </form>
+  </mat-card>
+
+  <mat-card appearance="outlined">
+    <div class="table-container" *ngIf="!loading; else loadingState">
+      <table mat-table [dataSource]="transactions" class="transactions-table" *ngIf="transactions.length; else emptyState">
+        <ng-container matColumnDef="id">
+          <th mat-header-cell *matHeaderCellDef>ID</th>
+          <td mat-cell *matCellDef="let transaction">{{ transaction._id }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="orderId">
+          <th mat-header-cell *matHeaderCellDef>Order</th>
+          <td mat-cell *matCellDef="let transaction">{{ transaction.order?.['orderNumber'] || transaction.order?.['number'] || transaction.order || '—' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="provider">
+          <th mat-header-cell *matHeaderCellDef>Provider</th>
+          <td mat-cell *matCellDef="let transaction">{{ transaction.provider || '—' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let transaction">
+            <span [class]="statusClass(transaction.status)">
+              {{ transaction.status | titlecase }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="amount">
+          <th mat-header-cell *matHeaderCellDef>Amount</th>
+          <td mat-cell *matCellDef="let transaction">
+            {{ transaction.amount?.amount | number:'1.2-2' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="currency">
+          <th mat-header-cell *matHeaderCellDef>Currency</th>
+          <td mat-cell *matCellDef="let transaction">{{ transaction.currency || transaction.amount?.currency || '—' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="createdAt">
+          <th mat-header-cell *matHeaderCellDef>Created</th>
+          <td mat-cell *matCellDef="let transaction">{{ transaction.createdAt | date:'medium' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef class="actions-column">Actions</th>
+          <td mat-cell *matCellDef="let transaction" class="actions-column">
+            <button mat-button color="primary" (click)="viewTransaction(transaction)">View</button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </div>
+
+    <mat-paginator
+      [length]="total"
+      [pageIndex]="pageIndex"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="[10, 20, 50]"
+      (page)="onPageChange($event)">
+    </mat-paginator>
+  </mat-card>
+
+  <ng-template #loadingState>
+    <div class="loading-state">
+      <mat-progress-spinner diameter="32" mode="indeterminate"></mat-progress-spinner>
+      <span>Loading transactions…</span>
+    </div>
+  </ng-template>
+
+  <ng-template #emptyState>
+    <div class="empty-state">
+      <p>No transactions match the selected filters.</p>
+    </div>
+  </ng-template>
+</section>

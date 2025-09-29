@@ -50,6 +50,12 @@ import { BreadcrumbComponent } from './layout/breadcrumb.component';
 import { AdminSettingsPlaceholderComponent } from './pages/admin/placeholders/admin-settings-placeholder.component';
 import { ShipmentsListComponent } from './pages/admin/shipments/shipments-list.component';
 import { ShipmentFormComponent } from './pages/admin/shipments/shipment-form.component';
+import { ShipmentDetailComponent } from './pages/admin/shipments/shipment-detail.component';
+import { TransactionsListComponent } from './pages/admin/transactions/transactions-list.component';
+import { TransactionDetailComponent } from './pages/admin/transactions/transaction-detail.component';
+import { RefundsListComponent } from './pages/admin/refunds/refunds-list.component';
+import { RefundDetailComponent } from './pages/admin/refunds/refund-detail.component';
+import { ReportsDashboardComponent } from './pages/admin/reports/reports-dashboard.component';
 import { CouponsListComponent } from './pages/admin/coupons/coupons-list.component';
 import { CouponFormComponent } from './pages/admin/coupons/coupon-form.component';
 import { ReviewsListComponent } from './pages/admin/reviews/reviews-list.component';
@@ -57,6 +63,7 @@ import { DebugUserComponent } from './shared/debug-user.component';
 import { PermissionsSettingsComponent } from './pages/admin/permissions/permissions-settings.component';
 
 import { MaterialModule } from './shared/material.module';
+import { NgChartsModule } from 'ng2-charts';
 import { AuthInterceptor } from './core/auth.interceptor';
 
 export function translateHttpLoaderFactory(http: HttpClient) {
@@ -111,7 +118,13 @@ export function translateHttpLoaderFactory(http: HttpClient) {
     CouponsListComponent,
     CouponFormComponent,
     PermissionsSettingsComponent,
-    DebugUserComponent
+    DebugUserComponent,
+    ShipmentDetailComponent,
+    TransactionsListComponent,
+    TransactionDetailComponent,
+    RefundsListComponent,
+    RefundDetailComponent,
+    ReportsDashboardComponent
   ],
   imports: [
     BrowserModule,
@@ -121,6 +134,7 @@ export function translateHttpLoaderFactory(http: HttpClient) {
     ReactiveFormsModule,
     LayoutModule,
     MaterialModule,
+    NgChartsModule,
     TranslateModule.forRoot({
       defaultLanguage: 'en',
       loader: {

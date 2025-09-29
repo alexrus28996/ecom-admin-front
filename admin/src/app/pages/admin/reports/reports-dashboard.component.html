@@ -1,0 +1,197 @@
+<section class="reports" *ngIf="!readOnly; else deniedTpl">
+  <header class="header">
+    <div>
+      <h1>Reporting</h1>
+      <p class="subtitle">Understand sales performance, top products, and customer engagement.</p>
+    </div>
+    <div class="actions">
+      <button mat-stroked-button color="primary" (click)="exportSales()">
+        <mat-icon>download</mat-icon>
+        Export Sales
+      </button>
+      <button mat-stroked-button (click)="exportTopProducts()">
+        <mat-icon>download</mat-icon>
+        Export Products
+      </button>
+      <button mat-stroked-button (click)="exportTopCustomers()">
+        <mat-icon>download</mat-icon>
+        Export Customers
+      </button>
+    </div>
+  </header>
+
+  <section class="kpis">
+    <mat-card appearance="outlined">
+      <h3>Total Revenue</h3>
+      <p>{{ totalRevenue | currency }}</p>
+    </mat-card>
+    <mat-card appearance="outlined">
+      <h3>Total Orders</h3>
+      <p>{{ totalOrders }}</p>
+    </mat-card>
+    <mat-card appearance="outlined">
+      <h3>Active Customers</h3>
+      <p>{{ activeCustomers }}</p>
+    </mat-card>
+  </section>
+
+  <mat-tab-group>
+    <mat-tab label="Sales">
+      <div class="tab-body">
+        <mat-card appearance="outlined">
+          <form [formGroup]="salesFiltersForm" class="filters" (ngSubmit)="applySalesFilters()">
+            <mat-form-field appearance="outline">
+              <mat-label>Group by</mat-label>
+              <mat-select formControlName="groupBy">
+                <mat-option value="day">Daily</mat-option>
+                <mat-option value="week">Weekly</mat-option>
+                <mat-option value="month">Monthly</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <div class="date-range" [formGroup]="salesFiltersForm.get('range')">
+              <mat-form-field appearance="outline">
+                <mat-label>Date range</mat-label>
+                <mat-date-range-input [rangePicker]="salesPicker">
+                  <input matStartDate formControlName="start" placeholder="Start" />
+                  <input matEndDate formControlName="end" placeholder="End" />
+                </mat-date-range-input>
+                <mat-datepicker-toggle matSuffix [for]="salesPicker"></mat-datepicker-toggle>
+                <mat-date-range-picker #salesPicker></mat-date-range-picker>
+              </mat-form-field>
+            </div>
+            <button mat-flat-button color="primary" type="submit">Apply</button>
+          </form>
+          <div class="chart-container" *ngIf="!loadingSales; else loadingSalesTpl">
+            <canvas baseChart [data]="salesChartData" [options]="salesChartOptions" chartType="line"></canvas>
+          </div>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Top Products">
+      <div class="tab-body">
+        <mat-card appearance="outlined">
+          <form [formGroup]="topProductsForm" class="filters" (ngSubmit)="applyProductsFilters()">
+            <mat-form-field appearance="outline">
+              <mat-label>Limit</mat-label>
+              <input matInput type="number" formControlName="limit" min="1" max="100" />
+            </mat-form-field>
+            <div class="date-range" [formGroup]="topProductsForm.get('range')">
+              <mat-form-field appearance="outline">
+                <mat-label>Date range</mat-label>
+                <mat-date-range-input [rangePicker]="productsPicker">
+                  <input matStartDate formControlName="start" placeholder="Start" />
+                  <input matEndDate formControlName="end" placeholder="End" />
+                </mat-date-range-input>
+                <mat-datepicker-toggle matSuffix [for]="productsPicker"></mat-datepicker-toggle>
+                <mat-date-range-picker #productsPicker></mat-date-range-picker>
+              </mat-form-field>
+            </div>
+            <button mat-flat-button color="primary" type="submit">Apply</button>
+          </form>
+          <div class="table-container" *ngIf="!loadingProducts; else loadingProductsTpl">
+            <table mat-table [dataSource]="topProducts" *ngIf="topProducts.length; else noProducts">
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Product</th>
+                <td mat-cell *matCellDef="let product">{{ product.name }}</td>
+              </ng-container>
+              <ng-container matColumnDef="quantity">
+                <th mat-header-cell *matHeaderCellDef>Quantity</th>
+                <td mat-cell *matCellDef="let product">{{ product.quantity }}</td>
+              </ng-container>
+              <ng-container matColumnDef="revenue">
+                <th mat-header-cell *matHeaderCellDef>Revenue</th>
+                <td mat-cell *matCellDef="let product">{{ product.revenue | currency }}</td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="['name','quantity','revenue']"></tr>
+              <tr mat-row *matRowDef="let row; columns: ['name','quantity','revenue']"></tr>
+            </table>
+          </div>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Top Customers">
+      <div class="tab-body">
+        <mat-card appearance="outlined">
+          <form [formGroup]="topCustomersForm" class="filters" (ngSubmit)="applyCustomersFilters()">
+            <mat-form-field appearance="outline">
+              <mat-label>Limit</mat-label>
+              <input matInput type="number" formControlName="limit" min="1" max="100" />
+            </mat-form-field>
+            <div class="date-range" [formGroup]="topCustomersForm.get('range')">
+              <mat-form-field appearance="outline">
+                <mat-label>Date range</mat-label>
+                <mat-date-range-input [rangePicker]="customersPicker">
+                  <input matStartDate formControlName="start" placeholder="Start" />
+                  <input matEndDate formControlName="end" placeholder="End" />
+                </mat-date-range-input>
+                <mat-datepicker-toggle matSuffix [for]="customersPicker"></mat-datepicker-toggle>
+                <mat-date-range-picker #customersPicker></mat-date-range-picker>
+              </mat-form-field>
+            </div>
+            <button mat-flat-button color="primary" type="submit">Apply</button>
+          </form>
+          <div class="table-container" *ngIf="!loadingCustomers; else loadingCustomersTpl">
+            <table mat-table [dataSource]="topCustomers" *ngIf="topCustomers.length; else noCustomers">
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Name</th>
+                <td mat-cell *matCellDef="let customer">{{ customer.name }}</td>
+              </ng-container>
+              <ng-container matColumnDef="email">
+                <th mat-header-cell *matHeaderCellDef>Email</th>
+                <td mat-cell *matCellDef="let customer">{{ customer.email || '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="orders">
+                <th mat-header-cell *matHeaderCellDef>Orders</th>
+                <td mat-cell *matCellDef="let customer">{{ customer.orders }}</td>
+              </ng-container>
+              <ng-container matColumnDef="revenue">
+                <th mat-header-cell *matHeaderCellDef>Revenue</th>
+                <td mat-cell *matCellDef="let customer">{{ customer.revenue | currency }}</td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="['name','email','orders','revenue']"></tr>
+              <tr mat-row *matRowDef="let row; columns: ['name','email','orders','revenue']"></tr>
+            </table>
+          </div>
+        </mat-card>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</section>
+
+<ng-template #loadingSalesTpl>
+  <div class="loading-state">
+    <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+    <span>Loading sales…</span>
+  </div>
+</ng-template>
+
+<ng-template #loadingProductsTpl>
+  <div class="loading-state">
+    <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+    <span>Loading products…</span>
+  </div>
+</ng-template>
+
+<ng-template #loadingCustomersTpl>
+  <div class="loading-state">
+    <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+    <span>Loading customers…</span>
+  </div>
+</ng-template>
+
+<ng-template #noProducts>
+  <div class="empty-state">No product data for the selected range.</div>
+</ng-template>
+
+<ng-template #noCustomers>
+  <div class="empty-state">No customer data for the selected range.</div>
+</ng-template>
+
+<ng-template #deniedTpl>
+  <mat-card appearance="outlined" class="denied">
+    <h2>Reports unavailable</h2>
+    <p>You do not have permission to view reporting dashboards.</p>
+  </mat-card>
+</ng-template>
