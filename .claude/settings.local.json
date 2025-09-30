@@ -9,7 +9,8 @@
       "Bash(npm run lint)",
       "Bash(npm run serve:*)",
       "Bash(npm run:*)",
-      "Bash(npm start)"
+      "Bash(npm start)",
+      "Bash(ng serve:*)"
     ],
     "deny": [],
     "ask": []
