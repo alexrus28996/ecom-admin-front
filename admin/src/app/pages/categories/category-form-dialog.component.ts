@@ -1,23 +1,18 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, OnDestroy, OnInit } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
+import { COMMA, ENTER } from '@angular/cdk/keycodes';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, OnDestroy } from '@angular/core';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { Subject, takeUntil } from 'rxjs';
-import { TranslateService } from '@ngx-translate/core';
+import { MatChipInputEvent } from '@angular/material/chips';
+import { Subject } from 'rxjs';
+import { finalize, takeUntil } from 'rxjs/operators';
 
-import { Category, CategoryService } from '../../services/category.service';
 import { ToastService } from '../../core/toast.service';
+import { UploadService } from '../../services/upload.service';
+import { AdminCategory, CategoryPayload, CategoryService } from '../../services/category.service';
+import { CategoryFormDialogData } from './category.models';
 
-interface CategoryDialogData {
-  category?: Category | null;
-}
-
-interface CategoryDialogResult {
+interface CategoryFormDialogResult {
   refresh?: boolean;
-}
-
-interface CategoryOption {
-  id: string;
-  label: string;
 }
 
 @Component({
@@ -26,50 +21,45 @@ interface CategoryOption {
   styleUrls: ['./category-form-dialog.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CategoryFormDialogComponent implements OnInit, OnDestroy {
-  readonly form: UntypedFormGroup = this.fb.group({
-    name: ['', [Validators.required, Validators.minLength(2)]],
-    slug: [
-      '',
-      [
-        Validators.required,
-        Validators.pattern(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
-      ]
-    ],
-    parent: [''],
-    description: ['']
+export class CategoryFormDialogComponent implements OnDestroy {
+  readonly separatorKeysCodes = [ENTER, COMMA];
+  readonly keywordInput = new FormControl('');
+
+  readonly form: FormGroup = this.fb.group({
+    name: ['', [Validators.required, Validators.maxLength(120)]],
+    slug: ['', [Validators.required, Validators.pattern(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)]],
+    parent: [null],
+    description: [''],
+    isActive: [true],
+    imageUrl: [''],
+    bannerUrl: [''],
+    iconUrl: [''],
+    metaTitle: ['', [Validators.maxLength(180)]],
+    metaDescription: ['', [Validators.maxLength(320)]],
+    metaKeywords: this.fb.control<string[]>([])
   });
 
-  parentOptions: CategoryOption[] = [];
+  isSaving = false;
+  uploadState: Record<'imageUrl' | 'bannerUrl' | 'iconUrl', boolean> = {
+    imageUrl: false,
+    bannerUrl: false,
+    iconUrl: false
+  };
 
-  loading = false;
-  saving = false;
-  errorKey: string | null = null;
-  lastError: unknown = null;
-
+  private slugManuallyEdited = false;
   private readonly destroy$ = new Subject<void>();
 
   constructor(
-    private readonly fb: UntypedFormBuilder,
-    private readonly dialogRef: MatDialogRef<CategoryFormDialogComponent, CategoryDialogResult>,
+    private readonly fb: FormBuilder,
+    private readonly dialogRef: MatDialogRef<CategoryFormDialogComponent, CategoryFormDialogResult>,
+    @Inject(MAT_DIALOG_DATA) public readonly data: CategoryFormDialogData,
     private readonly categories: CategoryService,
+    private readonly uploadService: UploadService,
     private readonly toast: ToastService,
-    private readonly translate: TranslateService,
-    private readonly cdr: ChangeDetectorRef,
-    @Inject(MAT_DIALOG_DATA) public readonly data: CategoryDialogData
-  ) {}
-
-  ngOnInit(): void {
-    const category = this.data?.category;
-    if (category) {
-      this.form.patchValue({
-        name: category.name,
-        slug: category.slug || '',
-        parent: typeof category.parent === 'object' ? category.parent?._id || '' : category.parent || '',
-        description: category.description || ''
-      });
-    }
-    this.loadParents(category?._id || null);
+    private readonly cdr: ChangeDetectorRef
+  ) {
+    this.initializeForm();
+    this.observeNameChanges();
   }
 
   ngOnDestroy(): void {
@@ -77,51 +67,46 @@ export class CategoryFormDialogComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  submit(): void {
-    if (this.saving) {
-      return;
-    }
+  get metaKeywords(): string[] {
+    return this.form.get('metaKeywords')?.value || [];
+  }
 
-    if (this.form.invalid) {
+  get parents() {
+    return this.data.parents;
+  }
+
+  get isEdit(): boolean {
+    return this.data.mode === 'edit' && !!this.data.category;
+  }
+
+  save(): void {
+    if (this.form.invalid || this.isSaving) {
       this.form.markAllAsTouched();
       return;
     }
 
-    const raw = this.form.getRawValue();
-    const payload = {
-      name: raw.name.trim(),
-      slug: raw.slug.trim(),
-      description: raw.description?.trim() || undefined,
-      parent: raw.parent || null
-    };
-
-    this.saving = true;
-    this.errorKey = null;
-    this.lastError = null;
-    this.cdr.markForCheck();
-
-    const request$ = this.data?.category?._id
+    const payload = this.buildPayload();
+    const request$ = this.isEdit && this.data.category
       ? this.categories.update(this.data.category._id, payload)
       : this.categories.create(payload);
 
+    this.isSaving = true;
     request$
-      .pipe(takeUntil(this.destroy$))
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          this.isSaving = false;
+          this.cdr.markForCheck();
+        })
+      )
       .subscribe({
         next: () => {
-          const key = this.data?.category?._id ? 'categories.messages.updateSuccess' : 'categories.messages.saveSuccess';
-          this.toast.success(this.translate.instant(key));
-          this.saving = false;
-          this.cdr.markForCheck();
+          this.toast.success(this.isEdit ? 'Category updated' : 'Category created');
           this.dialogRef.close({ refresh: true });
         },
-        error: (err) => {
-          const code = err?.error?.error?.code;
-          this.errorKey = code ? `errors.backend.${code}` : 'categories.errors.save';
-          const messageKey = this.mapError(code);
-          this.toast.error(this.translate.instant(messageKey));
-          this.lastError = err;
-          this.saving = false;
-          this.cdr.markForCheck();
+        error: (error) => {
+          console.error(error);
+          this.toast.error('Unable to save category');
         }
       });
   }
@@ -130,43 +115,152 @@ export class CategoryFormDialogComponent implements OnInit, OnDestroy {
     this.dialogRef.close({ refresh: false });
   }
 
-  trackById(_: number, option: CategoryOption): string {
-    return option.id;
+  onSlugInput(): void {
+    this.slugManuallyEdited = true;
   }
 
-  private loadParents(excludeId: string | null): void {
-    this.loading = true;
-    this.cdr.markForCheck();
-    this.categories
-      .list({ limit: 1000 })
-      .pipe(takeUntil(this.destroy$))
+  addKeyword(event: MatChipInputEvent): void {
+    const value = (event.value || '').trim();
+    if (!value) {
+      event.chipInput?.clear();
+      this.keywordInput.setValue('');
+      return;
+    }
+    const normalized = value.toLowerCase();
+    const keywords = new Set(this.metaKeywords.map((keyword) => keyword.toLowerCase()));
+    if (!keywords.has(normalized)) {
+      const updated = [...this.metaKeywords, value];
+      this.form.get('metaKeywords')?.setValue(updated);
+    }
+    event.chipInput?.clear();
+    this.keywordInput.setValue('');
+  }
+
+  removeKeyword(keyword: string): void {
+    const updated = this.metaKeywords.filter((existing) => existing !== keyword);
+    this.form.get('metaKeywords')?.setValue(updated);
+  }
+
+  uploadImage(field: 'imageUrl' | 'bannerUrl' | 'iconUrl', event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input?.files?.[0];
+    if (!file) {
+      return;
+    }
+    this.uploadState[field] = true;
+    this.uploadService
+      .upload(file)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          this.uploadState[field] = false;
+          this.cdr.markForCheck();
+        })
+      )
       .subscribe({
-        next: (res) => {
-          this.parentOptions = (res.items || [])
-            .filter((category) => !excludeId || category._id !== excludeId)
-            .map((category) => ({ id: category._id, label: category.name }));
-          this.loading = false;
+        next: (result) => {
+          this.form.get(field)?.setValue(result.url);
+          this.toast.success('File uploaded');
           this.cdr.markForCheck();
         },
-        error: (err) => {
-          this.lastError = err;
-          this.loading = false;
+        error: () => {
+          this.toast.error('Upload failed');
           this.cdr.markForCheck();
         }
       });
   }
 
-  private mapError(code: string | undefined): string {
-    if (!code) {
-      return 'categories.messages.saveError';
+  clearMedia(field: 'imageUrl' | 'bannerUrl' | 'iconUrl'): void {
+    this.form.get(field)?.setValue('');
+  }
+
+  private initializeForm(): void {
+    if (this.isEdit && this.data.category) {
+      const category = this.data.category as AdminCategory;
+      this.form.patchValue({
+        name: category.name,
+        slug: category.slug,
+        parent: typeof category.parent === 'string' ? category.parent : category.parent?._id ?? null,
+        description: category.description ?? '',
+        isActive: category.isActive !== false,
+        imageUrl: (category as any).imageUrl ?? (category as any).image ?? '',
+        bannerUrl: (category as any).bannerUrl ?? '',
+        iconUrl: (category as any).iconUrl ?? '',
+        metaTitle: category.metaTitle ?? '',
+        metaDescription: category.metaDescription ?? '',
+        metaKeywords: Array.isArray(category.metaKeywords) ? category.metaKeywords : []
+      });
+      this.slugManuallyEdited = true;
     }
-    switch (code) {
-      case 'CATEGORY_SLUG_EXISTS':
-        return 'categories.messages.errors.duplicateSlug';
-      case 'CATEGORY_VALIDATION_FAILED':
-        return 'categories.messages.errors.validationFailed';
-      default:
-        return 'categories.messages.saveError';
+  }
+
+  private observeNameChanges(): void {
+    this.form
+      .get('name')
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe((value) => {
+        if (!this.slugManuallyEdited) {
+          const slug = this.generateSlug(value ?? '');
+          this.form.get('slug')?.setValue(slug, { emitEvent: false });
+        }
+      });
+  }
+
+  private generateSlug(value: string): string {
+    return value
+      .toString()
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .substring(0, 120);
+  }
+
+  private buildPayload(): CategoryPayload & { name: string } {
+    const raw = this.form.value;
+    const payload: CategoryPayload & { name: string } = {
+      name: (raw.name || '').trim(),
+      slug: raw.slug ? raw.slug.trim() : undefined,
+      parent: raw.parent || null,
+      description: raw.description?.trim() || null,
+      isActive: raw.isActive,
+      imageUrl: raw.imageUrl || null,
+      bannerUrl: raw.bannerUrl || null,
+      iconUrl: raw.iconUrl || null,
+      metaTitle: raw.metaTitle?.trim() || null,
+      metaDescription: raw.metaDescription?.trim() || null,
+      metaKeywords: Array.isArray(raw.metaKeywords)
+        ? raw.metaKeywords
+            .map((keyword: string) => keyword.trim())
+            .filter((keyword: string) => !!keyword)
+        : undefined
+    };
+
+    if (!payload.slug) {
+      delete payload.slug;
     }
+    if (!payload.description) {
+      delete payload.description;
+    }
+    if (!payload.metaTitle) {
+      delete payload.metaTitle;
+    }
+    if (!payload.metaDescription) {
+      delete payload.metaDescription;
+    }
+    if (!payload.metaKeywords || payload.metaKeywords.length === 0) {
+      delete payload.metaKeywords;
+    }
+    if (!payload.imageUrl) {
+      delete payload.imageUrl;
+    }
+    if (!payload.bannerUrl) {
+      delete payload.bannerUrl;
+    }
+    if (!payload.iconUrl) {
+      delete payload.iconUrl;
+    }
+
+    return payload;
   }
 }

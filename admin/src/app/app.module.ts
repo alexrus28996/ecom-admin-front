@@ -25,9 +25,6 @@ import { AdminInventoryComponent } from './pages/admin/inventory-admin.component
 import { InventoryAdjustmentDialogComponent } from './pages/admin/inventory-adjustment-dialog.component';
 import { InventoryLocationDialogComponent } from './pages/admin/inventory-location-dialog.component';
 import { InventoryTransferDialogComponent } from './pages/admin/inventory-transfer-dialog.component';
-import { CategoriesComponent } from './pages/categories/categories.component';
-import { CategoryFormDialogComponent } from './pages/categories/category-form-dialog.component';
-import { CategoryReorderDialogComponent } from './pages/categories/category-reorder-dialog.component';
 import { AddressManagementComponent, AddressFormDialogComponent } from './pages/addresses/address-management.component';
 import { RegisterComponent } from './pages/register/register.component';
 import { CartComponent } from './pages/cart/cart.component';
@@ -64,6 +61,7 @@ import { PermissionsModule } from './pages/admin/permissions/permissions.module'
 import { MaterialModule } from './shared/material.module';
 import { NgChartsModule } from './shared/ng-charts.module';
 import { AuthInterceptor } from './core/auth.interceptor';
+import { CategoriesModule } from './pages/categories/categories.module';
 
 export function translateHttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
@@ -90,9 +88,6 @@ export function translateHttpLoaderFactory(http: HttpClient) {
     AdminUserDetailComponent,
     AdminOrdersListComponent,
     AdminOrderDetailComponent,
-    CategoriesComponent,
-    CategoryFormDialogComponent,
-    CategoryReorderDialogComponent,
     AdminUsersComponent,
     ConfirmDialogComponent,
     AdminReturnsListComponent,
@@ -132,6 +127,7 @@ export function translateHttpLoaderFactory(http: HttpClient) {
     LayoutModule,
     MaterialModule,
     NgChartsModule,
+    CategoriesModule,
     TranslateModule.forRoot({
       defaultLanguage: 'en',
       loader: {

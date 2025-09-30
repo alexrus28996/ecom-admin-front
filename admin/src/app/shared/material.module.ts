@@ -30,6 +30,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatGridListModule } from '@angular/material/grid-list';
+import { MatTreeModule } from '@angular/material/tree';
 
 const MATERIAL = [
   MatToolbarModule,
@@ -63,7 +64,8 @@ const MATERIAL = [
   MatButtonToggleModule,
   MatStepperModule,
   MatCheckboxModule,
-  MatGridListModule
+  MatGridListModule,
+  MatTreeModule
 ];
 
 @NgModule({
