@@ -4,6 +4,7 @@ export interface LayoutNavItem {
   readonly route: string;
   readonly roles?: readonly string[];
   readonly exact?: boolean;
+  readonly section?: 'overview' | 'catalog' | 'operations' | 'intelligence' | 'governance';
 }
 
 export interface BreadcrumbItem {

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormControl } from '@angular/forms';
 
+import { BreadcrumbItem } from './layout.models';
 import { PublicUser } from '../core/auth.service';
 
 @Component({
@@ -15,13 +16,12 @@ export class TopbarComponent {
   @Input() isHandset = false;
   @Input() user: PublicUser | null = null;
   @Input() refreshing = false;
-  @Input() searchPlaceholder = 'Search the workspace';
-  @Input() searchModule: string | null = null;
-  @Input() searchHint: string | null = null;
-  @Input() searchIcon = 'search';
-  @Input() searchEnabled = true;
+  @Input() breadcrumbs: BreadcrumbItem[] = [];
+  @Input() searchPlaceholder = 'Search the admin console…';
+  @Input() navCollapsed = false;
 
   @Output() menuClick = new EventEmitter<void>();
+  @Output() toggleSidebar = new EventEmitter<void>();
   @Output() toggleTheme = new EventEmitter<void>();
   @Output() logout = new EventEmitter<void>();
   @Output() search = new EventEmitter<string>();

@@ -992,6 +992,14 @@
       "addresses": "Addresses",
       "cart": "Cart",
       "orders": "Orders",
+      "categories": "Categories",
+      "inventory": "Inventory",
+      "shipments": "Shipments",
+      "returns": "Returns",
+      "payments": "Payments",
+      "reports": "Reports",
+      "auditLogs": "Audit Logs",
+      "usersPermissions": "Users & Permissions",
       "profile": "Profile",
       "commerce": "Commerce Suite",
       "empty": "No navigation",
@@ -1075,7 +1083,8 @@
     "shipments": "Shipments",
     "settings": "Settings",
     "categories": "Categories",
-    "permissions": "Permissions"
+    "permissions": "Permissions",
+    "auditLogs": "Audit Logs"
   },
   "inventory": {
     "title": "Inventory",

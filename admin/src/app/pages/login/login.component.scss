@@ -2,82 +2,176 @@
   display: block;
 }
 
-.login-shell {
-  min-height: calc(100vh - 128px);
+.auth-page {
+  min-height: 100vh;
+  padding: clamp(2rem, 5vw, 4rem);
+  background: radial-gradient(circle at top, rgba(99, 102, 241, 0.12), transparent 55%),
+    radial-gradient(circle at bottom, rgba(14, 165, 233, 0.12), transparent 45%),
+    var(--app-bg);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 32px 16px;
 }
 
-.login-card {
-  width: 100%;
-  max-width: 420px;
-  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.12);
+.auth-page__container {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) minmax(320px, 420px);
+  gap: clamp(2rem, 4vw, 4rem);
+  align-items: stretch;
+  width: min(960px, 100%);
 }
 
-.login-field {
-  width: 100%;
-  display: block;
+.auth-page__branding {
+  background: rgba(255, 255, 255, 0.65);
+  border-radius: 24px;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  box-shadow: var(--app-shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  border: 1px solid rgba(79, 70, 229, 0.12);
+  color: var(--app-text);
 }
 
-.login-field + .login-field {
-  margin-top: 16px;
+.theme-dark .auth-page__branding {
+  background: rgba(30, 41, 59, 0.6);
+  border-color: rgba(148, 163, 184, 0.16);
 }
 
-.login-actions {
+.auth-page__logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--app-primary), #818cf8);
+  display: grid;
+  place-items: center;
+  color: #fff;
+  box-shadow: var(--app-shadow-md);
+
+  mat-icon {
+    font-size: 30px;
+  }
+}
+
+.auth-page__branding h1 {
+  font-size: clamp(1.75rem, 3vw, 2rem);
+  margin: 0;
+}
+
+.auth-page__branding p {
+  margin: 0;
+  color: var(--app-text-secondary);
+  line-height: 1.5;
+}
+
+.auth-page__bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.auth-page__bullets li {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-top: 24px;
+  gap: 0.75rem;
+  font-weight: 500;
+  color: var(--app-text-secondary);
 }
 
-.login-actions button {
-  min-width: 140px;
+.auth-page__bullets mat-icon {
+  color: #22c55e;
+}
+
+.auth-card {
+  border-radius: 24px;
+  box-shadow: var(--app-shadow-xl);
+  backdrop-filter: blur(16px);
+}
+
+.auth-card mat-card-header {
+  padding-bottom: 0;
+}
+
+.auth-card__actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 24px 24px;
+  color: var(--app-text-secondary);
+}
+
+.auth-form {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.auth-form__field .mat-mdc-form-field-flex {
+  align-items: center;
+}
+
+.auth-form__field .mat-mdc-form-field-infix {
+  padding: 0.75rem 0 0.5rem;
+}
+
+.auth-form__field input {
+  font-size: 15px;
+}
+
+.auth-form__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.auth-form__submit {
+  position: relative;
+  min-height: 48px;
+  font-weight: 600;
+  border-radius: 12px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 0.75rem;
 }
 
-.login-actions mat-progress-spinner {
+.auth-form__submit mat-progress-spinner {
   width: 20px !important;
   height: 20px !important;
 }
 
-.login-footer {
-  margin-top: 16px;
-  display: flex;
-  justify-content: flex-start;
-  gap: 8px;
-  align-items: center;
-}
+@media (max-width: 960px) {
+  .auth-page__container {
+    grid-template-columns: minmax(0, 1fr);
+  }
 
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+  .auth-page__branding {
+    order: 2;
+    text-align: center;
+  }
+
+  .auth-page__bullets {
+    justify-items: center;
+  }
+
+  .auth-form__meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 @media (max-width: 599px) {
-  .login-actions {
-    flex-direction: column;
-    align-items: stretch;
+  .auth-page {
+    padding: 1.5rem;
   }
 
-  .login-actions button,
-  .login-actions a {
-    width: 100%;
-  }
-
-  .login-footer {
+  .auth-card__actions {
     flex-direction: column;
     align-items: flex-start;
+    padding: 0 16px 16px;
   }
 }

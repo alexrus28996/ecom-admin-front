@@ -5,9 +5,7 @@
   [class.sidebar--handset]="handset"
   role="navigation"
   aria-label="Main navigation">
-
   <div class="sidebar__inner">
-    <!-- Brand Section with Logo -->
     <div class="sidebar__brand">
       <button
         mat-icon-button
@@ -21,79 +19,56 @@
 
       <div class="sidebar__logo-section">
         <div class="sidebar__logo">
-          <mat-icon class="sidebar__logo-icon">admin_panel_settings</mat-icon>
+          <mat-icon class="sidebar__logo-icon">inventory_2</mat-icon>
         </div>
         <div class="sidebar__brand-text" *ngIf="!collapsed || handset">
-          <span class="sidebar__brand-title">Admin Panel</span>
-          <span class="sidebar__brand-subtitle">E-commerce</span>
+          <span class="sidebar__brand-title">Commerce Admin</span>
+          <span class="sidebar__brand-subtitle">Operate at scale</span>
         </div>
       </div>
     </div>
 
-    <!-- Navigation Menu -->
     <div class="sidebar__menu" *ngIf="(items || []).length; else emptyNav">
-      <!-- Group navigation items logically -->
-      <div class="sidebar__section">
-        <div class="sidebar__section-title" *ngIf="!collapsed || handset">
-          <span>Main</span>
+      <ng-container *ngFor="let section of groupedItems">
+        <div class="sidebar__section" *ngIf="section.items.length">
+          <div class="sidebar__section-title" *ngIf="!collapsed || handset">
+            <span>{{ section.label }}</span>
+          </div>
+          <a
+            *ngFor="let item of section.items; trackBy: trackByRoute"
+            [routerLink]="item.route"
+            class="sidebar__link"
+            routerLinkActive="sidebar__link--active"
+            [routerLinkActiveOptions]="item.exact ? { exact: true } : { exact: false }"
+            (click)="onNavigate()"
+            [matTooltip]="collapsed && !handset ? item.label : ''"
+            matTooltipPosition="right"
+            [attr.aria-label]="item.label">
+            <mat-icon class="sidebar__icon">{{ item.icon }}</mat-icon>
+            <span class="sidebar__label">{{ item.label }}</span>
+          </a>
         </div>
-        <a
-          *ngFor="let item of getMainItems(); trackBy: trackByRoute"
-          [routerLink]="item.route"
-          class="sidebar__link"
-          routerLinkActive="sidebar__link--active"
-          [routerLinkActiveOptions]="item.exact ? { exact: true } : { exact: false }"
-          (click)="onNavigate()"
-          [matTooltip]="collapsed && !handset ? item.label : ''"
-          matTooltipPosition="right"
-          [attr.aria-label]="item.label">
-          <mat-icon class="sidebar__icon">{{ item.icon }}</mat-icon>
-          <span class="sidebar__label">{{ item.label }}</span>
-          <div class="sidebar__indicator" *ngIf="item.route === '/dashboard'"></div>
-        </a>
-      </div>
-
-      <div class="sidebar__section" *ngIf="getAdminItems().length > 0">
-        <div class="sidebar__section-title" *ngIf="!collapsed || handset">
-          <span>Administration</span>
-        </div>
-        <a
-          *ngFor="let item of getAdminItems(); trackBy: trackByRoute"
-          [routerLink]="item.route"
-          class="sidebar__link"
-          routerLinkActive="sidebar__link--active"
-          [routerLinkActiveOptions]="item.exact ? { exact: true } : { exact: false }"
-          (click)="onNavigate()"
-          [matTooltip]="collapsed && !handset ? item.label : ''"
-          matTooltipPosition="right"
-          [attr.aria-label]="item.label">
-          <mat-icon class="sidebar__icon">{{ item.icon }}</mat-icon>
-          <span class="sidebar__label">{{ item.label }}</span>
-        </a>
-      </div>
+      </ng-container>
     </div>
 
     <ng-template #emptyNav>
       <div class="sidebar__empty">
         <mat-icon class="sidebar__empty-icon">menu</mat-icon>
-        <span *ngIf="!collapsed || handset">{{ 'shell.nav.empty' | translate }}</span>
+        <span *ngIf="!collapsed || handset">No sections available</span>
       </div>
     </ng-template>
 
-    <!-- Footer Section -->
     <div class="sidebar__footer">
-      <!-- Status Indicator -->
       <div class="sidebar__status" *ngIf="!collapsed || handset">
         <div class="sidebar__status-indicator">
-          <mat-icon class="sidebar__status-icon">security</mat-icon>
+          <span class="sidebar__status-dot"></span>
           <div class="sidebar__status-text">
-            <span class="sidebar__status-label">System Status</span>
-            <small class="sidebar__status-value">All systems operational</small>
+            <span class="sidebar__status-label">Realtime sync</span>
+            <small class="sidebar__status-value">All systems nominal</small>
           </div>
         </div>
       </div>
 
-      <!-- Collapse Toggle -->
       <button
         mat-icon-button
         type="button"
@@ -108,4 +83,3 @@
     </div>
   </div>
 </nav>
-

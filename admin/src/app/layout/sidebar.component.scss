@@ -284,9 +284,13 @@
     gap: var(--app-spacing-sm);
   }
 
-  &-icon {
-    font-size: 16px !important;
-    color: var(--app-success);
+  &-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--status-active);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+    animation: sidebarPulse 2.4s infinite;
     flex-shrink: 0;
   }
 
@@ -313,6 +317,18 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+}
+
+@keyframes sidebarPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
   }
 }
 

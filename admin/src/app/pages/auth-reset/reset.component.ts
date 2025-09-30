@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { FormBuilder, ValidatorFn, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 
@@ -13,8 +13,9 @@ import { AuthService } from '../../core/auth.service';
 })
 export class ResetComponent {
   readonly form = this.fb.group({
-    password: ['', [Validators.required, Validators.minLength(8)]]
-  });
+    password: ['', [Validators.required, Validators.minLength(8)]],
+    confirmPassword: ['', [Validators.required]]
+  }, { validators: ResetComponent.matchPasswordsValidator() });
 
   readonly token: string;
   loading = false;
@@ -85,9 +86,20 @@ export class ResetComponent {
     this.router.navigate(['/login']);
   }
 
-  showError(error: string): boolean {
-    const ctrl = this.form.get('password');
+  showError(control: 'password' | 'confirmPassword', error: string): boolean {
+    const ctrl = this.form.get(control);
     return !!ctrl && ctrl.touched && ctrl.hasError(error);
+  }
+
+  private static matchPasswordsValidator(): ValidatorFn {
+    return (group) => {
+      const password = group.get('password')?.value;
+      const confirm = group.get('confirmPassword')?.value;
+      if (!password || !confirm) {
+        return null;
+      }
+      return password === confirm ? null : { passwordMismatch: true };
+    };
   }
 }
 

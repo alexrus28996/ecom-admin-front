@@ -187,8 +187,18 @@ export class AuthService {
   }
 
   login(email: string, password: string): Observable<LoginResponse> {
+    const payload = { email: email.trim() };
+    if (!environment.production) {
+      console.log('[Auth] Login request', payload);
+    }
+
     return this.http.post<LoginResponse>(`${environment.apiBaseUrl}/auth/login`, { email, password }).pipe(
-      tap((res) => this.persistSession(res)),
+      tap((res) => {
+        if (!environment.production) {
+          console.log('[Auth] Login response', res);
+        }
+        this.persistSession(res);
+      }),
       switchMap((res) => this.loadContext({ force: true, fallbackUser: res?.user ?? null }).pipe(map(() => res)))
     );
   }
@@ -210,6 +220,10 @@ export class AuthService {
 
     this.refreshingSubject.next(true);
 
+    if (!environment.production) {
+      console.log('[Auth] Refreshing token');
+    }
+
     const request$ = this.http
       .post<LoginResponse>(`${environment.apiBaseUrl}/auth/refresh`, { refreshToken: token })
       .pipe(
@@ -230,6 +244,13 @@ export class AuthService {
 
     this.refreshRequest$ = request$;
     return request$;
+  }
+
+  getProfile(): Observable<PublicUser> {
+    return this.http.get<{ user: PublicUser }>(`${environment.apiBaseUrl}/auth/me`).pipe(
+      map(({ user }) => user),
+      tap((user) => this.setUser(user))
+    );
   }
 
   logout(refreshToken?: string): void {

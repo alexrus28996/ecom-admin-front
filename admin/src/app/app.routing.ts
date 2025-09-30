@@ -35,6 +35,7 @@ import { TransactionDetailComponent } from './pages/admin/transactions/transacti
 import { RefundsListComponent } from './pages/admin/refunds/refunds-list.component';
 import { RefundDetailComponent } from './pages/admin/refunds/refund-detail.component';
 import { ReportsDashboardComponent } from './pages/admin/reports/reports-dashboard.component';
+import { AuditLogsComponent } from './pages/admin/audit-logs/audit-logs.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -165,6 +166,16 @@ const routes: Routes = [
         component: ReportsDashboardComponent,
         canActivate: [RoleGuard, PermissionGuard],
         data: { roles: ['admin'], permissions: ['report:view'], breadcrumb: 'reports' }
+      },
+      {
+        path: 'admin/audit-logs',
+        component: AuditLogsComponent,
+        canActivate: [RoleGuard],
+        data: {
+          roles: ['admin'],
+          breadcrumb: 'auditLogs',
+          searchPlaceholder: 'Search audit entries'
+        }
       },
       {
         path: 'admin/settings',

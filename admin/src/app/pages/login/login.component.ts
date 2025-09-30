@@ -14,12 +14,14 @@ import { TranslateService } from '@ngx-translate/core';
 export class LoginComponent {
   readonly form = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(6)]]
+    password: ['', [Validators.required, Validators.minLength(6)]],
+    remember: [false]
   });
 
   loading = false;
   errorKey: string | null = null;
   lastError: any = null;
+  private readonly rememberKey = 'auth:remember-email';
 
   constructor(
     private fb: FormBuilder,
@@ -27,7 +29,12 @@ export class LoginComponent {
     private router: Router,
     private toast: ToastService,
     private translate: TranslateService
-  ) {}
+  ) {
+    const remembered = this.readRememberedEmail();
+    if (remembered) {
+      this.form.patchValue({ email: remembered, remember: true }, { emitEvent: false });
+    }
+  }
 
   submit(): void {
     if (this.loading) {
@@ -39,7 +46,7 @@ export class LoginComponent {
       return;
     }
 
-    const { email, password } = this.form.getRawValue();
+    const { email, password, remember } = this.form.getRawValue();
     if (!email || !password) {
       return;
     }
@@ -47,6 +54,8 @@ export class LoginComponent {
     this.loading = true;
     this.errorKey = null;
     this.lastError = null;
+
+    this.persistRememberPreference(remember ?? false, email);
 
     this.auth
       .login(email.trim(), password)
@@ -88,5 +97,25 @@ export class LoginComponent {
     }
 
     return this.translate.instant('login.errors.generic');
+  }
+
+  private readRememberedEmail(): string | null {
+    try {
+      return localStorage.getItem(this.rememberKey);
+    } catch {
+      return null;
+    }
+  }
+
+  private persistRememberPreference(remember: boolean, email: string): void {
+    try {
+      if (remember && email) {
+        localStorage.setItem(this.rememberKey, email.trim());
+      } else {
+        localStorage.removeItem(this.rememberKey);
+      }
+    } catch {
+      // Ignore storage failures silently
+    }
   }
 }

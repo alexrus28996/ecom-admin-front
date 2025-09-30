@@ -1,44 +1,95 @@
-.forgot-shell {
+:host {
+  display: block;
+}
+
+.auth-page {
+  min-height: 100vh;
+  padding: clamp(2rem, 6vw, 5rem);
+  background: radial-gradient(circle at top, rgba(236, 72, 153, 0.12), transparent 55%),
+    radial-gradient(circle at bottom, rgba(79, 70, 229, 0.12), transparent 45%),
+    var(--app-bg);
   display: flex;
+  align-items: center;
   justify-content: center;
-  padding: 48px 16px;
 }
 
-.forgot-card {
-  width: 100%;
-  max-width: 480px;
+.auth-page__container {
+  width: min(520px, 100%);
 }
 
-.forgot-field {
-  width: 100%;
+.auth-card {
+  border-radius: 24px;
+  box-shadow: var(--app-shadow-lg);
+  backdrop-filter: blur(18px);
 }
 
-.forgot-actions {
+.auth-card__icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--app-primary), #38bdf8);
+  color: #fff;
+  margin-right: 16px;
+  box-shadow: var(--app-shadow-md);
+}
+
+.auth-form {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.auth-form__intro {
+  margin: 0;
+  color: var(--app-text-secondary);
+  line-height: 1.6;
+}
+
+.auth-form__field .mat-mdc-form-field-infix {
+  padding: 0.75rem 0 0.5rem;
+}
+
+.auth-form__success {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 16px;
-}
-
-.forgot-success {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 16px;
-  padding: 8px 12px;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
   border-radius: 12px;
   background: rgba(34, 197, 94, 0.12);
-  color: #047857;
+  color: var(--app-text);
 }
 
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+.auth-form__submit {
+  min-height: 48px;
+  border-radius: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.auth-form__submit mat-progress-spinner {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.auth-card__actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px 24px;
+}
+
+@media (max-width: 599px) {
+  .auth-page {
+    padding: 2rem 1.5rem;
+  }
+
+  .auth-card__actions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
 }

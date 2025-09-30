@@ -52,6 +52,7 @@ import { TransactionDetailComponent } from './pages/admin/transactions/transacti
 import { RefundsListComponent } from './pages/admin/refunds/refunds-list.component';
 import { RefundDetailComponent } from './pages/admin/refunds/refund-detail.component';
 import { ReportsDashboardComponent } from './pages/admin/reports/reports-dashboard.component';
+import { AuditLogsComponent } from './pages/admin/audit-logs/audit-logs.component';
 import { CouponsListComponent } from './pages/admin/coupons/coupons-list.component';
 import { CouponFormComponent } from './pages/admin/coupons/coupon-form.component';
 import { ReviewsListComponent } from './pages/admin/reviews/reviews-list.component';
@@ -116,7 +117,8 @@ export function translateHttpLoaderFactory(http: HttpClient) {
     TransactionDetailComponent,
     RefundsListComponent,
     RefundDetailComponent,
-    ReportsDashboardComponent
+    ReportsDashboardComponent,
+    AuditLogsComponent
   ],
   imports: [
     BrowserModule,

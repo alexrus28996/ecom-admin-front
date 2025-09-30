@@ -16,6 +16,14 @@ export class SidebarComponent {
   @Output() toggleCollapse = new EventEmitter<void>();
   @Output() closeMobile = new EventEmitter<void>();
 
+  readonly sectionLabels: Record<NonNullable<LayoutNavItem['section']>, string> = {
+    overview: 'Overview',
+    catalog: 'Catalog',
+    operations: 'Operations',
+    intelligence: 'Intelligence',
+    governance: 'Governance'
+  } as const;
+
   trackByRoute(_: number, item: LayoutNavItem): string {
     return item.route;
   }
@@ -26,16 +34,35 @@ export class SidebarComponent {
     }
   }
 
-  getMainItems(): LayoutNavItem[] {
-    const mainRoutes = ['/dashboard', '/orders', '/cart', '/addresses', '/profile'];
-    return (this.items || []).filter(item => mainRoutes.includes(item.route));
+  get groupedItems(): { key: NonNullable<LayoutNavItem['section']>; label: string; items: LayoutNavItem[] }[] {
+    const groups = new Map<NonNullable<LayoutNavItem['section']>, LayoutNavItem[]>();
+    for (const item of this.items || []) {
+      const section = item.section ?? 'overview';
+      if (!groups.has(section)) {
+        groups.set(section, []);
+      }
+      groups.get(section)!.push(item);
+    }
+
+    return Array.from(groups.entries())
+      .map(([key, items]) => ({
+        key,
+        label: this.sectionLabels[key] ?? key,
+        items
+      }))
+      .sort((a, b) => this.sectionOrder(a.key) - this.sectionOrder(b.key));
   }
 
-  getAdminItems(): LayoutNavItem[] {
-    const adminRoutes = ['/admin'];
-    return (this.items || []).filter(item =>
-      item.route.startsWith('/admin') && !adminRoutes.includes(item.route)
-    );
+  private sectionOrder(key: NonNullable<LayoutNavItem['section']>): number {
+    const order: NonNullable<LayoutNavItem['section']>[] = [
+      'overview',
+      'catalog',
+      'operations',
+      'intelligence',
+      'governance'
+    ];
+    const index = order.indexOf(key);
+    return index === -1 ? order.length : index;
   }
 }
 

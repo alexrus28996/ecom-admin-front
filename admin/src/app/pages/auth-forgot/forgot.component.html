@@ -1,52 +1,52 @@
-<div class="forgot-shell">
-  <mat-card class="forgot-card">
-    <mat-card-header>
-      <mat-card-title>{{ 'forgot.title' | translate }}</mat-card-title>
-      <mat-card-subtitle>{{ 'forgot.subtitle' | translate }}</mat-card-subtitle>
-    </mat-card-header>
-
-    <mat-card-content>
-      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-        <mat-form-field appearance="fill" class="forgot-field">
-          <mat-label>{{ 'forgot.email.label' | translate }}</mat-label>
-          <input
-            matInput
-            type="email"
-            formControlName="email"
-            [placeholder]="'forgot.email.placeholder' | translate"
-            autocomplete="email"
-          />
-          <mat-error *ngIf="showError('email', 'required')">
-            {{ 'forgot.email.errors.required' | translate }}
-          </mat-error>
-          <mat-error *ngIf="showError('email', 'email')">
-            {{ 'forgot.email.errors.format' | translate }}
-          </mat-error>
-        </mat-form-field>
-
-        <app-error-banner [key]="errorKey" [error]="lastError"></app-error-banner>
-
-        <div class="forgot-success" *ngIf="successKey">
-          <mat-icon color="primary">check_circle</mat-icon>
-          <span>{{ successKey | translate }}</span>
+<section class="auth-page">
+  <div class="auth-page__container auth-page__container--single">
+    <mat-card class="auth-card">
+      <mat-card-header>
+        <div class="auth-card__icon">
+          <mat-icon>mail_lock</mat-icon>
         </div>
+        <div>
+          <mat-card-title>Reset your access</mat-card-title>
+          <mat-card-subtitle>We'll email a secure reset link</mat-card-subtitle>
+        </div>
+      </mat-card-header>
 
-        <div class="forgot-actions">
-          <button mat-raised-button color="primary" type="submit" [disabled]="loading">
-            <mat-progress-spinner
-              *ngIf="loading"
-              diameter="20"
-              mode="indeterminate"
-              color="accent"
-            ></mat-progress-spinner>
-            <span *ngIf="!loading">{{ 'forgot.actions.submit' | translate }}</span>
-            <span class="sr-only" *ngIf="loading">{{ 'forgot.actions.submitting' | translate }}</span>
+      <mat-card-content>
+        <form [formGroup]="form" (ngSubmit)="submit()" class="auth-form" novalidate>
+          <p class="auth-form__intro">
+            Enter the email linked to your admin account. We'll send recovery instructions instantly.
+          </p>
+
+          <mat-form-field appearance="outline" class="auth-form__field">
+            <mat-label>Email address</mat-label>
+            <mat-icon matPrefix>alternate_email</mat-icon>
+            <input
+              matInput
+              type="email"
+              formControlName="email"
+              placeholder="name@company.com"
+              autocomplete="email" />
+            <mat-error *ngIf="showError('email', 'required')">Email is required</mat-error>
+            <mat-error *ngIf="showError('email', 'email')">Enter a valid email</mat-error>
+          </mat-form-field>
+
+          <app-error-banner [key]="errorKey" [error]="lastError"></app-error-banner>
+
+          <div class="auth-form__success" *ngIf="successKey">
+            <mat-icon color="primary">check_circle</mat-icon>
+            <span>{{ successKey | translate }}</span>
+          </div>
+
+          <button mat-flat-button color="primary" type="submit" class="auth-form__submit" [disabled]="loading || form.invalid">
+            <mat-progress-spinner *ngIf="loading" diameter="20" mode="indeterminate"></mat-progress-spinner>
+            <span *ngIf="!loading">Send reset link</span>
           </button>
+        </form>
+      </mat-card-content>
 
-          <a mat-button routerLink="/login">{{ 'forgot.actions.backToLogin' | translate }}</a>
-        </div>
-      </form>
-    </mat-card-content>
-  </mat-card>
-</div>
-
+      <mat-card-actions class="auth-card__actions">
+        <a mat-button routerLink="/login">Back to login</a>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</section>

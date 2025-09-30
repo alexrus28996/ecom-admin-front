@@ -996,6 +996,14 @@
       "addresses": "Addresses",
       "cart": "Cart",
       "orders": "Orders",
+      "categories": "Categories",
+      "inventory": "Inventory",
+      "shipments": "Shipments",
+      "returns": "Returns",
+      "payments": "Payments",
+      "reports": "Reports",
+      "auditLogs": "Audit Logs",
+      "usersPermissions": "Users & Permissions",
       "profile": "Profile",
       "admin": {
         "users": "Admin / Users",
@@ -1028,6 +1036,18 @@
     "a11y": {
       "toggleNav": "Toggle navigation"
     }
+  },
+  "breadcrumb": {
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "orders": "Orders",
+    "inventory": "Inventory",
+    "returns": "Returns",
+    "shipments": "Shipments",
+    "settings": "Settings",
+    "categories": "Categories",
+    "permissions": "Permissions",
+    "auditLogs": "Audit Logs"
   },
   "inventory": {
     "title": "Inventory",

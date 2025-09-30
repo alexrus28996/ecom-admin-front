@@ -29,18 +29,15 @@
       [searchIcon]="searchIcon"
       [searchEnabled]="searchEnabled"
       [refreshing]="(auth.refreshing$ | async) ?? false"
+      [breadcrumbs]="breadcrumbs"
+      [searchPlaceholder]="searchPlaceholder"
+      [navCollapsed]="navCollapsed"
       (menuClick)="openMobileNav()"
+      (toggleSidebar)="toggleSidebar()"
       (toggleTheme)="toggleTheme()"
       (logout)="logout()"
       (search)="submitSearch($event)"
     ></app-topbar>
-
-    <!-- Auto-generated Breadcrumb Navigation -->
-    <app-breadcrumb
-      *ngIf="breadcrumbs.length > 0"
-      class="layout-wrapper__breadcrumbs"
-      [items]="breadcrumbs"
-    ></app-breadcrumb>
 
     <!-- Page Content with Proper Scrolling -->
     <main class="layout-wrapper__content">

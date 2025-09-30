@@ -31,14 +31,7 @@ export class LayoutWrapperComponent implements OnInit {
   navCollapsed = false;
   mobileNavOpen = false;
   breadcrumbs: BreadcrumbItem[] = [];
-  searchModuleLabel: string | null = 'Global';
-  searchPlaceholder = 'Search products, orders, customers…';
-  searchHint: string | null = null;
-  searchIcon = 'search';
-  searchEnabled = true;
-  private searchNavigateTo: string | null = '/admin/products';
-  private searchQueryParam = 'q';
-  private searchQueryExtras: Record<string, string | number | boolean | null | undefined> | undefined;
+  searchPlaceholder = 'Search the admin console…';
 
   constructor(
     public readonly auth: AuthService,
@@ -93,9 +86,11 @@ export class LayoutWrapperComponent implements OnInit {
       .subscribe(() => {
         this.mobileNavOpen = false;
         this.breadcrumbs = this.buildBreadcrumbs(this.activatedRoute.root);
+        this.updateSearchPlaceholder();
       });
 
     this.breadcrumbs = this.buildBreadcrumbs(this.activatedRoute.root);
+    this.updateSearchPlaceholder();
   }
 
   toggleTheme(): void {
@@ -131,20 +126,8 @@ export class LayoutWrapperComponent implements OnInit {
       return;
     }
 
-    const queryParams: Record<string, string | number | boolean | null | undefined> = {
-      ...(this.searchQueryExtras ?? {})
-    };
-
-    if (this.searchQueryParam) {
-      queryParams[this.searchQueryParam] = search;
-    }
-
-    this.contextSearch.configure({ presetValue: search });
-
-    this.router.navigate([this.searchNavigateTo], {
-      queryParams,
-      queryParamsHandling: 'merge'
-    });
+    const target = this.resolveSearchTarget();
+    this.router.navigate([target], { queryParams: { q: search } });
   }
 
   logout(): void {
@@ -155,22 +138,89 @@ export class LayoutWrapperComponent implements OnInit {
 
   private initializeNavItems(): void {
     const items: LayoutNavItem[] = [
-      { label: this.translate.instant('shell.nav.dashboard'), icon: 'grid_view', route: '/dashboard', exact: true },
-      { label: this.translate.instant('shell.nav.orders'), icon: 'receipt_long', route: '/orders' },
-      { label: this.translate.instant('shell.nav.cart'), icon: 'shopping_cart', route: '/cart' },
-      { label: this.translate.instant('shell.nav.addresses'), icon: 'location_on', route: '/addresses' },
-      { label: this.translate.instant('shell.nav.profile'), icon: 'person', route: '/profile' },
-      { label: this.translate.instant('shell.nav.products'), icon: 'inventory_2', route: '/admin/products', roles: ['admin'] },
-      { label: this.translate.instant('shell.nav.admin.orders'), icon: 'receipt_long', route: '/admin/orders', roles: ['admin'] },
-      { label: this.translate.instant('shell.nav.admin.users'), icon: 'group', route: '/admin/users', roles: ['admin'] },
-      { label: this.translate.instant('shell.nav.admin.permissions'), icon: 'lock', route: '/admin/permissions', roles: ['admin'] },
-      { label: this.translate.instant('shell.nav.admin.categories'), icon: 'category', route: '/admin/categories', roles: ['admin'] },
-      { label: this.translate.instant('shell.nav.admin.inventory'), icon: 'warehouse', route: '/admin/inventory', roles: ['admin'] },
-      { label: this.translate.instant('shell.nav.admin.returns'), icon: 'assignment_return', route: '/admin/returns', roles: ['admin'] },
-      { label: this.translate.instant('shell.nav.admin.reviews'), icon: 'reviews', route: '/admin/reviews', roles: ['admin'] },
-      { label: this.translate.instant('shell.nav.admin.shipments'), icon: 'local_shipping', route: '/admin/shipments', roles: ['admin'] },
-      { label: this.translate.instant('shell.nav.admin.coupons'), icon: 'confirmation_number', route: '/admin/coupons', roles: ['admin'] },
-      { label: this.translate.instant('shell.nav.admin.settings'), icon: 'settings', route: '/admin/settings', roles: ['admin'] }
+      {
+        label: this.translate.instant('shell.nav.dashboard') || 'Dashboard',
+        icon: 'space_dashboard',
+        route: '/dashboard',
+        exact: true,
+        section: 'overview'
+      },
+      {
+        label: this.translate.instant('shell.nav.profile') || 'My Profile',
+        icon: 'person',
+        route: '/profile',
+        section: 'overview'
+      },
+      {
+        label: this.translate.instant('shell.nav.products') || 'Products',
+        icon: 'inventory_2',
+        route: '/admin/products',
+        roles: ['admin'],
+        section: 'catalog'
+      },
+      {
+        label: this.translate.instant('shell.nav.categories') || 'Categories',
+        icon: 'category',
+        route: '/admin/categories',
+        roles: ['admin'],
+        section: 'catalog'
+      },
+      {
+        label: this.translate.instant('shell.nav.inventory') || 'Inventory',
+        icon: 'warehouse',
+        route: '/admin/inventory',
+        roles: ['admin'],
+        section: 'operations'
+      },
+      {
+        label: this.translate.instant('shell.nav.orders') || 'Orders',
+        icon: 'assignment',
+        route: '/admin/orders',
+        roles: ['admin'],
+        section: 'operations'
+      },
+      {
+        label: this.translate.instant('shell.nav.shipments') || 'Shipments',
+        icon: 'local_shipping',
+        route: '/admin/shipments',
+        roles: ['admin'],
+        section: 'operations'
+      },
+      {
+        label: this.translate.instant('shell.nav.returns') || 'Returns',
+        icon: 'assignment_return',
+        route: '/admin/returns',
+        roles: ['admin'],
+        section: 'operations'
+      },
+      {
+        label: this.translate.instant('shell.nav.payments') || 'Payments',
+        icon: 'credit_card',
+        route: '/admin/transactions',
+        roles: ['admin'],
+        section: 'operations'
+      },
+      {
+        label: this.translate.instant('shell.nav.reports') || 'Reports',
+        icon: 'insights',
+        route: '/admin/reports',
+        roles: ['admin'],
+        section: 'intelligence'
+      },
+      {
+        label: this.translate.instant('shell.nav.auditLogs') || 'Audit Logs',
+        icon: 'fact_check',
+        route: '/admin/audit-logs',
+        roles: ['admin'],
+        section: 'governance'
+      },
+      {
+        label: this.translate.instant('shell.nav.usersPermissions') || 'Users & Permissions',
+        icon: 'shield_person',
+        route: '/admin/users',
+        roles: ['admin'],
+        section: 'governance'
+      }
     ];
 
     this.navItems = items;
@@ -211,19 +261,65 @@ export class LayoutWrapperComponent implements OnInit {
     return breadcrumbs;
   }
 
-  private applySearchState(state: ContextSearchState): void {
-    this.searchModuleLabel = state.moduleLabel;
-    this.searchPlaceholder = state.placeholder;
-    this.searchHint = state.hint;
-    this.searchIcon = state.icon;
-    this.searchEnabled = state.enabled;
-    this.searchNavigateTo = state.navigateTo;
-    this.searchQueryParam = state.queryParam;
-    this.searchQueryExtras = state.queryExtras;
-
-    const preset = state.presetValue ?? '';
-    if (preset !== (this.searchControl.value ?? '')) {
-      this.searchControl.setValue(preset, { emitEvent: false });
+  private updateSearchPlaceholder(): void {
+    const routeWithData = this.findDeepestRoute(this.activatedRoute);
+    const explicitPlaceholder = routeWithData.snapshot.data?.['searchPlaceholder'];
+    if (typeof explicitPlaceholder === 'string' && explicitPlaceholder.trim().length > 0) {
+      this.searchPlaceholder = explicitPlaceholder;
+      return;
     }
+
+    const lastCrumb = this.breadcrumbs[this.breadcrumbs.length - 1];
+    if (lastCrumb?.label) {
+      this.searchPlaceholder = `Search ${lastCrumb.label.toLowerCase()}…`;
+      return;
+    }
+
+    this.searchPlaceholder = 'Search the admin console…';
+  }
+
+  private findDeepestRoute(route: ActivatedRoute): ActivatedRoute {
+    let current = route;
+    while (current.firstChild) {
+      current = current.firstChild;
+    }
+    return current;
+  }
+
+  private resolveSearchTarget(): string {
+    const explicit = this.findDeepestRoute(this.activatedRoute).snapshot.data?.['searchRoute'];
+    if (typeof explicit === 'string' && explicit.trim().length > 0) {
+      return explicit;
+    }
+
+    const url = this.router.url;
+    if (url.startsWith('/admin/orders')) {
+      return '/admin/orders';
+    }
+    if (url.startsWith('/admin/transactions') || url.startsWith('/admin/payments')) {
+      return '/admin/transactions';
+    }
+    if (url.startsWith('/admin/returns')) {
+      return '/admin/returns';
+    }
+    if (url.startsWith('/admin/shipments')) {
+      return '/admin/shipments';
+    }
+    if (url.startsWith('/admin/inventory')) {
+      return '/admin/inventory';
+    }
+    if (url.startsWith('/admin/categories')) {
+      return '/admin/categories';
+    }
+    if (url.startsWith('/admin/users') || url.startsWith('/admin/permissions')) {
+      return '/admin/users';
+    }
+    if (url.startsWith('/admin/reports')) {
+      return '/admin/reports';
+    }
+    if (url.startsWith('/admin/audit-logs')) {
+      return '/admin/audit-logs';
+    }
+    return '/admin/products';
   }
 }
