@@ -1,194 +1,455 @@
+// ========================================
+// Enterprise Topbar Styles
+// ========================================
+
 .topbar {
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
+  display: flex;
   align-items: center;
-  gap: 24px;
-  padding: 20px 32px;
-  background: linear-gradient(135deg, rgba(7, 11, 22, 0.92), rgba(7, 11, 22, 0.78));
-  backdrop-filter: blur(26px);
+  height: var(--topbar-height);
+  padding: 0 var(--app-spacing-lg);
+  background: var(--app-panel);
+  backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--app-border);
-  box-shadow: 0 18px 36px rgba(5, 12, 26, 0.35);
+  box-shadow: var(--app-shadow-sm);
   color: var(--app-text);
+  position: relative;
+  z-index: 1100;
 }
 
-.theme-light .topbar {
-  background: rgba(248, 250, 255, 0.9);
-  color: #0f172a;
-  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.1);
-}
+// ========================================
+// Left section (mobile menu + brand)
+// ========================================
 
 .topbar__left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--app-spacing-md);
 }
 
-.topbar__menu {
-  border-radius: 14px;
-  background: rgba(15, 23, 42, 0.55);
-  color: var(--app-text);
-}
+.topbar__menu-btn {
+  border-radius: var(--app-radius-md) !important;
+  background: var(--app-surface) !important;
+  color: var(--app-text) !important;
+  border: 1px solid var(--app-border) !important;
+  transition: all 200ms ease !important;
 
-.theme-light .topbar__menu {
-  background: rgba(255, 255, 255, 0.85);
-  color: inherit;
+  &:hover {
+    background: var(--app-surface-raised) !important;
+    border-color: var(--app-border-strong) !important;
+  }
 }
 
 .topbar__brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--app-spacing-sm);
 }
 
 .topbar__logo {
-  width: 42px;
-  height: 42px;
-  border-radius: 14px;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--app-radius-md);
   background: linear-gradient(135deg, var(--app-primary), var(--app-accent));
-  display: grid;
-  place-items: center;
-  color: #f8fafc;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: var(--app-shadow-md);
+
+  mat-icon {
+    font-size: 20px !important;
+  }
 }
 
 .topbar__brand-text {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 2px;
 }
 
 .topbar__brand-name {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 16px;
+  color: var(--app-text);
+  white-space: nowrap;
 }
 
-.topbar__brand-sub {
-  font-size: 12px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--app-text-muted);
+// ========================================
+// Center section (search)
+// ========================================
+
+.topbar__center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .topbar__search {
-  max-width: 520px;
   width: 100%;
+  max-width: 480px;
+
+  &-field {
+    width: 100%;
+
+    .mat-mdc-form-field-wrapper {
+      background: var(--app-surface);
+      border-radius: var(--app-radius-lg);
+      border: 1px solid var(--app-border);
+      transition: all 200ms ease;
+
+      &:hover {
+        border-color: var(--app-border-strong);
+      }
+    }
+
+    .mat-mdc-form-field-focus-overlay {
+      border-radius: var(--app-radius-lg);
+    }
+
+    .mdc-notched-outline {
+      border: none;
+    }
+
+    .mat-mdc-form-field-infix {
+      padding: 12px 16px;
+      min-height: 44px;
+    }
+
+    .mat-mdc-input-element {
+      font-size: 14px;
+      color: var(--app-text);
+
+      &::placeholder {
+        color: var(--app-text-muted);
+        opacity: 1;
+      }
+    }
+
+    .mat-icon {
+      color: var(--app-text-muted);
+      font-size: 18px !important;
+    }
+  }
+
+  &-submit {
+    background: var(--app-primary) !important;
+    color: white !important;
+    border-radius: var(--app-radius-sm) !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+
+    mat-icon {
+      font-size: 16px !important;
+    }
+
+    &:hover {
+      background: var(--app-primary-strong) !important;
+    }
+  }
 }
 
-.topbar__search .mat-mdc-form-field {
-  width: 100%;
-  background: rgba(15, 23, 42, 0.6);
-  border-radius: 14px;
-}
-
-.theme-light .topbar__search .mat-mdc-form-field {
-  background: rgba(255, 255, 255, 0.92);
-}
+// ========================================
+// Right section (actions + profile)
+// ========================================
 
 .topbar__actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--app-spacing-sm);
 }
 
 .topbar__refresh {
-  width: 28px !important;
-  height: 28px !important;
-}
-
-.topbar__action {
-  border-radius: 14px !important;
-  transition: background 160ms ease, color 160ms ease;
-}
-
-.topbar__action:hover,
-.topbar__action:focus-visible {
-  background: rgba(56, 189, 248, 0.16);
-}
-
-.topbar__profile {
   display: flex;
   align-items: center;
-  gap: 12px;
-  border-radius: 999px !important;
-  padding: 4px 12px !important;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+
+  mat-progress-spinner {
+    width: 24px !important;
+    height: 24px !important;
+  }
+}
+
+.topbar__action-btn {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: var(--app-radius-md) !important;
+  background: var(--app-surface) !important;
+  color: var(--app-text-muted) !important;
+  border: 1px solid var(--app-border) !important;
+  transition: all 200ms ease !important;
+
+  &:hover {
+    background: var(--app-surface-raised) !important;
+    color: var(--app-text) !important;
+    border-color: var(--app-border-strong) !important;
+  }
+
+  mat-icon {
+    font-size: 20px !important;
+  }
+}
+
+.topbar__notifications {
+  position: relative;
+
+  .topbar__notification-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: var(--app-error);
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--app-panel);
+  }
+}
+
+.topbar__profile-btn {
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--app-spacing-sm) !important;
+  padding: 6px 12px !important;
+  border-radius: var(--app-radius-lg) !important;
+  background: var(--app-surface) !important;
+  color: var(--app-text) !important;
+  border: 1px solid var(--app-border) !important;
   text-transform: none !important;
+  transition: all 200ms ease !important;
+  min-height: 44px !important;
+
+  &:hover {
+    background: var(--app-surface-raised) !important;
+    border-color: var(--app-border-strong) !important;
+  }
+}
+
+.topbar__profile-content {
+  display: flex;
+  align-items: center;
+  gap: var(--app-spacing-sm);
 }
 
 .topbar__avatar {
-  width: 38px;
-  height: 38px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--app-primary), var(--app-accent));
-  color: #f8fafc;
-  display: grid;
-  place-items: center;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  overflow: hidden;
-}
-
-.topbar__avatar--image {
-  background-size: cover;
-  background-position: center;
-  color: transparent;
-}
-
-.topbar__identity {
-  display: grid;
-  line-height: 1.2;
-}
-
-.topbar__identity strong {
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.topbar__identity small {
   font-size: 12px;
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: var(--app-shadow-sm);
+
+  &--image {
+    background-size: cover;
+    background-position: center;
+    color: transparent;
+  }
+
+  mat-icon {
+    font-size: 16px !important;
+  }
+}
+
+.topbar__profile-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  min-width: 0;
+}
+
+.topbar__profile-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--app-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar__profile-email {
+  font-size: 11px;
   color: var(--app-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-@media (max-width: 1199px) {
-  .topbar {
-    padding: 16px 24px;
-    gap: 16px;
-    grid-template-columns: auto 1fr auto;
-  }
-}
+.topbar__profile-arrow {
+  font-size: 18px !important;
+  color: var(--app-text-muted);
+  transition: transform 200ms ease;
 
-@media (max-width: 959px) {
-  .topbar {
-    grid-template-columns: auto 1fr;
-    grid-auto-flow: row;
-    align-items: start;
-  }
-
-  .topbar__actions {
-    order: 3;
+  .topbar__profile-btn:hover & {
+    transform: rotate(180deg);
   }
 }
 
-@media (max-width: 599px) {
+// ========================================
+// Enhanced profile menu
+// ========================================
+
+.topbar__profile-menu {
+  .mat-mdc-menu-content {
+    padding: var(--app-spacing-sm) !important;
+  }
+}
+
+.topbar__profile-header {
+  padding: var(--app-spacing-md) !important;
+  cursor: default !important;
+  pointer-events: none !important;
+
+  &:hover {
+    background: transparent !important;
+  }
+}
+
+.topbar__profile-info {
+  display: flex;
+  align-items: center;
+  gap: var(--app-spacing-md);
+}
+
+.topbar__profile-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--app-primary), var(--app-accent));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 16px;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: var(--app-shadow-md);
+
+  &--image {
+    background-size: cover;
+    background-position: center;
+    color: transparent;
+  }
+}
+
+.topbar__profile-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+
+  strong {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--app-text);
+  }
+
+  small {
+    font-size: 12px;
+    color: var(--app-text-muted);
+  }
+}
+
+.topbar__profile-role {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--app-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+
+  mat-icon {
+    font-size: 12px !important;
+  }
+}
+
+.topbar__logout-btn {
+  color: var(--app-error) !important;
+
+  mat-icon {
+    color: var(--app-error) !important;
+  }
+}
+
+// ========================================
+// Responsive design
+// ========================================
+
+@media (max-width: 1024px) {
   .topbar {
-    padding: 14px 16px;
-    gap: 12px;
+    padding: 0 var(--app-spacing-md);
   }
 
-  .topbar__search {
-    order: 3;
-    width: 100%;
+  .topbar__center {
+    max-width: 400px;
   }
 
-  .topbar__actions {
-    width: 100%;
-    justify-content: flex-end;
+  .topbar__profile-text {
+    display: none;
   }
 
-  .topbar__profile {
+  .topbar__profile-btn {
+    padding: 8px !important;
+    min-width: 44px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .topbar {
+    padding: 0 var(--app-spacing-sm);
+  }
+
+  .topbar__center {
+    display: none; // Hide search on mobile, can be added to a slide-down panel
+  }
+
+  .topbar__left {
     flex: 1;
-    justify-content: flex-end;
+  }
+
+  .topbar__actions {
+    gap: var(--app-spacing-xs);
+  }
+
+  .topbar__action-btn {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .topbar__profile-btn {
+    padding: 6px !important;
+    min-width: 40px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar__actions {
+    .topbar__action-btn:not(.topbar__notifications) {
+      display: none; // Hide some action buttons on very small screens
+    }
+  }
+
+  .topbar__profile-avatar {
+    display: none; // Hide avatar in menu on very small screens
   }
 }

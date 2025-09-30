@@ -1,117 +1,173 @@
-<header class="topbar">
+<header class="topbar" role="banner">
+  <!-- Left Section: Mobile Menu & Branding -->
   <div class="topbar__left">
     <button
       mat-icon-button
       type="button"
-      class="topbar__menu"
+      class="topbar__menu-btn"
       *ngIf="isHandset"
       (click)="menuClick.emit()"
       [attr.aria-label]="'shell.topbar.menu.toggleNav' | translate"
       [matTooltip]="'shell.topbar.menu.toggleNav' | translate"
-      matTooltipPosition="below"
-    >
+      matTooltipPosition="below">
       <mat-icon>menu</mat-icon>
     </button>
-    <div class="topbar__brand">
-      <span class="topbar__logo">{{ 'shell.brandShort' | translate }}</span>
+
+    <!-- Company Brand (visible on mobile) -->
+    <div class="topbar__brand" *ngIf="isHandset">
+      <div class="topbar__logo">
+        <mat-icon>admin_panel_settings</mat-icon>
+      </div>
       <div class="topbar__brand-text">
-        <span class="topbar__brand-name">{{ 'shell.brand' | translate }}</span>
-        <span class="topbar__brand-sub">{{ 'shell.brandTagline' | translate }}</span>
+        <span class="topbar__brand-name">Admin Panel</span>
       </div>
     </div>
   </div>
 
-  <form class="topbar__search" (ngSubmit)="submit()" novalidate>
-    <mat-form-field appearance="outline">
-      <mat-label>{{ 'shell.topbar.search.label' | translate }}</mat-label>
-      <input
-        matInput
-        [formControl]="searchControl"
-        [placeholder]="'shell.topbar.search.placeholder' | translate"
-      />
-      <button
-        mat-icon-button
-        matSuffix
-        type="submit"
-        [attr.aria-label]="'shell.topbar.search.aria' | translate"
-      >
-        <mat-icon>search</mat-icon>
-      </button>
-    </mat-form-field>
-  </form>
+  <!-- Center Section: Contextual Search -->
+  <div class="topbar__center">
+    <form class="topbar__search" (ngSubmit)="submit()" novalidate>
+      <mat-form-field appearance="outline" class="topbar__search-field">
+        <mat-label>Search products, orders...</mat-label>
+        <input
+          matInput
+          [formControl]="searchControl"
+          placeholder="Type to search..."
+          autocomplete="off"
+        />
+        <mat-icon matPrefix>search</mat-icon>
+        <button
+          mat-icon-button
+          matSuffix
+          type="submit"
+          [attr.aria-label]="'Search'"
+          *ngIf="searchControl.value"
+          class="topbar__search-submit">
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+      </mat-form-field>
+    </form>
+  </div>
 
+  <!-- Right Section: Actions & Profile -->
   <div class="topbar__actions">
-    <mat-progress-spinner
-      *ngIf="refreshing"
-      class="topbar__refresh"
-      mode="indeterminate"
-      diameter="28"
-      strokeWidth="4"
-      color="accent"
-      aria-hidden="true"
-    ></mat-progress-spinner>
+    <!-- Loading Indicator -->
+    <div class="topbar__refresh" *ngIf="refreshing">
+      <mat-progress-spinner
+        mode="indeterminate"
+        diameter="24"
+        strokeWidth="3"
+        color="primary"
+        aria-label="Loading">
+      </mat-progress-spinner>
+    </div>
+
+    <!-- Theme Toggle -->
     <button
       mat-icon-button
       type="button"
-      class="topbar__action"
+      class="topbar__action-btn"
       (click)="toggleTheme.emit()"
-      [matTooltip]="(isDark ? 'shell.actions.setLight' : 'shell.actions.setDark') | translate"
-      [attr.aria-label]="(isDark ? 'shell.actions.setLight' : 'shell.actions.setDark') | translate"
-    >
+      [matTooltip]="(isDark ? 'Switch to light theme' : 'Switch to dark theme')"
+      [attr.aria-label]="(isDark ? 'Switch to light theme' : 'Switch to dark theme')">
       <mat-icon>{{ isDark ? 'light_mode' : 'dark_mode' }}</mat-icon>
     </button>
+
+    <!-- Notifications -->
     <button
       mat-icon-button
       type="button"
-      class="topbar__action"
-      [matTooltip]="'shell.topbar.notifications' | translate"
-      [attr.aria-label]="'shell.topbar.notifications' | translate"
-    >
+      class="topbar__action-btn topbar__notifications"
+      [matTooltip]="'Notifications'"
+      [attr.aria-label]="'Notifications'">
       <mat-icon>notifications</mat-icon>
+      <span class="topbar__notification-badge" aria-label="3 unread notifications">3</span>
     </button>
+
+    <!-- User Profile Menu -->
     <button
-      mat-button
+      mat-stroked-button
       type="button"
-      class="topbar__profile"
+      class="topbar__profile-btn"
       [matMenuTriggerFor]="profileMenu"
-      *ngIf="user; else anonymous"
-    >
-      <span
-        class="topbar__avatar"
-        [class.topbar__avatar--image]="!!user?.avatarUrl"
-        [style.background-image]="user?.avatarUrl ? 'url(' + user?.avatarUrl + ')' : ''"
-      >
-        <ng-container *ngIf="!user?.avatarUrl">{{ avatarInitials }}</ng-container>
-      </span>
-      <span class="topbar__identity">
-        <strong>{{ user?.name || ('shell.topbar.anonymous.name' | translate) }}</strong>
-        <small>{{ user?.email || ('shell.topbar.anonymous.email' | translate) }}</small>
-      </span>
-      <mat-icon>expand_more</mat-icon>
+      *ngIf="user; else anonymous">
+      <div class="topbar__profile-content">
+        <div
+          class="topbar__avatar"
+          [class.topbar__avatar--image]="!!user?.avatarUrl"
+          [style.background-image]="user?.avatarUrl ? 'url(' + user?.avatarUrl + ')' : ''">
+          <ng-container *ngIf="!user?.avatarUrl">{{ avatarInitials }}</ng-container>
+        </div>
+        <div class="topbar__profile-text" *ngIf="!isHandset">
+          <span class="topbar__profile-name">{{ user?.name || 'Anonymous' }}</span>
+          <small class="topbar__profile-email">{{ user?.email || 'No email' }}</small>
+        </div>
+        <mat-icon class="topbar__profile-arrow">expand_more</mat-icon>
+      </div>
     </button>
+
     <ng-template #anonymous>
-      <button mat-button type="button" class="topbar__profile" [matMenuTriggerFor]="profileMenu">
-        <span class="topbar__avatar">{{ 'shell.brandShort' | translate }}</span>
-        <span class="topbar__identity">
-          <strong>{{ 'shell.topbar.anonymous.name' | translate }}</strong>
-          <small>{{ 'shell.topbar.anonymous.email' | translate }}</small>
-        </span>
-        <mat-icon>expand_more</mat-icon>
+      <button
+        mat-stroked-button
+        type="button"
+        class="topbar__profile-btn"
+        [matMenuTriggerFor]="profileMenu">
+        <div class="topbar__profile-content">
+          <div class="topbar__avatar">
+            <mat-icon>person</mat-icon>
+          </div>
+          <div class="topbar__profile-text" *ngIf="!isHandset">
+            <span class="topbar__profile-name">Guest User</span>
+            <small class="topbar__profile-email">Not signed in</small>
+          </div>
+          <mat-icon class="topbar__profile-arrow">expand_more</mat-icon>
+        </div>
       </button>
     </ng-template>
-    <mat-menu #profileMenu="matMenu">
+
+    <!-- Enhanced Profile Menu -->
+    <mat-menu #profileMenu="matMenu" class="topbar__profile-menu">
+      <div class="topbar__profile-header" mat-menu-item disabled>
+        <div class="topbar__profile-info">
+          <div
+            class="topbar__profile-avatar"
+            [class.topbar__profile-avatar--image]="!!user?.avatarUrl"
+            [style.background-image]="user?.avatarUrl ? 'url(' + user?.avatarUrl + ')' : ''">
+            <ng-container *ngIf="!user?.avatarUrl">{{ avatarInitials }}</ng-container>
+          </div>
+          <div class="topbar__profile-details">
+            <strong>{{ user?.name || 'Guest User' }}</strong>
+            <small>{{ user?.email || 'Not signed in' }}</small>
+            <div class="topbar__profile-role">
+              <mat-icon>admin_panel_settings</mat-icon>
+              <span>Administrator</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
       <button mat-menu-item routerLink="/profile">
         <mat-icon>account_circle</mat-icon>
-        <span>{{ 'shell.topbar.menu.profile' | translate }}</span>
+        <span>My Profile</span>
       </button>
+
       <button mat-menu-item routerLink="/admin/settings">
-        <mat-icon>tune</mat-icon>
-        <span>{{ 'shell.topbar.menu.settings' | translate }}</span>
+        <mat-icon>settings</mat-icon>
+        <span>Settings</span>
       </button>
+
+      <button mat-menu-item>
+        <mat-icon>help_outline</mat-icon>
+        <span>Help & Support</span>
+      </button>
+
       <mat-divider></mat-divider>
-      <button mat-menu-item type="button" (click)="logout.emit()">
+
+      <button mat-menu-item type="button" (click)="logout.emit()" class="topbar__logout-btn">
         <mat-icon>logout</mat-icon>
-        <span>{{ 'shell.topbar.menu.logout' | translate }}</span>
+        <span>Sign Out</span>
       </button>
     </mat-menu>
   </div>

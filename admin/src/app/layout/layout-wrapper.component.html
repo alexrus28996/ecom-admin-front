@@ -1,5 +1,11 @@
-<div class="layout-wrapper" [class.layout-wrapper--collapsed]="navCollapsed">
+<div class="layout-wrapper"
+     [class.layout-wrapper--collapsed]="navCollapsed"
+     [class.layout-wrapper--mobile-nav-open]="mobileNavOpen"
+     [class.layout-wrapper--handset]="(isHandset$ | async) ?? false">
+
+  <!-- Enterprise Sidebar -->
   <app-sidebar
+    class="layout-wrapper__sidebar"
     [items]="visibleNav$ | async"
     [collapsed]="navCollapsed"
     [mobileOpen]="mobileNavOpen"
@@ -8,8 +14,11 @@
     (closeMobile)="closeMobileNav()"
   ></app-sidebar>
 
+  <!-- Main Content Area -->
   <div class="layout-wrapper__main">
+    <!-- Enhanced Top Navigation -->
     <app-topbar
+      class="layout-wrapper__topbar"
       [isDark]="isDark"
       [isHandset]="(isHandset$ | async) ?? false"
       [user]="auth.user$ | async"
@@ -21,12 +30,14 @@
       (search)="submitSearch($event)"
     ></app-topbar>
 
+    <!-- Auto-generated Breadcrumb Navigation -->
     <app-breadcrumb
       *ngIf="breadcrumbs.length > 0"
       class="layout-wrapper__breadcrumbs"
       [items]="breadcrumbs"
     ></app-breadcrumb>
 
+    <!-- Page Content with Proper Scrolling -->
     <main class="layout-wrapper__content">
       <div class="layout-wrapper__surface">
         <router-outlet></router-outlet>
@@ -34,5 +45,11 @@
     </main>
   </div>
 
-  <div class="layout-wrapper__backdrop" *ngIf="mobileNavOpen" (click)="closeMobileNav()"></div>
+  <!-- Mobile Navigation Backdrop -->
+  <div
+    class="layout-wrapper__backdrop"
+    *ngIf="mobileNavOpen"
+    (click)="closeMobileNav()"
+    aria-hidden="true">
+  </div>
 </div>

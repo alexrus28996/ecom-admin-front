@@ -25,5 +25,17 @@ export class SidebarComponent {
       this.closeMobile.emit();
     }
   }
+
+  getMainItems(): LayoutNavItem[] {
+    const mainRoutes = ['/dashboard', '/orders', '/cart', '/addresses', '/profile'];
+    return (this.items || []).filter(item => mainRoutes.includes(item.route));
+  }
+
+  getAdminItems(): LayoutNavItem[] {
+    const adminRoutes = ['/admin'];
+    return (this.items || []).filter(item =>
+      item.route.startsWith('/admin') && !adminRoutes.includes(item.route)
+    );
+  }
 }
 
