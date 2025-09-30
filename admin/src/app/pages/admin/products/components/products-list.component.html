@@ -1,0 +1,197 @@
+<section class="products-list" *ngIf="!loading || products.length; else loadingState">
+  <header class="products-list__header">
+    <div class="products-list__title">
+      <h1>Products</h1>
+      <p class="products-list__subtitle">Manage your catalog, pricing, and availability.</p>
+    </div>
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="createProduct()"
+      [disabled]="!permissionsState.create"
+      matTooltip="Missing permission: product:create"
+      matTooltipDisabled="permissionsState.create"
+      aria-label="Create new product"
+    >
+      <mat-icon>add</mat-icon>
+      New Product
+    </button>
+  </header>
+
+  <form class="products-list__filters" [formGroup]="filtersForm" aria-label="Product filters">
+    <mat-form-field appearance="outline">
+      <mat-label>Search</mat-label>
+      <input matInput formControlName="q" placeholder="Search products" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Category</mat-label>
+      <mat-select formControlName="category" aria-label="Filter by category">
+        <mat-option value="">All</mat-option>
+        <mat-option *ngFor="let category of categories" [value]="category.id">{{ category.name }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Status</mat-label>
+      <mat-select formControlName="status" aria-label="Filter by status">
+        <mat-option value="">All</mat-option>
+        <mat-option value="active">Active</mat-option>
+        <mat-option value="inactive">Inactive</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Min price</mat-label>
+      <input matInput formControlName="priceMin" type="number" min="0" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Max price</mat-label>
+      <input matInput formControlName="priceMax" type="number" min="0" />
+    </mat-form-field>
+
+    <button mat-stroked-button type="button" (click)="refresh()">Reset</button>
+  </form>
+
+  <section class="products-list__bulk" *ngIf="hasSelection()">
+    <span>{{ selection.selected.length }} selected</span>
+    <span class="spacer"></span>
+    <button mat-button (click)="bulkCategoryAssign(categories[0]?.id)" [disabled]="!categories.length">Assign Category</button>
+    <button mat-button (click)="bulkPriceUpdate(10)">Increase Price 10%</button>
+    <button mat-button (click)="exportCsv()">Export CSV</button>
+  </section>
+
+  <div class="products-list__table" role="region" aria-live="polite">
+    <table mat-table [dataSource]="products" class="mat-elevation-z1" matSort>
+      <ng-container matColumnDef="select">
+        <th mat-header-cell *matHeaderCellDef>
+          <mat-checkbox
+            [checked]="selection.selected.length === products.length && products.length > 0"
+            [indeterminate]="selection.selected.length && selection.selected.length < products.length"
+            (change)="toggleAll($event.checked)"
+            aria-label="Select all products"
+          ></mat-checkbox>
+        </th>
+        <td mat-cell *matCellDef="let product">
+          <mat-checkbox
+            (click)="$event.stopPropagation()"
+            (change)="toggle(product)"
+            [checked]="selection.isSelected(product)"
+            aria-label="Select product {{ product.name }}"
+          ></mat-checkbox>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="image">
+        <th mat-header-cell *matHeaderCellDef>Image</th>
+        <td mat-cell *matCellDef="let product">
+          <img
+            *ngIf="product.images?.length; else noImage"
+            [src]="product.images[0]?.url"
+            [alt]="product.images[0]?.alt || product.name"
+            class="products-list__thumbnail"
+          />
+          <ng-template #noImage>
+            <div class="products-list__thumbnail products-list__thumbnail--placeholder" aria-hidden="true">
+              <mat-icon>image_not_supported</mat-icon>
+            </div>
+          </ng-template>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Name</th>
+        <td mat-cell *matCellDef="let product">
+          <div class="products-list__name">{{ product.name }}</div>
+          <div class="products-list__slug">/{{ product.slug }}</div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="sku">
+        <th mat-header-cell *matHeaderCellDef>SKU</th>
+        <td mat-cell *matCellDef="let product">{{ product.sku || '—' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="category">
+        <th mat-header-cell *matHeaderCellDef>Category</th>
+        <td mat-cell *matCellDef="let product">{{ product.category || '—' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="brand">
+        <th mat-header-cell *matHeaderCellDef>Brand</th>
+        <td mat-cell *matCellDef="let product">{{ product.brand || '—' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="price">
+        <th mat-header-cell *matHeaderCellDef>Price</th>
+        <td mat-cell *matCellDef="let product">
+          <span class="products-list__price">{{ product.price | currency:product.currency }}</span>
+          <span class="products-list__compare" *ngIf="product.compareAtPrice">
+            {{ product.compareAtPrice | currency:product.currency }}
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let product">
+          <mat-chip color="primary" [disabled]="true" *ngIf="product.isActive !== false" class="chip-active">Active</mat-chip>
+          <mat-chip color="warn" [disabled]="true" *ngIf="product.isActive === false" class="chip-inactive">Inactive</mat-chip>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="updatedAt">
+        <th mat-header-cell *matHeaderCellDef>Updated</th>
+        <td mat-cell *matCellDef="let product">{{ product.updatedAt | date:'medium' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef class="products-list__actions-header">Actions</th>
+        <td mat-cell *matCellDef="let product" class="products-list__actions">
+          <button mat-icon-button (click)="viewProduct(product)" aria-label="View product">
+            <mat-icon>visibility</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            (click)="editProduct(product)"
+            [disabled]="!permissionsState.edit"
+            [matTooltip]="permissionsState.edit ? 'Edit' : 'Missing permission: product:edit'"
+            aria-label="Edit product"
+          >
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            color="warn"
+            (click)="deleteProduct(product)"
+            [disabled]="!permissionsState.delete"
+            [matTooltip]="permissionsState.delete ? 'Delete' : 'Missing permission: product:delete'"
+            aria-label="Delete product"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+  </div>
+
+  <mat-paginator
+    [length]="total"
+    [pageSize]="limit"
+    [pageIndex]="page - 1"
+    [pageSizeOptions]="[10, 20, 50]"
+    (page)="onPageChange($event.pageIndex, $event.pageSize)"
+    aria-label="Products pagination"
+  ></mat-paginator>
+</section>
+
+<ng-template #loadingState>
+  <div class="products-list__loading" aria-live="polite">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading products…</p>
+  </div>
+</ng-template>

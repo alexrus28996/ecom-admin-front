@@ -1,0 +1,25 @@
+<div class="image-uploader" cdkDropList (cdkDropListDropped)="onDrop($event)">
+  <div class="image-uploader__dropzone" *ngIf="editable">
+    <input type="file" accept="image/*" (change)="onFileSelected($event)" aria-label="Upload product image" />
+    <mat-icon>cloud_upload</mat-icon>
+    <span>Drag & drop or click to upload</span>
+  </div>
+
+  <div class="image-uploader__list">
+    <div class="image-uploader__item" *ngFor="let image of images; index as i" cdkDrag>
+      <img [src]="image.url" [alt]="image.alt || 'Product image'" />
+      <mat-form-field appearance="outline">
+        <mat-label>Alt text</mat-label>
+        <input matInput [value]="image.alt" (input)="updateAlt(i, $any($event.target).value)" [readonly]="!editable" />
+      </mat-form-field>
+      <button mat-icon-button color="warn" (click)="remove(i)" [disabled]="!editable" aria-label="Remove image">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="image-uploader__progress" *ngIf="uploading" aria-live="assertive">
+  <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  <span>Uploading image…</span>
+</div>

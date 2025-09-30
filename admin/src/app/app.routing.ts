@@ -2,8 +2,6 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { LoginComponent } from './pages/login/login.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
-import { ProductsListComponent } from './pages/products/products-list.component';
-import { ProductFormComponent } from './pages/products/product-form.component';
 import { AdminUsersComponent } from './pages/admin/admin-users.component';
 import { AdminUsersListComponent } from './pages/admin/users-list.component';
 import { AdminUserDetailComponent } from './pages/admin/user-detail.component';
@@ -64,21 +62,7 @@ const routes: Routes = [
       },
       {
         path: 'admin/products',
-        component: ProductsListComponent,
-        canActivate: [RoleGuard, PermissionGuard],
-        data: { roles: ['admin'], permissions: ['product:read'], breadcrumb: 'products' }
-      },
-      {
-        path: 'admin/products/new',
-        component: ProductFormComponent,
-        canActivate: [RoleGuard, PermissionGuard],
-        data: { roles: ['admin'], permissions: ['product:create'], breadcrumb: 'createProduct' }
-      },
-      {
-        path: 'admin/products/:id/edit',
-        component: ProductFormComponent,
-        canActivate: [RoleGuard, PermissionGuard],
-        data: { roles: ['admin'], permissions: ['product:update'], breadcrumb: 'editProduct' }
+        loadChildren: () => import('./pages/admin/products/products.module').then((m) => m.ProductsModule)
       },
       {
         path: 'admin/users',
