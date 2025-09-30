@@ -11,13 +11,51 @@ export class AdminService {
   constructor(private http: HttpClient) {}
 
   getMetrics(): Observable<MetricSummary> {
-    return this.http.get<{ metrics: MetricSummary }>(`${this.base}/metrics`).pipe(
-      map(response => response.metrics || response as any)
-    );
+    return this.http.get<unknown>(`${this.base}/metrics`).pipe(map((response) => this.normalizeMetrics(response)));
   }
 
   getHealth(): Observable<HealthStatus> {
     return this.http.get<HealthStatus>(`${environment.apiBaseUrl.replace(/\/api$/, '')}/health`);
+  }
+
+  private normalizeMetrics(response: unknown): MetricSummary {
+    const payload: any = (response as any)?.metrics ?? (response as any)?.data ?? response ?? {};
+
+    const usersTotal = Number(payload.usersTotal ?? payload.users?.total ?? 0);
+    const usersActive = Number(payload.usersActive ?? payload.users?.active ?? 0);
+    const adminsCount = Number(payload.adminsCount ?? payload.users?.admins ?? 0);
+    const productsTotal = Number(payload.productsCount ?? payload.products?.total ?? 0);
+    const ordersTotal = Number(payload.ordersTotal ?? payload.orders?.total ?? 0);
+    const ordersByStatus = payload.ordersByStatus ?? payload.orders?.byStatus ?? {};
+    const revenueSeries = payload.revenueLast7Days ?? payload.revenue?.last7Days ?? [];
+    const normalizedOrdersByStatus =
+      ordersByStatus && typeof ordersByStatus === 'object'
+        ? Object.entries(ordersByStatus).reduce<Record<string, number>>((acc, [status, value]) => {
+            acc[status] = Number(value ?? 0);
+            return acc;
+          }, {})
+        : {};
+
+    return {
+      users: {
+        total: usersTotal,
+        active: usersActive,
+        admins: adminsCount
+      },
+      products: {
+        total: productsTotal
+      },
+      orders: {
+        total: ordersTotal,
+        byStatus: normalizedOrdersByStatus
+      },
+      revenueLast7Days: Array.isArray(revenueSeries)
+        ? revenueSeries.map((entry: any) => ({
+            date: String(entry?.date ?? entry?.day ?? entry?.period ?? ''),
+            total: Number(entry?.total ?? entry?.revenue ?? 0)
+          }))
+        : []
+    };
   }
 
   listOrders(params: {

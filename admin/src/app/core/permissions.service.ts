@@ -19,7 +19,7 @@ export class PermissionsService {
 
   constructor(private readonly auth: AuthService) {
     this.auth.authorization$.subscribe((state) => {
-      this.applyPermissions(state.permissions, state.roles.includes('admin'));
+      this.applyPermissions(state.permissions, state.roles.includes('admin'), state.loaded);
     });
   }
 
@@ -84,20 +84,22 @@ export class PermissionsService {
     );
   }
 
-  private applyPermissions(permissions: readonly string[], isAdmin: boolean): void {
+  private applyPermissions(permissions: readonly string[], isAdmin: boolean, loaded: boolean): void {
     const normalizedPermissions = Array.isArray(permissions) ? permissions : [];
     const hasWildcard = isAdmin || normalizedPermissions.includes('*');
     this.hasUniversalAccess = hasWildcard;
 
+    const isLoaded = loaded || hasWildcard || normalizedPermissions.length > 0;
+
     if (hasWildcard) {
       this.permissions$.next({});
-      this.loaded = true;
+      this.loaded = isLoaded;
       return;
     }
 
     const tree = this.normalizeFromArray(normalizedPermissions);
     this.permissions$.next(tree);
-    this.loaded = Object.keys(tree).length > 0;
+    this.loaded = isLoaded;
   }
 
   private normalizeFromArray(values: readonly string[]): PermissionTree {

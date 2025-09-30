@@ -23,9 +23,11 @@ export interface UserPreferences {
 }
 
 export interface LoginResponse {
-  token: string;
+  token?: string;
+  accessToken?: string;
   user: PublicUser;
   refreshToken?: string;
+  refresh_token?: string;
 }
 
 export interface PreferencesResponse {
@@ -159,12 +161,14 @@ export class AuthService {
       return;
     }
 
-    if (response.token) {
-      this.setAccessToken(response.token);
-      this.scheduleTokenRefresh(response.token);
+    const accessToken = response.token ?? response.accessToken;
+    if (accessToken) {
+      this.setAccessToken(accessToken);
+      this.scheduleTokenRefresh(accessToken);
     }
-    if (response.refreshToken) {
-      this.setRefreshToken(response.refreshToken);
+    const refreshToken = response.refreshToken ?? response.refresh_token;
+    if (refreshToken) {
+      this.setRefreshToken(refreshToken);
     }
     if (response.user) {
       this.setUser(response.user);
