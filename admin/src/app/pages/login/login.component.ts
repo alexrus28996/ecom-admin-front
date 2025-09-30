@@ -3,7 +3,6 @@ import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { AuthService } from '../../core/auth.service';
-import { PermissionsService } from '../../core/permissions.service';
 import { ToastService } from '../../core/toast.service';
 import { TranslateService } from '@ngx-translate/core';
 
@@ -26,7 +25,6 @@ export class LoginComponent {
     private fb: FormBuilder,
     private auth: AuthService,
     private router: Router,
-    private permissions: PermissionsService,
     private toast: ToastService,
     private translate: TranslateService
   ) {}
@@ -53,11 +51,11 @@ export class LoginComponent {
     this.auth
       .login(email.trim(), password)
       .pipe(finalize(() => (this.loading = false)))
-        .subscribe({
-          next: () => {
-            this.permissions.load().subscribe({ next: () => {}, error: () => {} });
-            this.router.navigate(['/dashboard']);
-          },
+      .subscribe({
+        next: () => {
+          console.debug('[LoginComponent] Login successful, navigating to dashboard');
+          this.router.navigate(['/dashboard']);
+        },
         error: (err) => {
           const code = err?.error?.error?.code;
           const message = err?.error?.error?.message;
@@ -66,6 +64,7 @@ export class LoginComponent {
           this.lastError = code || hasMessage ? err : { error: { error: { message: this.translate.instant('login.errors.generic') } } };
           const toastMessage = this.resolveErrorMessage(code, hasMessage ? message : null);
           this.toast.error(toastMessage);
+          console.warn('[LoginComponent] Login failed', { code, message: toastMessage, original: err });
         }
       });
   }

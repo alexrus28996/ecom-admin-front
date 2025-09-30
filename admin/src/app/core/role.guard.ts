@@ -17,41 +17,64 @@ export class RoleGuard implements CanActivate {
 
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean | UrlTree | Observable<boolean | UrlTree> {
     const requiredRoles = (route.data?.['roles'] as string[] | undefined) ?? ['admin'];
-    const accessDeniedMessage = this.i18n.instant('auth.errors.accessDenied');
 
-    if (!requiredRoles.length) {
-      return true;
-    }
-
-    if (this.auth.hasValidAccessToken() && this.auth.hasAnyRole(requiredRoles)) {
+    if (this.hasAccess(requiredRoles)) {
       return true;
     }
 
     if (!this.auth.hasRefreshToken) {
-      this.toast.error(accessDeniedMessage);
-      this.auth.logout();
+      return this.handleDenied(state.url, requiredRoles, true);
+    }
+
+    return this.auth.loadContext({ force: true }).pipe(
+      map(() => {
+        if (this.hasAccess(requiredRoles)) {
+          return true;
+        }
+        return this.handleDenied(state.url, requiredRoles, false);
+      }),
+      catchError(() => of(this.handleDenied(state.url, requiredRoles, true)))
+    );
+  }
+
+  private hasAccess(requiredRoles: readonly string[]): boolean {
+    if (!requiredRoles.length) {
+      return true;
+    }
+
+    const user = this.auth.currentUser;
+    if (!user) {
+      return false;
+    }
+
+    if (user.roles?.includes('admin')) {
+      console.debug('[RoleGuard] Admin bypass granted', { user, requiredRoles });
+      return true;
+    }
+
+    const allowed = requiredRoles.some((role) => user.roles?.includes(role));
+    if (allowed) {
+      return true;
+    }
+
+    return false;
+  }
+
+  private handleDenied(url: string, requiredRoles: readonly string[], redirectToLogin: boolean): UrlTree {
+    const messageKey = 'auth.errors.accessDenied';
+    const translated = this.i18n.instant(messageKey);
+    this.toast.error(translated !== messageKey ? translated : 'Access Denied');
+    console.warn('[RoleGuard] Access denied', {
+      user: this.auth.currentUser,
+      requiredRoles
+    });
+
+    if (redirectToLogin) {
       return this.router.createUrlTree(['/login'], {
-        queryParams: { redirectTo: state.url }
+        queryParams: { redirectTo: url }
       });
     }
 
-    return this.auth.refresh({ force: true }).pipe(
-      map((response) => {
-        if (response && this.auth.hasAnyRole(requiredRoles)) {
-          return true;
-        }
-        this.toast.error(accessDeniedMessage);
-        return this.router.parseUrl('/denied');
-      }),
-      catchError(() => {
-        this.toast.error(accessDeniedMessage);
-        this.auth.logout();
-        return of(
-          this.router.createUrlTree(['/login'], {
-            queryParams: { redirectTo: state.url }
-          })
-        );
-      })
-    );
+    return this.router.parseUrl('/denied');
   }
 }

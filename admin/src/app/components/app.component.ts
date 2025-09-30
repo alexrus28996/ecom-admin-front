@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 
 import { AuthService } from '../core/auth.service';
-import { PermissionsService } from '../core/permissions.service';
 
 @Component({
   selector: 'app-root',
@@ -13,8 +12,7 @@ import { PermissionsService } from '../core/permissions.service';
 export class AppComponent implements OnInit {
   constructor(
     private readonly auth: AuthService,
-    private readonly translate: TranslateService,
-    private readonly permissions: PermissionsService
+    private readonly translate: TranslateService
   ) {
     this.translate.addLangs(['en', 'fr']);
     this.translate.setDefaultLang('en');
@@ -26,21 +24,12 @@ export class AppComponent implements OnInit {
       return;
     }
 
-    this.auth.getCurrentUser().subscribe({
-      next: (user) => {
-        console.log('Current user loaded:', user);
+    this.auth.loadContext({ force: true }).subscribe({
+      next: (state) => {
+        console.debug('[AppComponent] Authorization context ready', state);
       },
       error: (err) => {
-        console.error('Error loading current user:', err);
-      }
-    });
-
-    this.permissions.load().subscribe({
-      next: (permissions) => {
-        console.log('Permissions loaded:', permissions);
-      },
-      error: (err) => {
-        console.error('Error loading permissions:', err);
+        console.error('[AppComponent] Failed to load authorization context', err);
       }
     });
 

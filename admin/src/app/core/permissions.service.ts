@@ -1,19 +1,12 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, of } from 'rxjs';
-import { catchError, distinctUntilChanged, finalize, map, shareReplay, tap } from 'rxjs/operators';
+import { distinctUntilChanged, finalize, map, shareReplay } from 'rxjs/operators';
 
-import { environment } from '../../environments/environment';
+import { AuthService } from './auth.service';
 
-type PermissionNode = boolean | PermissionTree;
-interface PermissionTree {
+export type PermissionNode = boolean | PermissionTree;
+export interface PermissionTree {
   [key: string]: PermissionNode;
-}
-
-interface PermissionsResponse {
-  permissions?: unknown;
-  data?: unknown;
-  [key: string]: unknown;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -22,8 +15,13 @@ export class PermissionsService {
   private inFlight$?: Observable<PermissionTree>;
   private loaded = false;
   private loading = false;
+  private hasUniversalAccess = false;
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(private readonly auth: AuthService) {
+    this.auth.authorization$.subscribe((state) => {
+      this.applyPermissions(state.permissions, state.roles.includes('admin'));
+    });
+  }
 
   get snapshot(): PermissionTree {
     return this.permissions$.value;
@@ -44,19 +42,10 @@ export class PermissionsService {
 
     this.loading = true;
 
-    const request$ = this.http
-      .get<PermissionsResponse>(`${environment.apiBaseUrl}/permissions/me`)
+    const request$ = this.auth
+      .loadContext({ force })
       .pipe(
-        map((response) => this.normalize(response)),
-        tap((tree) => {
-          this.permissions$.next(tree);
-          this.loaded = true;
-        }),
-        catchError(() => {
-          this.permissions$.next({});
-          this.loaded = false;
-          return of({} as PermissionTree);
-        }),
+        map(() => this.snapshot),
         finalize(() => {
           this.loading = false;
           this.inFlight$ = undefined;
@@ -70,6 +59,8 @@ export class PermissionsService {
 
   clear(): void {
     this.loaded = false;
+    this.loading = false;
+    this.hasUniversalAccess = false;
     this.permissions$.next({});
   }
 
@@ -78,68 +69,41 @@ export class PermissionsService {
       return fallback;
     }
 
+    if (this.hasUniversalAccess || this.auth.isAdmin) {
+      return true;
+    }
+
     const value = this.resolve(this.snapshot, permission);
     return value === undefined ? fallback : !!value;
   }
 
   can$(permission: string, fallback = false): Observable<boolean> {
-    return this.stream().pipe(
+    return this.auth.authorization$.pipe(
       map(() => this.can(permission, fallback)),
       distinctUntilChanged()
     );
   }
 
-  private normalize(raw: PermissionsResponse | unknown): PermissionTree {
-    if (!raw) {
-      return {};
+  private applyPermissions(permissions: readonly string[], isAdmin: boolean): void {
+    const normalizedPermissions = Array.isArray(permissions) ? permissions : [];
+    const hasWildcard = isAdmin || normalizedPermissions.includes('*');
+    this.hasUniversalAccess = hasWildcard;
+
+    if (hasWildcard) {
+      this.permissions$.next({});
+      this.loaded = true;
+      return;
     }
 
-    if (Array.isArray(raw)) {
-      return this.normalizeFromArray(raw as unknown[]);
-    }
-
-    if (typeof raw === 'object') {
-      const value = raw as PermissionsResponse;
-      if (value.permissions) {
-        return this.normalize(value.permissions);
-      }
-      if (value.data) {
-        return this.normalize(value.data);
-      }
-
-      const tree: PermissionTree = {};
-      Object.entries(value).forEach(([key, node]) => {
-        if (node === null || node === undefined) {
-          return;
-        }
-        if (typeof node === 'boolean') {
-          tree[key] = node;
-          return;
-        }
-        if (Array.isArray(node)) {
-          const nested = this.normalizeFromArray(node as unknown[]);
-          if (Object.keys(nested).length > 0) {
-            tree[key] = nested;
-          }
-          return;
-        }
-        if (typeof node === 'object') {
-          const normalizedChild = this.normalize(node);
-          if (Object.keys(normalizedChild).length > 0) {
-            tree[key] = normalizedChild;
-          }
-        }
-      });
-      return tree;
-    }
-
-    return {};
+    const tree = this.normalizeFromArray(normalizedPermissions);
+    this.permissions$.next(tree);
+    this.loaded = Object.keys(tree).length > 0;
   }
 
-  private normalizeFromArray(values: unknown[]): PermissionTree {
+  private normalizeFromArray(values: readonly string[]): PermissionTree {
     const tree: PermissionTree = {};
     values
-      .filter((value): value is string => typeof value === 'string')
+      .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
       .forEach((permission) => this.assign(tree, permission, true));
     return tree;
   }

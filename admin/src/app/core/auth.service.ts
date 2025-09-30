@@ -1,8 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
-import { tap, catchError, map, finalize, shareReplay } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of, throwError, forkJoin } from 'rxjs';
+import { catchError, finalize, map, shareReplay, switchMap, tap } from 'rxjs/operators';
+
 import { environment } from '../../environments/environment';
+import { AuthorizationStore, AuthorizationState } from './authorization.store';
 
 export interface PublicUser {
   _id?: string;
@@ -32,22 +34,23 @@ export interface PreferencesResponse {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private tokenKey = 'auth_token';
-  private refreshKey = 'refresh_token';
-  private userKey = 'auth_user';
-  private _user$ = new BehaviorSubject<PublicUser | null>(null);
-  user$ = this._user$.asObservable();
+  private readonly tokenKey = 'auth_token';
+  private readonly refreshKey = 'refresh_token';
+  private readonly userKey = 'auth_user';
+  readonly user$ = this.authorizationStore.user$;
+  readonly permissions$ = this.authorizationStore.permissions$;
+  readonly authorization$ = this.authorizationStore.state$;
   private accessToken: string | null = null;
   private refreshTokenValue: string | null = null;
   private refreshTimer: ReturnType<typeof setTimeout> | null = null;
   private refreshRequest$?: Observable<LoginResponse | null>;
+  private contextRequest$?: Observable<AuthorizationState>;
   private readonly refreshingSubject = new BehaviorSubject<boolean>(false);
   readonly refreshing$ = this.refreshingSubject.asObservable();
   private readonly refreshLeadTimeMs = 60_000;
   private readonly minRefreshIntervalMs = 5_000;
 
-  constructor(private http: HttpClient) {
-    // Try restore from storage
+  constructor(private readonly http: HttpClient, private readonly authorizationStore: AuthorizationStore) {
     const storedToken = localStorage.getItem(this.tokenKey);
     const storedRefresh = localStorage.getItem(this.refreshKey);
     const userRaw = localStorage.getItem(this.userKey);
@@ -57,9 +60,11 @@ export class AuthService {
 
     if (userRaw) {
       try {
-        this._user$.next(JSON.parse(userRaw));
-      } catch {
-        this._user$.next(null);
+        const parsed: PublicUser | null = JSON.parse(userRaw);
+        this.setUser(parsed);
+      } catch (error) {
+        console.warn('[AuthService] Unable to parse cached user, clearing session', error);
+        this.setUser(null);
       }
     }
 
@@ -68,13 +73,48 @@ export class AuthService {
     }
   }
 
-  get token(): string | null { return this.accessToken; }
-  get refreshToken(): string | null { return this.refreshTokenValue; }
-  get user(): PublicUser | null { return this._user$.value; }
-  get isLoggedIn(): boolean { return this.hasValidAccessToken(); }
-  get roles(): string[] { return this.user?.roles ?? []; }
-  get isAdmin(): boolean { return this.hasRole('admin'); }
-  get hasRefreshToken(): boolean { return !!this.refreshToken; }
+  get token(): string | null {
+    return this.accessToken;
+  }
+
+  get refreshToken(): string | null {
+    return this.refreshTokenValue;
+  }
+
+  get user(): PublicUser | null {
+    return this.authorizationStore.snapshot.user;
+  }
+
+  get currentUser(): (PublicUser & { permissions: string[] }) | null {
+    const state = this.authorizationStore.snapshot;
+    if (!state.user) {
+      return null;
+    }
+    return {
+      ...state.user,
+      permissions: [...state.permissions]
+    };
+  }
+
+  get isLoggedIn(): boolean {
+    return this.hasValidAccessToken();
+  }
+
+  get roles(): string[] {
+    return this.authorizationStore.snapshot.roles;
+  }
+
+  get permissions(): string[] {
+    return this.authorizationStore.snapshot.permissions;
+  }
+
+  get isAdmin(): boolean {
+    return this.hasRole('admin');
+  }
+
+  get hasRefreshToken(): boolean {
+    return !!this.refreshToken;
+  }
 
   hasRole(role: string): boolean {
     if (!role) {
@@ -104,11 +144,14 @@ export class AuthService {
   private setUser(user: PublicUser | null): void {
     if (user) {
       localStorage.setItem(this.userKey, JSON.stringify(user));
-      this._user$.next(user);
     } else {
       localStorage.removeItem(this.userKey);
-      this._user$.next(null);
     }
+
+    this.authorizationStore.patch({
+      user,
+      roles: user?.roles ? Array.from(new Set(user.roles)) : []
+    });
   }
 
   private persistSession(response: LoginResponse | null): void {
@@ -132,9 +175,11 @@ export class AuthService {
     this.cancelScheduledRefresh();
     this.refreshingSubject.next(false);
     this.refreshRequest$ = undefined;
+    this.contextRequest$ = undefined;
     this.setAccessToken(null);
     this.setRefreshToken(null);
-    this.setUser(null);
+    this.authorizationStore.reset();
+    localStorage.removeItem(this.userKey);
   }
 
   register(name: string, email: string, password: string): Observable<{ user: PublicUser }> {
@@ -143,7 +188,8 @@ export class AuthService {
 
   login(email: string, password: string): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${environment.apiBaseUrl}/auth/login`, { email, password }).pipe(
-      tap((res) => this.persistSession(res))
+      tap((res) => this.persistSession(res)),
+      switchMap((res) => this.loadContext({ force: true, fallbackUser: res?.user ?? null }).pipe(map(() => res)))
     );
   }
 
@@ -168,7 +214,9 @@ export class AuthService {
       .post<LoginResponse>(`${environment.apiBaseUrl}/auth/refresh`, { refreshToken: token })
       .pipe(
         tap((res) => this.persistSession(res)),
-        map((res) => res ?? null),
+        switchMap((res) =>
+          this.loadContext({ force: true, fallbackUser: res?.user ?? null, silent: true }).pipe(map(() => res ?? null))
+        ),
         catchError((error) => {
           this.clearSession();
           return throwError(() => error);
@@ -196,18 +244,13 @@ export class AuthService {
     this.clearSession();
   }
 
-  getCurrentUser(): Observable<PublicUser | null> {
-    return this.http.get<{ user: PublicUser }>(`${environment.apiBaseUrl}/auth/me`).pipe(
-      map(({ user }) => user),
-      tap((user) => this.setUser(user)),
-      catchError((err) => {
-        this.clearSession();
-        return of(null);
-      })
-    );
+  getCurrentUser(options: { force?: boolean } = {}): Observable<PublicUser | null> {
+    return this.loadContext({ force: options.force }).pipe(map((state) => state.user));
   }
 
-  updateProfile(data: Partial<Pick<PublicUser, 'name' | 'avatarUrl'>> & Record<string, unknown>): Observable<PublicUser> {
+  updateProfile(
+    data: Partial<Pick<PublicUser, 'name' | 'avatarUrl'>> & Record<string, unknown>
+  ): Observable<PublicUser> {
     return this.http.patch<{ user: PublicUser }>(`${environment.apiBaseUrl}/auth/profile`, data).pipe(
       map(({ user }) => user),
       tap((user) => this.setUser(user))
@@ -215,7 +258,10 @@ export class AuthService {
   }
 
   changePassword(currentPassword: string, newPassword: string): Observable<{ success: boolean }> {
-    return this.http.post<{ success: boolean }>(`${environment.apiBaseUrl}/auth/password/change`, { currentPassword, newPassword });
+    return this.http.post<{ success: boolean }>(`${environment.apiBaseUrl}/auth/password/change`, {
+      currentPassword,
+      newPassword
+    });
   }
 
   forgotPassword(email: string, baseUrl?: string): Observable<{ success: boolean }> {
@@ -258,6 +304,77 @@ export class AuthService {
     }
 
     return expiresAt - offsetMs > Date.now();
+  }
+
+  loadContext(options: { force?: boolean; fallbackUser?: PublicUser | null; silent?: boolean } = {}): Observable<AuthorizationState> {
+    const { force = false, fallbackUser = null, silent = false } = options;
+
+    if (!this.hasValidAccessToken()) {
+      if (!silent) {
+        console.warn('[AuthService] loadContext skipped – no valid access token present');
+      }
+      this.authorizationStore.reset();
+      return of(this.authorizationStore.snapshot);
+    }
+
+    if (this.contextRequest$ && !force) {
+      return this.contextRequest$;
+    }
+
+    this.authorizationStore.patch({ loading: true });
+    if (!silent) {
+      console.debug('[AuthService] Loading authorization context…');
+    }
+
+    const user$ = this.http
+      .get<{ user: PublicUser }>(`${environment.apiBaseUrl}/auth/me`)
+      .pipe(
+        map(({ user }) => user),
+        catchError((error) => {
+          console.error('[AuthService] Failed to load /auth/me', error);
+          return of(fallbackUser);
+        })
+      );
+
+    const permissions$ = this.http
+      .get<unknown>(`${environment.apiBaseUrl}/permissions/me`)
+      .pipe(
+        map((response) => this.extractPermissions(response)),
+        catchError((error) => {
+          console.error('[AuthService] Failed to load /permissions/me', error);
+          return of<string[]>([]);
+        })
+      );
+
+    const request$ = forkJoin({ user: user$, permissions: permissions$ }).pipe(
+      tap(({ user, permissions }) => {
+        const effectiveUser = user ?? fallbackUser ?? null;
+        this.setUser(effectiveUser);
+        const roles = this.authorizationStore.snapshot.roles;
+        const normalizedPermissions = roles.includes('admin') ? ['*'] : this.normalizePermissions(permissions);
+        this.authorizationStore.patch({
+          permissions: normalizedPermissions,
+          loaded: true,
+          loading: false,
+          lastSyncedAt: Date.now()
+        });
+        if (!silent) {
+          console.debug('[AuthService] Authorization context loaded', {
+            roles,
+            permissions: normalizedPermissions
+          });
+        }
+      }),
+      map(() => this.authorizationStore.snapshot),
+      finalize(() => {
+        this.authorizationStore.patch({ loading: false });
+        this.contextRequest$ = undefined;
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+
+    this.contextRequest$ = request$;
+    return request$;
   }
 
   private setAccessToken(token: string | null): void {
@@ -356,5 +473,30 @@ export class AuthService {
     }
 
     throw new Error('No base64 decoder available');
+  }
+
+  private normalizePermissions(raw: string[] | null | undefined): string[] {
+    if (!raw || raw.length === 0) {
+      return [];
+    }
+    const unique = Array.from(
+      new Set(raw.filter((permission) => typeof permission === 'string' && permission.trim().length > 0))
+    );
+    return unique.sort();
+  }
+
+  private extractPermissions(response: unknown): string[] {
+    if (!response || typeof response !== 'object') {
+      return [];
+    }
+
+    const value = response as { permissions?: unknown; data?: unknown };
+    const source = value.permissions ?? value.data;
+
+    if (Array.isArray(source)) {
+      return source.filter((item): item is string => typeof item === 'string');
+    }
+
+    return [];
   }
 }
