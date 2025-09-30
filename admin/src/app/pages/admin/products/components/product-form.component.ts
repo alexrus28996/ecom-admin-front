@@ -277,18 +277,31 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       payload.costPrice = raw.costPrice;
     }
 
+    const seo: NonNullable<ProductSavePayload['seo']> = {};
+    let hasSeo = false;
+
     const metaTitle = raw.metaTitle.trim();
     if (metaTitle) {
-      payload.metaTitle = metaTitle;
+      seo.metaTitle = metaTitle;
+      hasSeo = true;
     }
 
     const metaDescription = raw.metaDescription.trim();
     if (metaDescription) {
-      payload.metaDescription = metaDescription;
+      seo.metaDescription = metaDescription;
+      hasSeo = true;
+    }
+
+    if (raw.metaKeywords) {
+      seo.metaKeywords = metaKeywords;
+      hasSeo = true;
+    }
+
+    if (hasSeo) {
+      payload.seo = seo;
     }
 
     payload.tags = tags;
-    payload.metaKeywords = metaKeywords;
     payload.images = images;
 
     return payload;
