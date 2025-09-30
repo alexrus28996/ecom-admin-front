@@ -26,21 +26,30 @@
 
   <!-- Center Section: Contextual Search -->
   <div class="topbar__center">
-    <form class="topbar__search" (ngSubmit)="submit()" novalidate>
+    <form
+      class="topbar__search"
+      (ngSubmit)="submit()"
+      novalidate
+      *ngIf="searchEnabled; else searchDisabledTpl">
+      <div class="topbar__search-context" *ngIf="searchModule">
+        <mat-icon>{{ searchIcon }}</mat-icon>
+        <span>{{ searchModule }}</span>
+      </div>
       <mat-form-field appearance="outline" class="topbar__search-field">
-        <mat-label>Search products, orders...</mat-label>
+        <mat-label>{{ searchModule ? searchModule + ' search' : 'Global search' }}</mat-label>
         <input
           matInput
           [formControl]="searchControl"
-          placeholder="Type to search..."
+          [placeholder]="searchPlaceholder"
           autocomplete="off"
         />
-        <mat-icon matPrefix>search</mat-icon>
+        <mat-icon matPrefix>{{ searchIcon }}</mat-icon>
+        <mat-hint *ngIf="searchHint">{{ searchHint }}</mat-hint>
         <button
           mat-icon-button
           matSuffix
           type="submit"
-          [attr.aria-label]="'Search'"
+          [attr.aria-label]="searchPlaceholder"
           *ngIf="searchControl.value"
           class="topbar__search-submit">
           <mat-icon>arrow_forward</mat-icon>
@@ -48,6 +57,13 @@
       </mat-form-field>
     </form>
   </div>
+
+  <ng-template #searchDisabledTpl>
+    <div class="topbar__search topbar__search--disabled">
+      <mat-icon>search_off</mat-icon>
+      <span>Search unavailable for this view</span>
+    </div>
+  </ng-template>
 
   <!-- Right Section: Actions & Profile -->
   <div class="topbar__actions">

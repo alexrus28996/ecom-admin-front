@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnDe
 import { FormBuilder } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { PageEvent } from '@angular/material/paginator';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, combineLatest, takeUntil } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
 import { tap } from 'rxjs/operators';
@@ -13,6 +13,7 @@ import { AdminService } from '../../services/admin.service';
 import { ProductVariantsDialogComponent } from './product-variants-dialog.component';
 import { PermissionsService } from '../../core/permissions.service';
 import { environment } from '../../../environments/environment';
+import { ContextSearchService } from '../../core/context-search.service';
 
 interface CategoryOption {
   id: string;
@@ -79,6 +80,7 @@ export class ProductsListComponent implements OnInit, OnDestroy {
   private permissionsLoaded = false;
 
   private readonly destroy$ = new Subject<void>();
+  private routeReady = false;
 
   readonly productPermissions$ = combineLatest({
     create: this.permissions.can$('product:create'),
@@ -101,10 +103,17 @@ export class ProductsListComponent implements OnInit, OnDestroy {
     private readonly adminService: AdminService,
     private readonly cdr: ChangeDetectorRef,
     private readonly permissions: PermissionsService,
-    private readonly router: Router
+    private readonly route: ActivatedRoute,
+    private readonly router: Router,
+    private readonly contextSearch: ContextSearchService
   ) {}
 
   ngOnInit(): void {
+    this.configureContextualSearch();
+    this.translate.onLangChange
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.configureContextualSearch());
+
     this.permissions
       .load()
       .pipe(takeUntil(this.destroy$))
@@ -113,12 +122,16 @@ export class ProductsListComponent implements OnInit, OnDestroy {
         error: () => this.cdr.markForCheck()
       });
     this.loadCategories();
-    this.load();
+
+    this.route.queryParamMap
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((params) => this.applySearchFromRoute(params.get('q')));
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    this.contextSearch.reset();
   }
 
   onAddProduct(): void {
@@ -188,7 +201,19 @@ export class ProductsListComponent implements OnInit, OnDestroy {
 
   onSubmit(): void {
     this.pageIndex = 0;
-    this.load();
+    const q = (this.filterForm.value.q ?? '').toString().trim();
+    const previous = (this.route.snapshot.queryParamMap.get('q') ?? '').trim();
+
+    if (previous === q) {
+      this.load();
+      return;
+    }
+
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { q: q || null },
+      queryParamsHandling: 'merge'
+    });
   }
 
   onPageChange(event: PageEvent): void {
@@ -358,6 +383,53 @@ export class ProductsListComponent implements OnInit, OnDestroy {
 
   trackById(_: number, item: ProductSummary): string | undefined {
     return item._id;
+  }
+
+  private configureContextualSearch(): void {
+    const moduleLabel = this.translateOrFallback('products.title', 'Products');
+    const placeholder = this.translateOrFallback(
+      'products.filters.search.placeholder',
+      'Search products by name, SKU or ID…'
+    );
+    const hint = this.translateOrFallback(
+      'products.filters.search.hint',
+      'Use name, SKU or ID to locate catalog entries.'
+    );
+
+    this.contextSearch.configure({
+      moduleLabel,
+      placeholder,
+      hint,
+      navigateTo: '/admin/products',
+      queryParam: 'q',
+      icon: 'inventory_2'
+    });
+  }
+
+  private applySearchFromRoute(raw: string | null): void {
+    const value = (raw ?? '').trim();
+    const current = (this.filterForm.get('q')?.value ?? '').toString().trim();
+
+    if (value !== current) {
+      this.filterForm.patchValue({ q: value }, { emitEvent: false });
+    }
+
+    this.contextSearch.configure({ presetValue: value });
+
+    const firstEmission = !this.routeReady;
+    this.routeReady = true;
+
+    if (firstEmission || value !== current) {
+      if (!firstEmission) {
+        this.pageIndex = 0;
+      }
+      this.load();
+    }
+  }
+
+  private translateOrFallback(key: string, fallback: string): string {
+    const value = this.translate.instant(key);
+    return value && value !== key ? value : fallback;
   }
 
   private parsePrice(value: string | number | null | undefined): number | undefined {

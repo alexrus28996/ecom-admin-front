@@ -6,8 +6,8 @@
 $light-theme: mat.define-theme((
   color: (
     theme-type: light,
-    primary: mat.$violet-palette,
-    tertiary: mat.$orange-palette
+    primary: mat.$indigo-palette,
+    tertiary: mat.$deep-orange-palette
   ),
   typography: (
     brand-family: 'Inter, Roboto, "Helvetica Neue", Arial, sans-serif',
@@ -21,8 +21,8 @@ $light-theme: mat.define-theme((
 $dark-theme: mat.define-theme((
   color: (
     theme-type: dark,
-    primary: mat.$violet-palette,
-    tertiary: mat.$orange-palette
+    primary: mat.$indigo-palette,
+    tertiary: mat.$deep-orange-palette
   ),
   typography: (
     brand-family: 'Inter, Roboto, "Helvetica Neue", Arial, sans-serif',
@@ -51,8 +51,8 @@ $dark-theme: mat.define-theme((
   --app-text-muted: #64748b;
   --app-border: rgba(15, 23, 42, 0.08);
   --app-border-strong: rgba(15, 23, 42, 0.16);
-  --app-primary: #4f46e5;
-  --app-primary-strong: #4338ca;
+  --app-primary: #3f51b5;
+  --app-primary-strong: #2c3e93;
   --app-accent: #ff7043;
   --app-success: #10b981;
   --app-warning: #f59e0b;
@@ -102,8 +102,8 @@ $dark-theme: mat.define-theme((
   --app-text-muted: #94a3b8;
   --app-border: rgba(148, 163, 184, 0.15);
   --app-border-strong: rgba(148, 163, 184, 0.3);
-  --app-primary: #6366f1;
-  --app-primary-strong: #4f46e5;
+  --app-primary: #5c6bc0;
+  --app-primary-strong: #3f51b5;
   --app-accent: #ff8a65;
   --app-success: #34d399;
   --app-warning: #fbbf24;

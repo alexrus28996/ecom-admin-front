@@ -15,6 +15,11 @@ export class TopbarComponent {
   @Input() isHandset = false;
   @Input() user: PublicUser | null = null;
   @Input() refreshing = false;
+  @Input() searchPlaceholder = 'Search the workspace';
+  @Input() searchModule: string | null = null;
+  @Input() searchHint: string | null = null;
+  @Input() searchIcon = 'search';
+  @Input() searchEnabled = true;
 
   @Output() menuClick = new EventEmitter<void>();
   @Output() toggleTheme = new EventEmitter<void>();
@@ -30,6 +35,9 @@ export class TopbarComponent {
   }
 
   submit(): void {
+    if (!this.searchEnabled) {
+      return;
+    }
     const value = (this.searchControl?.value || '').toString().trim();
     if (!value) {
       return;

@@ -11,6 +11,7 @@ import { AuthService } from '../core/auth.service';
 import { ThemeService } from '../core/theme.service';
 import { LayoutNavItem, BreadcrumbItem } from './layout.models';
 import { PermissionsService } from '../core/permissions.service';
+import { ContextSearchService, ContextSearchState } from '../core/context-search.service';
 
 @Component({
   selector: 'app-layout-wrapper',
@@ -30,6 +31,14 @@ export class LayoutWrapperComponent implements OnInit {
   navCollapsed = false;
   mobileNavOpen = false;
   breadcrumbs: BreadcrumbItem[] = [];
+  searchModuleLabel: string | null = 'Global';
+  searchPlaceholder = 'Search products, orders, customers…';
+  searchHint: string | null = null;
+  searchIcon = 'search';
+  searchEnabled = true;
+  private searchNavigateTo: string | null = '/admin/products';
+  private searchQueryParam = 'q';
+  private searchQueryExtras: Record<string, string | number | boolean | null | undefined> | undefined;
 
   constructor(
     public readonly auth: AuthService,
@@ -38,6 +47,7 @@ export class LayoutWrapperComponent implements OnInit {
     private readonly theme: ThemeService,
     private readonly permissions: PermissionsService,
     private readonly translate: TranslateService,
+    private readonly contextSearch: ContextSearchService,
     breakpointObserver: BreakpointObserver
   ) {
     this.isHandset$ = breakpointObserver.observe([Breakpoints.Handset, Breakpoints.Tablet]).pipe(
@@ -52,6 +62,10 @@ export class LayoutWrapperComponent implements OnInit {
       map(([, items]) => items.filter((item) => this.auth.hasAnyRole(item.roles))),
       shareReplay({ bufferSize: 1, refCount: true })
     );
+
+    this.contextSearch.state$
+      .pipe(takeUntilDestroyed())
+      .subscribe((state) => this.applySearchState(state));
   }
 
   ngOnInit(): void {
@@ -106,6 +120,10 @@ export class LayoutWrapperComponent implements OnInit {
   }
 
   submitSearch(value?: string): void {
+    if (!this.searchEnabled || !this.searchNavigateTo) {
+      return;
+    }
+
     const raw = value ?? this.searchControl.value;
     const search = (raw || '').toString().trim();
 
@@ -113,7 +131,20 @@ export class LayoutWrapperComponent implements OnInit {
       return;
     }
 
-    this.router.navigate(['/admin/products'], { queryParams: { q: search } });
+    const queryParams: Record<string, string | number | boolean | null | undefined> = {
+      ...(this.searchQueryExtras ?? {})
+    };
+
+    if (this.searchQueryParam) {
+      queryParams[this.searchQueryParam] = search;
+    }
+
+    this.contextSearch.configure({ presetValue: search });
+
+    this.router.navigate([this.searchNavigateTo], {
+      queryParams,
+      queryParamsHandling: 'merge'
+    });
   }
 
   logout(): void {
@@ -178,5 +209,21 @@ export class LayoutWrapperComponent implements OnInit {
     }
 
     return breadcrumbs;
+  }
+
+  private applySearchState(state: ContextSearchState): void {
+    this.searchModuleLabel = state.moduleLabel;
+    this.searchPlaceholder = state.placeholder;
+    this.searchHint = state.hint;
+    this.searchIcon = state.icon;
+    this.searchEnabled = state.enabled;
+    this.searchNavigateTo = state.navigateTo;
+    this.searchQueryParam = state.queryParam;
+    this.searchQueryExtras = state.queryExtras;
+
+    const preset = state.presetValue ?? '';
+    if (preset !== (this.searchControl.value ?? '')) {
+      this.searchControl.setValue(preset, { emitEvent: false });
+    }
   }
 }
