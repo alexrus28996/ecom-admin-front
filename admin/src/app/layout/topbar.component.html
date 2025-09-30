@@ -37,20 +37,30 @@
     </div>
 
     <div class="topbar__section topbar__section--center">
-      <form class="topbar__search" (ngSubmit)="submit()" novalidate>
+      <form
+        class="topbar__search"
+        [class.topbar__search--disabled]="!searchEnabled"
+        (ngSubmit)="submit()"
+        novalidate>
+        <div class="topbar__search-meta" *ngIf="searchModule || searchHint">
+          <span class="topbar__search-module" *ngIf="searchModule">{{ searchModule }}</span>
+          <span class="topbar__search-hint" *ngIf="searchHint">{{ searchHint }}</span>
+        </div>
+
         <mat-form-field appearance="outline" class="topbar__search-field">
           <mat-label>{{ searchPlaceholder }}</mat-label>
-          <mat-icon matPrefix>search</mat-icon>
+          <mat-icon matPrefix>{{ searchIcon }}</mat-icon>
           <input
             matInput
             [formControl]="searchControl"
             [placeholder]="searchPlaceholder"
+            [disabled]="!searchEnabled"
             autocomplete="off" />
           <button
             mat-icon-button
             matSuffix
             type="submit"
-            [disabled]="!(searchControl?.value?.toString().trim())"
+            [disabled]="!searchEnabled || !(searchControl?.value?.toString().trim())"
             aria-label="Search">
             <mat-icon>arrow_forward</mat-icon>
           </button>

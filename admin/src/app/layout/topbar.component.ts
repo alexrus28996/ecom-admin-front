@@ -18,6 +18,10 @@ export class TopbarComponent {
   @Input() refreshing = false;
   @Input() breadcrumbs: BreadcrumbItem[] = [];
   @Input() searchPlaceholder = 'Search the admin console…';
+  @Input() searchModule: string | null = null;
+  @Input() searchHint: string | null = null;
+  @Input() searchIcon = 'search';
+  @Input() searchEnabled = true;
   @Input() navCollapsed = false;
 
   @Output() menuClick = new EventEmitter<void>();

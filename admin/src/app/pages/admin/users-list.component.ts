@@ -41,7 +41,7 @@ export class AdminUsersListComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.configureContextualSearch();
-    this.translate.onLangChange
+    this.i18n.onLangChange
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.configureContextualSearch());
 

@@ -32,6 +32,15 @@ export class LayoutWrapperComponent implements OnInit {
   mobileNavOpen = false;
   breadcrumbs: BreadcrumbItem[] = [];
   searchPlaceholder = 'Search the admin console…';
+  searchModuleLabel: string | null = 'Global';
+  searchHint: string | null = null;
+  searchIcon = 'search';
+  searchEnabled = true;
+
+  private searchNavigateTo: string | null = '/admin/products';
+  private searchQueryParam = 'q';
+  private searchQueryExtras: ContextSearchState['queryExtras'];
+  private searchPlaceholderLocked = false;
 
   constructor(
     public readonly auth: AuthService,
@@ -127,7 +136,22 @@ export class LayoutWrapperComponent implements OnInit {
     }
 
     const target = this.resolveSearchTarget();
-    this.router.navigate([target], { queryParams: { q: search } });
+    const queryParams: Record<string, string | number | boolean | null> = {};
+
+    if (this.searchQueryExtras) {
+      Object.entries(this.searchQueryExtras).forEach(([key, extraValue]) => {
+        if (extraValue !== undefined) {
+          queryParams[key] = extraValue;
+        }
+      });
+    }
+
+    queryParams[this.searchQueryParam] = search;
+
+    this.router.navigate([target], {
+      queryParams,
+      queryParamsHandling: 'merge'
+    });
   }
 
   logout(): void {
@@ -262,20 +286,26 @@ export class LayoutWrapperComponent implements OnInit {
   }
 
   private updateSearchPlaceholder(): void {
+    if (this.searchPlaceholderLocked) {
+      return;
+    }
+
+    this.searchPlaceholder = this.computeDefaultPlaceholder();
+  }
+
+  private computeDefaultPlaceholder(): string {
     const routeWithData = this.findDeepestRoute(this.activatedRoute);
     const explicitPlaceholder = routeWithData.snapshot.data?.['searchPlaceholder'];
     if (typeof explicitPlaceholder === 'string' && explicitPlaceholder.trim().length > 0) {
-      this.searchPlaceholder = explicitPlaceholder;
-      return;
+      return explicitPlaceholder;
     }
 
     const lastCrumb = this.breadcrumbs[this.breadcrumbs.length - 1];
     if (lastCrumb?.label) {
-      this.searchPlaceholder = `Search ${lastCrumb.label.toLowerCase()}…`;
-      return;
+      return `Search ${lastCrumb.label.toLowerCase()}…`;
     }
 
-    this.searchPlaceholder = 'Search the admin console…';
+    return 'Search the admin console…';
   }
 
   private findDeepestRoute(route: ActivatedRoute): ActivatedRoute {
@@ -287,6 +317,10 @@ export class LayoutWrapperComponent implements OnInit {
   }
 
   private resolveSearchTarget(): string {
+    if (this.searchNavigateTo) {
+      return this.searchNavigateTo;
+    }
+
     const explicit = this.findDeepestRoute(this.activatedRoute).snapshot.data?.['searchRoute'];
     if (typeof explicit === 'string' && explicit.trim().length > 0) {
       return explicit;
@@ -321,5 +355,48 @@ export class LayoutWrapperComponent implements OnInit {
       return '/admin/audit-logs';
     }
     return '/admin/products';
+  }
+
+  private applySearchState(state: ContextSearchState): void {
+    const moduleLabel = state.moduleLabel?.trim();
+    this.searchModuleLabel = moduleLabel && moduleLabel.length ? moduleLabel : null;
+
+    const hint = state.hint?.trim();
+    this.searchHint = hint && hint.length ? hint : null;
+
+    const icon = state.icon?.trim();
+    this.searchIcon = icon && icon.length ? icon : 'search';
+
+    this.searchEnabled = !!state.enabled;
+    const navigateTo = state.navigateTo?.trim();
+    this.searchNavigateTo = navigateTo && navigateTo.length ? navigateTo : null;
+
+    const queryParam = state.queryParam?.trim();
+    this.searchQueryParam = queryParam && queryParam.length ? queryParam : 'q';
+    this.searchQueryExtras = state.queryExtras;
+
+    const placeholder = state.placeholder?.trim();
+    if (placeholder && placeholder.length) {
+      this.searchPlaceholder = placeholder;
+      this.searchPlaceholderLocked = true;
+    } else {
+      this.searchPlaceholderLocked = false;
+      this.searchPlaceholder = this.computeDefaultPlaceholder();
+    }
+
+    if (this.searchEnabled) {
+      if (this.searchControl.disabled) {
+        this.searchControl.enable({ emitEvent: false });
+      }
+    } else if (this.searchControl.enabled) {
+      this.searchControl.disable({ emitEvent: false });
+    }
+
+    if (state.presetValue !== undefined) {
+      const nextValue = state.presetValue ?? '';
+      if (this.searchControl.value !== nextValue) {
+        this.searchControl.setValue(nextValue, { emitEvent: false });
+      }
+    }
   }
 }
