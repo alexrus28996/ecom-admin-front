@@ -1,99 +1,44 @@
-<ng-container *ngIf="!loading; else dashboardLoading">
-  <div class="dashboard-grid">
-    <section class="dashboard-header">
-      <div class="header-text">
-        <h1>{{ 'dashboard.title' | translate }}</h1>
-        <p>{{ 'dashboard.subtitle' | translate }}</p>
-      </div>
-      <button mat-stroked-button color="accent" (click)="refresh()">
-        <mat-icon>refresh</mat-icon>
-        {{ 'dashboard.actions.refresh' | translate }}
-      </button>
-    </section>
+<div class="dashboard">
+  <mat-card class="welcome-card">
+    <mat-card-header>
+      <mat-card-title>
+        <h1>Welcome, {{ userName }}!</h1>
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <p><strong>Email:</strong> {{ userEmail }}</p>
+      <p><strong>Role:</strong> {{ userRole }}</p>
+      <p><strong>Admin Access:</strong> {{ isAdmin ? 'Yes' : 'No' }}</p>
+    </mat-card-content>
+  </mat-card>
 
-    <section class="metric-cards">
-      <mat-card *ngFor="let card of buildCards()" class="metric-card" [ngClass]="card.color">
-        <mat-card-header>
-          <div mat-card-avatar class="metric-icon">
-            <mat-icon>{{ card.icon }}</mat-icon>
-          </div>
-          <mat-card-title>{{ card.value }}</mat-card-title>
-          <mat-card-subtitle>{{ card.titleKey ? (card.titleKey | translate) : card.title }}</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content *ngIf="card.hintKey">
-          <p>{{ card.hintKey | translate }}</p>
-        </mat-card-content>
-      </mat-card>
-    </section>
+  <div class="actions">
+    <mat-card class="action-card" routerLink="/profile">
+      <mat-card-content>
+        <mat-icon>person</mat-icon>
+        <h3>My Profile</h3>
+      </mat-card-content>
+    </mat-card>
 
-    <section class="operations-cards">
-      <mat-card *ngFor="let card of operationsCards()" class="metric-card operations-card" [ngClass]="card.color">
-        <mat-card-header>
-          <div mat-card-avatar class="metric-icon">
-            <mat-icon>{{ card.icon }}</mat-icon>
-          </div>
-          <mat-card-title>{{ card.value }}</mat-card-title>
-          <mat-card-subtitle>{{ card.titleKey ? (card.titleKey | translate) : card.title }}</mat-card-subtitle>
-        </mat-card-header>
-      </mat-card>
-    </section>
+    <mat-card *ngIf="isAdmin" class="action-card" routerLink="/admin/products">
+      <mat-card-content>
+        <mat-icon>inventory_2</mat-icon>
+        <h3>Products</h3>
+      </mat-card-content>
+    </mat-card>
 
-    <section class="health-section" *ngIf="health">
-      <mat-card class="panel">
-        <mat-card-title>{{ 'dashboard.health.title' | translate }}</mat-card-title>
-        <mat-card-content>
-          <div class="health-status" [ngClass]="healthStatusClass()">
-            <mat-icon>{{ healthStatusClass() === 'healthy' ? 'check_circle' : (healthStatusClass() === 'degraded' ? 'warning' : 'error') }}</mat-icon>
-            <div>
-              <h3>{{ ('dashboard.health.status.' + healthStatusClass()) | translate }}</h3>
-              <p *ngIf="health?.name">{{ 'dashboard.health.service' | translate:{ name: health.name } }}</p>
-              <p *ngIf="health?.version">{{ 'dashboard.health.version' | translate:{ version: health.version } }}</p>
-            </div>
-          </div>
-        </mat-card-content>
-      </mat-card>
-    </section>
+    <mat-card *ngIf="isAdmin" class="action-card" routerLink="/admin/orders">
+      <mat-card-content>
+        <mat-icon>shopping_cart</mat-icon>
+        <h3>Orders</h3>
+      </mat-card-content>
+    </mat-card>
 
-    <section class="revenue-section" *ngIf="metrics?.revenueLast7Days?.length">
-      <mat-card class="panel">
-        <mat-card-title>{{ 'dashboard.revenue.title' | translate }}</mat-card-title>
-        <mat-card-content>
-          <div class="revenue-list">
-            <div class="revenue-row" *ngFor="let day of metrics?.revenueLast7Days">
-              <span class="muted">{{ day.date | date:'EEE, MMM d' }}</span>
-              <span>
-                {{ day.total | currency:'USD':'symbol':'1.2-2' }}
-              </span>
-            </div>
-          </div>
-        </mat-card-content>
-      </mat-card>
-    </section>
-
-    <section class="orders-breakdown" *ngIf="metrics?.orders?.byStatus | keyvalue as entries">
-      <mat-card class="panel">
-        <mat-card-title>{{ 'dashboard.orders.title' | translate }}</mat-card-title>
-        <mat-card-content>
-          <div class="status-grid">
-            <div class="status-cell" *ngFor="let status of entries">
-              <span class="status-label">{{ ('dashboard.orders.status.' + status.key) | translate }}</span>
-              <span class="status-value">{{ status.value }}</span>
-            </div>
-          </div>
-        </mat-card-content>
-      </mat-card>
-    </section>
+    <mat-card *ngIf="isAdmin" class="action-card" routerLink="/admin/users">
+      <mat-card-content>
+        <mat-icon>people</mat-icon>
+        <h3>Users</h3>
+      </mat-card-content>
+    </mat-card>
   </div>
-
-  <app-error-banner [key]="errorKey"></app-error-banner>
-
-  <!-- Debug Component - Remove in production -->
-  <app-debug-user></app-debug-user>
-</ng-container>
-
-<ng-template #dashboardLoading>
-  <div class="dashboard-loading">
-    <mat-progress-spinner diameter="48" mode="indeterminate" color="primary"></mat-progress-spinner>
-    <p>{{ 'dashboard.loading' | translate }}</p>
-  </div>
-</ng-template>
+</div>

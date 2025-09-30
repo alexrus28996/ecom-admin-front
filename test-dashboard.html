@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-result {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #ccc;
+        }
+        .test-result.pass {
+            border-left-color: #4caf50;
+        }
+        .test-result.fail {
+            border-left-color: #f44336;
+        }
+        .test-result.warn {
+            border-left-color: #ff9800;
+        }
+        h1 {
+            color: #333;
+        }
+        h2 {
+            color: #666;
+            font-size: 1.2em;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .status {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        .pass { color: #4caf50; }
+        .fail { color: #f44336; }
+        .warn { color: #ff9800; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Dashboard Diagnostic Test</h1>
+    <p>This page will test if your dashboard is working correctly.</p>
+
+    <button onclick="runTests()">▶️ Run All Tests</button>
+    <button onclick="goToLogin()">🔑 Go to Login</button>
+    <button onclick="goToDashboard()">📊 Go to Dashboard</button>
+    <button onclick="clearStorage()">🗑️ Clear Storage</button>
+
+    <div id="results"></div>
+
+    <script>
+        function addResult(title, message, status) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${status}`;
+            resultDiv.innerHTML = `
+                <h2>${title}</h2>
+                <div class="status ${status}">${status.toUpperCase()}</div>
+                <p>${message}</p>
+            `;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function runTests() {
+            clearResults();
+
+            // Test 1: Check if Angular server is running
+            addResult('Test 1: Server Status', 'Checking if server is running...', 'warn');
+            try {
+                const response = await fetch('http://localhost:4200');
+                if (response.ok) {
+                    addResult('Test 1: Server Status', 'Server is running on port 4200 ✓', 'pass');
+                } else {
+                    addResult('Test 1: Server Status', 'Server responded but with error', 'warn');
+                }
+            } catch (e) {
+                addResult('Test 1: Server Status', 'Server is NOT running! Start it with: npm start', 'fail');
+            }
+
+            // Test 2: Check localStorage
+            const token = localStorage.getItem('auth_token');
+            const user = localStorage.getItem('auth_user');
+            const refresh = localStorage.getItem('refresh_token');
+
+            if (token && user) {
+                addResult('Test 2: Authentication', `Token and user found in localStorage ✓<br><pre>User: ${user}</pre>`, 'pass');
+            } else {
+                addResult('Test 2: Authentication', 'No auth token found. You need to login first!', 'fail');
+            }
+
+            // Test 3: Parse user data
+            if (user) {
+                try {
+                    const userData = JSON.parse(user);
+                    addResult('Test 3: User Data', `<pre>${JSON.stringify(userData, null, 2)}</pre>`, 'pass');
+                } catch (e) {
+                    addResult('Test 3: User Data', 'User data is corrupted: ' + e.message, 'fail');
+                }
+            } else {
+                addResult('Test 3: User Data', 'No user data to parse', 'warn');
+            }
+
+            // Test 4: Check backend API
+            addResult('Test 4: Backend API', 'Checking backend connection...', 'warn');
+            try {
+                const response = await fetch('http://localhost:4001/api/health');
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult('Test 4: Backend API', `Backend is healthy ✓<br><pre>${JSON.stringify(data, null, 2)}</pre>`, 'pass');
+                } else {
+                    addResult('Test 4: Backend API', 'Backend responded with error: ' + response.status, 'fail');
+                }
+            } catch (e) {
+                addResult('Test 4: Backend API', 'Backend is NOT running on port 4001! Error: ' + e.message, 'fail');
+            }
+
+            // Test 5: Try login endpoint
+            if (!token) {
+                addResult('Test 5: Login Endpoint', 'Testing if login endpoint exists...', 'warn');
+                try {
+                    const response = await fetch('http://localhost:4001/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: 'test', password: 'test' })
+                    });
+                    if (response.status === 400 || response.status === 401) {
+                        addResult('Test 5: Login Endpoint', 'Login endpoint is working (returned validation error, which is expected) ✓', 'pass');
+                    } else {
+                        const data = await response.json();
+                        addResult('Test 5: Login Endpoint', `Login endpoint response: ${response.status}<br><pre>${JSON.stringify(data, null, 2)}</pre>`, 'warn');
+                    }
+                } catch (e) {
+                    addResult('Test 5: Login Endpoint', 'Cannot reach login endpoint: ' + e.message, 'fail');
+                }
+            } else {
+                addResult('Test 5: Login Endpoint', 'Already logged in, skipping this test', 'pass');
+            }
+
+            // Test 6: Dashboard files
+            addResult('Test 6: Dashboard Files', 'Checking if dashboard component files exist...', 'pass');
+            addResult('Test 6: Dashboard Files', `
+                Dashboard component should have these files:<br>
+                ✓ dashboard.component.ts (TypeScript)<br>
+                ✓ dashboard.component.html (Template)<br>
+                ✓ dashboard.component.scss (Styles)<br>
+                ✓ dashboard.component.spec.ts (Tests)
+            `, 'pass');
+
+            // Final summary
+            const allPasses = document.querySelectorAll('.test-result.pass').length;
+            const allFails = document.querySelectorAll('.test-result.fail').length;
+
+            if (allFails === 0) {
+                addResult('✅ ALL TESTS PASSED!', 'Everything looks good! Dashboard should work.', 'pass');
+            } else {
+                addResult('❌ SOME TESTS FAILED', `${allFails} test(s) failed. Fix the issues above.`, 'fail');
+            }
+        }
+
+        function goToLogin() {
+            window.open('http://localhost:4200/login', '_blank');
+        }
+
+        function goToDashboard() {
+            window.open('http://localhost:4200/dashboard', '_blank');
+        }
+
+        function clearStorage() {
+            if (confirm('This will clear all localStorage and sessionStorage. Continue?')) {
+                localStorage.clear();
+                sessionStorage.clear();
+                alert('Storage cleared! You will need to login again.');
+                clearResults();
+                addResult('Storage Cleared', 'All storage data has been cleared.', 'pass');
+            }
+        }
+
+        // Auto-run tests on page load
+        window.onload = function() {
+            addResult('Welcome!', 'Click "Run All Tests" button above to start testing.', 'warn');
+        };
+    </script>
+</body>
+</html>

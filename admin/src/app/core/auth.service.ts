@@ -79,6 +79,10 @@ export class AuthService {
     return this.accessToken;
   }
 
+  getToken(): string | null {
+    return this.accessToken;
+  }
+
   get refreshToken(): string | null {
     return this.refreshTokenValue;
   }

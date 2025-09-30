@@ -43,7 +43,7 @@ export class AuthInterceptor implements HttpInterceptor {
     private i18n: TranslateService
   ) {}
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    const token = this.auth.token;
+    const token = this.auth.getToken();
     const shouldUseIdempotencyKey = this.shouldAddIdempotencyKey(req.method);
 
     const setHeaders: Record<string, string> = {};

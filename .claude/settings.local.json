@@ -10,7 +10,12 @@
       "Bash(npm run serve:*)",
       "Bash(npm run:*)",
       "Bash(npm start)",
-      "Bash(ng serve:*)"
+      "Bash(ng serve:*)",
+      "Bash(npx ng build:*)",
+      "Bash(curl:*)",
+      "Bash(npx ng test:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []
