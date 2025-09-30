@@ -80,12 +80,12 @@
         <div class="chips-input tab-grid__full">
           <mat-label>Tags</mat-label>
           <div class="chips-input__list">
-            <mat-chip-list>
+            <mat-chip-set>
               <mat-chip *ngFor="let control of tagsArray.controls; let i = index" (removed)="removeTag(i)">
                 {{ control.value }}
                 <button matChipRemove><mat-icon>close</mat-icon></button>
               </mat-chip>
-            </mat-chip-list>
+            </mat-chip-set>
           </div>
           <input matInput placeholder="Add tag" #tagInput (keyup.enter)="addTag(tagInput.value); tagInput.value = ''" />
         </div>
@@ -141,12 +141,12 @@
         <div class="chips-input tab-grid__full">
           <mat-label>Meta keywords</mat-label>
           <div class="chips-input__list">
-            <mat-chip-list>
+            <mat-chip-set>
               <mat-chip *ngFor="let control of keywordsArray.controls; let i = index" (removed)="removeKeyword(i)">
                 {{ control.value }}
                 <button matChipRemove><mat-icon>close</mat-icon></button>
               </mat-chip>
-            </mat-chip-list>
+            </mat-chip-set>
           </div>
           <input
             matInput
@@ -174,3 +174,4 @@
     </mat-tab>
   </mat-tab-group>
 </section>
+

@@ -4,27 +4,27 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { ToastService } from '../../../../core/toast.service';
 import { PermissionsService } from '../../../../core/permissions.service';
-import { AdminProductsService } from '../services/products.service';
+import { AdminProductsService, ProductSavePayload } from '../services/products.service';
 import { Product, ProductImage } from '../models/product';
 
 interface ProductFormValue {
   name: string;
   slug: string;
-  description?: string;
-  longDescription?: string;
+  description: string;
+  longDescription: string;
   isActive: boolean;
-  category?: string;
-  brand?: string;
-  vendor?: string;
-  taxClass?: string;
+  category: string;
+  brand: string;
+  vendor: string;
+  taxClass: string;
   tags: string[];
   price: number;
-  compareAtPrice?: number;
-  costPrice?: number;
+  compareAtPrice: number | null;
+  costPrice: number | null;
   currency: string;
   images: ProductImage[];
-  metaTitle?: string;
-  metaDescription?: string;
+  metaTitle: string;
+  metaDescription: string;
   metaKeywords: string[];
 }
 
@@ -45,23 +45,23 @@ export class ProductFormComponent implements OnInit, OnDestroy {
   private readonly cdr = inject(ChangeDetectorRef);
 
   readonly form = this.fb.group({
-    name: ['', Validators.required],
-    slug: ['', Validators.required],
-    description: [''],
-    longDescription: [''],
-    isActive: [true],
-    category: ['', Validators.required],
-    brand: [''],
-    vendor: [''],
-    taxClass: [''],
-    tags: this.fb.array<string>([]),
-    price: [0, [Validators.required, Validators.min(0)]],
-    compareAtPrice: [null, [Validators.min(0)]],
-    costPrice: [null, [Validators.min(0)]],
-    currency: ['USD', Validators.required],
-    metaTitle: [''],
-    metaDescription: [''],
-    metaKeywords: this.fb.array<string>([])
+    name: this.fb.control('', { validators: [Validators.required], nonNullable: true }),
+    slug: this.fb.control('', { validators: [Validators.required], nonNullable: true }),
+    description: this.fb.control('', { nonNullable: true }),
+    longDescription: this.fb.control('', { nonNullable: true }),
+    isActive: this.fb.control(true, { nonNullable: true }),
+    category: this.fb.control('', { validators: [Validators.required], nonNullable: true }),
+    brand: this.fb.control('', { nonNullable: true }),
+    vendor: this.fb.control('', { nonNullable: true }),
+    taxClass: this.fb.control('', { nonNullable: true }),
+    tags: new FormArray<FormControl<string>>([]),
+    price: this.fb.control(0, { validators: [Validators.required, Validators.min(0)], nonNullable: true }),
+    compareAtPrice: this.fb.control<number | null>(null, [Validators.min(0)]),
+    costPrice: this.fb.control<number | null>(null, [Validators.min(0)]),
+    currency: this.fb.control('USD', { validators: [Validators.required], nonNullable: true }),
+    metaTitle: this.fb.control('', { nonNullable: true }),
+    metaDescription: this.fb.control('', { nonNullable: true }),
+    metaKeywords: new FormArray<FormControl<string>>([])
   });
 
   images: ProductImage[] = [];
@@ -108,8 +108,9 @@ export class ProductFormComponent implements OnInit, OnDestroy {
   }
 
   addTag(value: string): void {
-    if (!value) return;
-    this.tagsArray.push(new FormControl(value));
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    this.tagsArray.push(this.fb.control(trimmed, { nonNullable: true }));
   }
 
   removeTag(index: number): void {
@@ -117,8 +118,9 @@ export class ProductFormComponent implements OnInit, OnDestroy {
   }
 
   addKeyword(value: string): void {
-    if (!value) return;
-    this.keywordsArray.push(new FormControl(value));
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    this.keywordsArray.push(this.fb.control(trimmed, { nonNullable: true }));
   }
 
   removeKeyword(index: number): void {
@@ -182,38 +184,114 @@ export class ProductFormComponent implements OnInit, OnDestroy {
     this.form.patchValue({
       name: product.name,
       slug: product.slug,
-      description: product.description,
-      longDescription: product.longDescription,
+      description: product.description ?? '',
+      longDescription: product.longDescription ?? '',
       isActive: product.isActive !== false,
-      category: product.category,
-      brand: product.brand,
-      vendor: product.vendor,
-      taxClass: product.taxClass,
+      category: product.category ?? '',
+      brand: product.brand ?? '',
+      vendor: product.vendor ?? '',
+      taxClass: product.taxClass ?? '',
       price: product.price,
       compareAtPrice: product.compareAtPrice ?? null,
       costPrice: product.costPrice ?? null,
-      currency: product.currency,
-      metaTitle: product.seo?.metaTitle,
-      metaDescription: product.seo?.metaDescription
+      currency: product.currency ?? 'USD',
+      metaTitle: product.seo?.metaTitle ?? '',
+      metaDescription: product.seo?.metaDescription ?? ''
     });
 
     this.tagsArray.clear();
-    (product.tags || []).forEach(tag => this.tagsArray.push(new FormControl(tag)));
+    (product.tags || []).forEach(tag => {
+      const normalized = tag?.trim();
+      if (normalized) {
+        this.tagsArray.push(this.fb.control(normalized, { nonNullable: true }));
+      }
+    });
 
     this.keywordsArray.clear();
-    (product.seo?.metaKeywords || []).forEach(keyword => this.keywordsArray.push(new FormControl(keyword)));
+    (product.seo?.metaKeywords || []).forEach(keyword => {
+      const normalized = keyword?.trim();
+      if (normalized) {
+        this.keywordsArray.push(this.fb.control(normalized, { nonNullable: true }));
+      }
+    });
 
     this.images = product.images || [];
     this.cdr.markForCheck();
   }
 
-  private toPayload(): ProductFormValue {
-    return {
-      ...(this.form.getRawValue() as ProductFormValue),
-      tags: this.tagsArray.value,
-      metaKeywords: this.keywordsArray.value,
-      images: this.images
+  private toPayload(): ProductSavePayload {
+    const raw = this.form.getRawValue() as ProductFormValue;
+    const tags = (raw.tags ?? []).map(tag => tag.trim()).filter((tag): tag is string => !!tag);
+    const metaKeywords = (raw.metaKeywords ?? []).map(keyword => keyword.trim()).filter((keyword): keyword is string => !!keyword);
+    const images = (this.images || [])
+      .map(image => ({
+        url: image.url?.trim() ?? '',
+        alt: image.alt?.trim() || undefined,
+        sortOrder: image.sortOrder
+      }))
+      .filter(image => !!image.url);
+
+    const payload: ProductSavePayload = {
+      name: raw.name.trim(),
+      slug: raw.slug.trim(),
+      price: raw.price,
+      currency: raw.currency.trim() || 'USD',
+      isActive: raw.isActive
     };
+
+    const description = raw.description.trim();
+    if (description) {
+      payload.description = description;
+    }
+
+    const longDescription = raw.longDescription.trim();
+    if (longDescription) {
+      payload.longDescription = longDescription;
+    }
+
+    const category = raw.category.trim();
+    if (category) {
+      payload.category = category;
+    }
+
+    const brand = raw.brand.trim();
+    if (brand) {
+      payload.brand = brand;
+    }
+
+    const vendor = raw.vendor.trim();
+    if (vendor) {
+      payload.vendor = vendor;
+    }
+
+    const taxClass = raw.taxClass.trim();
+    if (taxClass) {
+      payload.taxClass = taxClass;
+    }
+
+    if (raw.compareAtPrice !== null) {
+      payload.compareAtPrice = raw.compareAtPrice;
+    }
+
+    if (raw.costPrice !== null) {
+      payload.costPrice = raw.costPrice;
+    }
+
+    const metaTitle = raw.metaTitle.trim();
+    if (metaTitle) {
+      payload.metaTitle = metaTitle;
+    }
+
+    const metaDescription = raw.metaDescription.trim();
+    if (metaDescription) {
+      payload.metaDescription = metaDescription;
+    }
+
+    payload.tags = tags;
+    payload.metaKeywords = metaKeywords;
+    payload.images = images;
+
+    return payload;
   }
 
   private toggleForm(enabled: boolean): void {
@@ -233,3 +311,15 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       .replace(/^-+|-+$/g, '');
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+

@@ -5,7 +5,7 @@ import { environment } from '../../../../../environments/environment';
 import { PaginatedProducts, Product, ProductFilters } from '../models/product';
 import { VariantMatrixPreviewRequest, VariantMatrixPreviewResponse } from '../models/variant';
 
-interface ProductSavePayload extends Partial<Product> {
+export interface ProductSavePayload extends Partial<Product> {
   images?: { url: string; alt?: string; sortOrder?: number }[];
   seo?: { metaTitle?: string; metaDescription?: string; metaKeywords?: string[] };
 }
@@ -195,15 +195,15 @@ export class AdminProductsService {
   }
 
   exportCsv(filters: ProductFilters): Observable<Blob> {
-    let params = new HttpParams();
+    let params = new HttpParams().set('format', 'csv');
     if (filters.q) params = params.set('q', filters.q);
     if (filters.category) params = params.set('category', filters.category);
     if (filters.status === 'active') params = params.set('isActive', 'true');
     if (filters.status === 'inactive') params = params.set('isActive', 'false');
 
     return this.http.get(`${this.adminProductsUrl}/export`, {
-      params: params.set('format', 'csv'),
-      responseType: 'blob' as 'json'
+      params,
+      responseType: 'blob' as const
     });
   }
 
@@ -235,3 +235,12 @@ export class AdminProductsService {
       );
   }
 }
+
+
+
+
+
+
+
+
+

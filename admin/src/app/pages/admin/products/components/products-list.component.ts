@@ -45,7 +45,7 @@ export class ProductsListComponent implements OnInit, OnDestroy {
   });
 
   readonly displayedColumns = ['select', 'image', 'name', 'sku', 'category', 'brand', 'price', 'status', 'updatedAt', 'actions'];
-  readonly selection = new SelectionModel<Product>(true, [], true, product => product._id);
+  readonly selection = new SelectionModel<Product>(true, [], true, (a, b) => a._id === b._id);
 
   products: Product[] = [];
   loading = false;
@@ -295,3 +295,4 @@ export class ProductsListComponent implements OnInit, OnDestroy {
     return Number.isFinite(parsed) ? parsed : undefined;
   }
 }
+
