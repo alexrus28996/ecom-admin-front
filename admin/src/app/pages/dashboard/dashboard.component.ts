@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { AuthService } from '../../core/auth.service';
+import { AuthService, PublicUser } from '../../core/auth.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -7,18 +7,30 @@ import { AuthService } from '../../core/auth.service';
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit {
-  userName = 'User';
+  isLoggedIn = false;
+  userName = 'Guest';
   userEmail = '';
-  userRole = 'user';
   isAdmin = false;
 
-  constructor(private auth: AuthService) {}
+  constructor(private readonly auth: AuthService) {}
 
   ngOnInit(): void {
-    const user = this.auth.user;
-    this.userName = user?.name || 'User';
-    this.userEmail = user?.email || 'No email';
-    this.userRole = user?.roles?.[0] || 'user';
+    this.isLoggedIn = this.auth.isLoggedIn;
+
+    if (!this.isLoggedIn) {
+      this.resetUserDetails();
+      return;
+    }
+
+    const user: PublicUser | null = this.auth.user;
+    this.userName = user?.name?.trim() || 'User';
+    this.userEmail = user?.email || '';
     this.isAdmin = this.auth.isAdmin;
+  }
+
+  private resetUserDetails(): void {
+    this.userName = 'Guest';
+    this.userEmail = '';
+    this.isAdmin = false;
   }
 }

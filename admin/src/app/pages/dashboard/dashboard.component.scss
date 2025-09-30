@@ -1,50 +1,11 @@
 .dashboard {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 1.5rem;
 }
 
-.welcome-card {
-  margin-bottom: 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-
-  h1 {
-    color: white;
-    margin: 0;
-  }
-
-  p {
-    margin: 0.5rem 0;
-    font-size: 1.1rem;
-  }
+h1 {
+  margin-bottom: 0.75rem;
 }
 
-.actions {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-}
-
-.action-card {
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  text-align: center;
-
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-  }
-
-  mat-icon {
-    font-size: 48px;
-    width: 48px;
-    height: 48px;
-    margin-bottom: 0.5rem;
-  }
-
-  h3 {
-    margin: 0;
-    font-size: 1.2rem;
-  }
+p {
+  margin: 0.5rem 0;
 }

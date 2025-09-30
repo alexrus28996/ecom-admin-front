@@ -1,44 +1,20 @@
-<div class="dashboard">
-  <mat-card class="welcome-card">
-    <mat-card-header>
-      <mat-card-title>
-        <h1>Welcome, {{ userName }}!</h1>
-      </mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <p><strong>Email:</strong> {{ userEmail }}</p>
-      <p><strong>Role:</strong> {{ userRole }}</p>
-      <p><strong>Admin Access:</strong> {{ isAdmin ? 'Yes' : 'No' }}</p>
-    </mat-card-content>
-  </mat-card>
+<section class="dashboard">
+  <ng-container *ngIf="isLoggedIn; else loginNotice">
+    <h1>Welcome, {{ userName }}!</h1>
 
-  <div class="actions">
-    <mat-card class="action-card" routerLink="/profile">
-      <mat-card-content>
-        <mat-icon>person</mat-icon>
-        <h3>My Profile</h3>
-      </mat-card-content>
-    </mat-card>
+    <p *ngIf="userEmail">
+      <strong>Email:</strong>
+      <span>{{ userEmail }}</span>
+    </p>
 
-    <mat-card *ngIf="isAdmin" class="action-card" routerLink="/admin/products">
-      <mat-card-content>
-        <mat-icon>inventory_2</mat-icon>
-        <h3>Products</h3>
-      </mat-card-content>
-    </mat-card>
+    <p>
+      <strong>Access:</strong>
+      <span>{{ isAdmin ? 'Administrator' : 'Standard user' }}</span>
+    </p>
+  </ng-container>
 
-    <mat-card *ngIf="isAdmin" class="action-card" routerLink="/admin/orders">
-      <mat-card-content>
-        <mat-icon>shopping_cart</mat-icon>
-        <h3>Orders</h3>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card *ngIf="isAdmin" class="action-card" routerLink="/admin/users">
-      <mat-card-content>
-        <mat-icon>people</mat-icon>
-        <h3>Users</h3>
-      </mat-card-content>
-    </mat-card>
-  </div>
-</div>
+  <ng-template #loginNotice>
+    <h1>Welcome!</h1>
+    <p>Please sign in to view your dashboard information.</p>
+  </ng-template>
+</section>
