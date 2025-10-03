@@ -79,7 +79,7 @@ import { InitialsPipe } from '../../../shared/utils/initials.pipe';
             class="flex items-center gap-3 rounded-full bg-slate-100 px-3 py-1.5 text-left hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
           >
             <div class="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-500 text-white">
-              {{ user | initials }}
+              {{ (user.name || user.email) | initials }}
             </div>
             <div class="hidden text-left sm:block">
               <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">

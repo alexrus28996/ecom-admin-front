@@ -9,7 +9,6 @@ import {
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
-import { provideMatIconNoHttpProvider } from '@angular/material/icon';
 import { HttpClient } from '@angular/common/http';
 import { appRoutes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
@@ -30,7 +29,6 @@ export const appConfig: ApplicationConfig = {
     provideRouter(appRoutes),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor, errorInterceptor])),
     provideAnimations(),
-    provideMatIconNoHttpProvider(),
     importProvidersFrom(
       TranslateModule.forRoot({
         defaultLanguage: 'en',

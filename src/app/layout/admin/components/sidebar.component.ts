@@ -54,6 +54,7 @@ interface NavigationItem {
             *ngIf="item.enabled && item.route; else disabledItem"
             mat-list-item
             [routerLink]="item.route"
+            routerLinkActive=""
             [routerLinkActiveOptions]="{ exact: true }"
             #rla="routerLinkActive"
             [ngClass]="[
