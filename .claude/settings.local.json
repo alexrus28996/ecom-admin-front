@@ -24,7 +24,12 @@
       "Bash(npx:*)",
       "Bash(npm install:*)",
       "Bash(tree:*)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(taskkill:*)",
+      "Bash(test:*)",
+      "Bash(cmd //c:*)",
+      "Bash(mkdir:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
