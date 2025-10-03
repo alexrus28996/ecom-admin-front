@@ -1,0 +1,23 @@
+<section>
+  <header class="mb-6">
+    <h1 class="text-2xl font-semibold tracking-tight">{{ 'dashboard.title' | translate }}</h1>
+    <p class="text-gray-600">{{ 'dashboard.subtitle' | translate }}</p>
+  </header>
+
+  <div class="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
+    <div *ngFor="let c of cards" class="rounded-xl border bg-white p-4">
+      <div class="text-sm text-gray-500">{{ c.titleKey | translate }}</div>
+      <div class="mt-2 text-2xl font-semibold">{{ c.value }}</div>
+    </div>
+  </div>
+
+  <div class="mt-8 rounded-xl border bg-white p-6">
+    <h2 class="text-lg font-medium mb-2">Getting started</h2>
+    <ol class="list-decimal pl-5 space-y-1 text-gray-700">
+      <li>Create categories and brands</li>
+      <li>Create your first product</li>
+      <li>Adjust inventory location and stock</li>
+      <li>Invite teammates and set permissions</li>
+    </ol>
+  </div>
+</section>

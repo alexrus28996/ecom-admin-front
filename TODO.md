@@ -1,6 +1,5 @@
 # TODO
-- [ ] Add full user management (zip2)
-- [ ] Add categories CRUD (zip3)
-- [ ] Polish product form (zip4)
-- [ ] Integrate audit log timeline with filtering
-- [ ] Add localization switcher for additional languages beyond English
+- [ ] Integrate Users module (Zip 2)
+- [ ] Add Categories CRUD (Zip 3)
+- [ ] Add Product form (Zip 4)
+- [ ] Improve responsive design for mobile

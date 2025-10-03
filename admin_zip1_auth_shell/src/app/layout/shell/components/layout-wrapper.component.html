@@ -1,0 +1,14 @@
+<div class="min-h-screen flex bg-gray-50">
+  <mat-sidenav-container class="w-full">
+    <mat-sidenav mode="side" [(opened)]="sidebarOpen" class="w-64 bg-white border-r">
+      <app-sidebar></app-sidebar>
+    </mat-sidenav>
+    <mat-sidenav-content>
+      <app-topbar (click)="toggleSidebar()" ></app-topbar>
+      <main class="p-6">
+        <app-breadcrumbs></app-breadcrumbs>
+        <router-outlet></router-outlet>
+      </main>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+</div>

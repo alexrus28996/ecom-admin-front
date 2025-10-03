@@ -1,0 +1,15 @@
+{
+  "auth": {
+    "title": "Sign in to {{app}}",
+    "email": "Email address",
+    "password": "Password",
+    "rememberMe": "Remember me",
+    "signIn": "Sign in",
+    "signingIn": "Signing in...",
+    "errors": {
+      "invalid": "Invalid email or password.",
+      "network": "Network error. Please try again.",
+      "unknown": "Something went wrong. Please try again."
+    }
+  }
+}

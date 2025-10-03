@@ -1,0 +1,1 @@
+// routing declared inline in module for simplicity

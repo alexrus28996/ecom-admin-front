@@ -1,0 +1,29 @@
+{
+  "shell": {
+    "dashboard": "Dashboard",
+    "catalog": "Catalog",
+    "products": "Products",
+    "categories": "Categories",
+    "orders": "Orders",
+    "payments": "Payments",
+    "inventory": "Inventory",
+    "users": "Users",
+    "permissions": "Permissions",
+    "reports": "Reports",
+    "audit": "Audit Logs",
+    "logout": "Log out",
+    "searchPlaceholder": "Search anything\u2026",
+    "hello": "Hello",
+    "admin": "Admin"
+  },
+  "dashboard": {
+    "title": "Overview",
+    "subtitle": "Today\u2019s snapshot",
+    "cards": {
+      "revenue": "Revenue (7d)",
+      "orders": "Orders (7d)",
+      "customers": "Active customers",
+      "products": "Products live"
+    }
+  }
+}

@@ -1,0 +1,33 @@
+<div class="min-h-screen grid place-items-center bg-gradient-to-br from-gray-50 to-white p-4">
+  <div class="w-full max-w-md rounded-2xl border bg-white/90 backdrop-blur p-8 shadow-sm">
+    <div class="flex items-center gap-3 mb-6">
+      <img src="assets/logo.svg" class="h-8 w-8" alt="Logo" />
+      <h1 class="text-xl font-semibold">{{ 'auth.title' | translate:{ app: 'Ecom Admin'} }}</h1>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>{{ 'auth.email' | translate }}</mat-label>
+        <input matInput formControlName="email" type="email" autocomplete="email" />
+        <mat-error *ngIf="form.controls.email.hasError('required')">Email is required</mat-error>
+        <mat-error *ngIf="form.controls.email.hasError('email')">Enter a valid email</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>{{ 'auth.password' | translate }}</mat-label>
+        <input matInput formControlName="password" type="password" autocomplete="current-password" />
+        <mat-error *ngIf="form.controls.password.hasError('required')">Password is required</mat-error>
+      </mat-form-field>
+
+      <div class="flex items-center justify-between">
+        <mat-checkbox formControlName="remember">{{ 'auth.rememberMe' | translate }}</mat-checkbox>
+      </div>
+
+      <button mat-raised-button color="primary" class="w-full" [disabled]="loading">
+        <mat-spinner *ngIf="loading" diameter="18" class="mr-2"></mat-spinner>
+        <span *ngIf="!loading">{{ 'auth.signIn' | translate }}</span>
+        <span *ngIf="loading">{{ 'auth.signingIn' | translate }}</span>
+      </button>
+    </form>
+  </div>
+</div>

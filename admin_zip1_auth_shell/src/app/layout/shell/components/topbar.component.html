@@ -1,0 +1,31 @@
+<header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b">
+  <div class="flex items-center justify-between px-4 h-14">
+    <div class="flex items-center gap-3">
+      <button mat-icon-button class="md:hidden"><mat-icon>menu</mat-icon></button>
+      <a class="flex items-center gap-2 font-semibold" routerLink="/admin">
+        <img src="assets/logo.svg" alt="Logo" class="h-6 w-6" />
+        <span class="hidden sm:block">Ecom Admin</span>
+      </a>
+    </div>
+    <div class="flex-1 max-w-xl px-6">
+      <div class="relative">
+        <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 opacity-50">search</mat-icon>
+        <input class="w-full pl-10 pr-3 py-2 rounded-lg border focus:outline-none focus:ring" placeholder="{{ 'shell.searchPlaceholder' | translate }}" />
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <button mat-icon-button matTooltip="Theme"><mat-icon>brightness_6</mat-icon></button>
+      <button mat-icon-button matTooltip="Notifications"><mat-icon>notifications</mat-icon></button>
+      <div class="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-gray-100">
+        <div class="h-8 w-8 rounded-full bg-indigo-600 text-white grid place-items-center">
+          {{ (auth.user?.name || auth.user?.email) | initials }}
+        </div>
+        <div class="hidden md:block text-sm">
+          <div class="font-medium">{{ auth.user?.name || 'Admin' }}</div>
+          <div class="text-gray-500">{{ auth.user?.email }}</div>
+        </div>
+        <button mat-icon-button (click)="logout()" matTooltip="{{ 'shell.logout' | translate }}"><mat-icon>logout</mat-icon></button>
+      </div>
+    </div>
+  </div>
+</header>

@@ -1,0 +1,10 @@
+<nav class="p-2">
+  <ul class="space-y-1">
+    <li *ngFor="let item of nav">
+      <a [routerLink]="item.link" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700">
+        <mat-icon class="opacity-70">{{item.icon}}</mat-icon>
+        <span>{{ item.label | translate }}</span>
+      </a>
+    </li>
+  </ul>
+</nav>

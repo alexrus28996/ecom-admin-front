@@ -1,0 +1,16 @@
+{
+  "common": {
+    "appName": "Ecom Admin",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search",
+    "actions": "Actions",
+    "yes": "Yes",
+    "no": "No",
+    "loading": "Loading...",
+    "retry": "Retry",
+    "close": "Close"
+  }
+}

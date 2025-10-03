@@ -1,0 +1,56 @@
+{
+  "app": {
+    "name": "Ecom",
+    "admin": "Admin Console"
+  },
+  "languages": {
+    "en": "English"
+  },
+  "common": {
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "darkMode": "Enable dark mode",
+    "lightMode": "Enable light mode"
+  },
+  "auth": {
+    "loginTitle": "Admin Login",
+    "email": "Email",
+    "password": "Password",
+    "login": "Login",
+    "logout": "Logout",
+    "forgotPassword": "Forgot password?",
+    "invalidCredentials": "Invalid email or password",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Enter a valid email",
+    "passwordRequired": "Password is required",
+    "passwordLength": "Password must be at least 6 characters",
+    "genericError": "Unable to sign in. Please try again."
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "products": "Products",
+    "categories": "Categories",
+    "inventory": "Inventory",
+    "orders": "Orders",
+    "reports": "Reports",
+    "audit": "Audit Logs",
+    "profile": "Profile"
+  },
+  "dashboard": {
+    "users": "Total Users",
+    "products": "Total Products",
+    "orders": "Total Orders",
+    "revenue": "Revenue (Last 7 Days)",
+    "salesChart": "Sales Overview",
+    "subtitle": "Key business metrics refreshed in real time",
+    "pending": "Pending",
+    "paid": "Paid",
+    "delivered": "Delivered",
+    "salesDescription": "Revenue vs. order volume for the selected period",
+    "metricsError": "We couldn't refresh metrics right now. Please retry later.",
+    "salesError": "Sales report data is unavailable. Try again soon.",
+    "loadingMetrics": "Loading dashboard metrics...",
+    "loadingSales": "Loading sales performance..."
+  }
+}
