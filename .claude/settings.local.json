@@ -17,7 +17,14 @@
       "Bash(netstat:*)",
       "Bash(findstr:*)",
       "Bash(dir:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(unzip:*)",
+      "Bash(test -f angular.json)",
+      "Bash(mv:*)",
+      "Bash(npx:*)",
+      "Bash(npm install:*)",
+      "Bash(tree:*)",
+      "Bash(npm uninstall:*)"
     ],
     "deny": [],
     "ask": []
