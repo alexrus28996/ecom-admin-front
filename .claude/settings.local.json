@@ -15,7 +15,9 @@
       "Bash(curl:*)",
       "Bash(npx ng test:*)",
       "Bash(netstat:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(dir:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []
